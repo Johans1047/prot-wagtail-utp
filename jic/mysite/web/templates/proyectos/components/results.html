@@ -1,11 +1,9 @@
 <section class="py-8 lg:py-12 bg-stone-50">
     <div class="mx-auto max-w-7xl px-4 lg:px-8">
         <p class="mb-4 text-sm text-muted-foreground">
-        {% if filtered|length == 1 %}
-            {{ filtered|length }} proyecto encontrado
-        {% elif filtered|length > 1 %}
-            {{ filtered|length }} proyectos encontrados
-        {% endif %}
+            {% if filtered|length == 1 %} {{ filtered|length }} proyecto
+            encontrado {% elif filtered|length > 1 %} {{ filtered|length }}
+            proyectos encontrados {% endif %}
         </p>
         <div class="overflow-x-auto rounded-xl border border-border">
             <table class="w-full text-sm">
@@ -13,97 +11,111 @@
                     <tr class="bg-secondary/45">
                         <th
                             class="px-4 py-3 text-left font-semibold text-foreground"
-                            >Año</th
                         >
+                            Año
+                        </th>
                         <th
                             class="px-4 py-3 text-left font-semibold text-foreground"
-                            >Titulo</th
                         >
+                            Titulo
+                        </th>
                         <th
                             class="hidden px-4 py-3 text-left font-semibold text-foreground md:table-cell"
-                            >Universidad</th
                         >
+                            Universidad
+                        </th>
                         <th
                             class="hidden px-4 py-3 text-left font-semibold text-foreground lg:table-cell"
-                            >Categoria</th
                         >
+                            Categoria
+                        </th>
                         <th
                             class="hidden px-4 py-3 text-left font-semibold text-foreground sm:table-cell"
-                            >Contacto</th
                         >
+                            Contacto
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for p in filtered %}
-                        <tr
-                            class="border-t border-border transition-colors hover:bg-secondary/20"
-                        >
-                            <td class="px-4 py-3 text-foreground">
-                                <div class="flex items-center gap-2">
+                    <tr
+                        class="border-t border-border transition-colors hover:bg-secondary/20"
+                    >
+                        <td class="px-4 py-3 text-foreground">
+                            <div class="flex items-center gap-2">
+                                <div class="w-3.5 h-3.5 shrink-0">
                                     {% if p.winner %}
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="14"
-                                            height="14"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            class="h-3.5 w-3.5 text-golden"
-                                            aria-hidden="true"
-                                            ><path
-                                                d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978"
-                                            ></path><path
-                                                d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978"
-                                            ></path><path
-                                                d="M18 9h1.5a1 1 0 0 0 0-5H18"
-                                            ></path><path d="M4 22h16"
-                                            ></path><path
-                                                d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"
-                                            ></path><path
-                                                d="M6 9H4.5a1 1 0 0 1 0-5H6"
-                                            ></path></svg
-                                        >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="14"
+                                        height="14"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        class="h-3.5 w-3.5 text-golden"
+                                        aria-hidden="true"
+                                    >
+                                        <path
+                                            d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978"
+                                        ></path>
+                                        <path
+                                            d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978"
+                                        ></path>
+                                        <path
+                                            d="M18 9h1.5a1 1 0 0 0 0-5H18"
+                                        ></path>
+                                        <path d="M4 22h16"></path>
+                                        <path
+                                            d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"
+                                        ></path>
+                                        <path
+                                            d="M6 9H4.5a1 1 0 0 1 0-5H6"
+                                        ></path>
+                                    </svg>
                                     {% endif %}
-                                    {{ p.year }}
                                 </div>
-                            </td>
-                            <td
-                                class="max-w-xs px-4 py-3 font-medium text-foreground"
-                                >{{ p.title }}</td
+                                {{ p.year }}
+                            </div>
+                        </td>
+                        <td
+                            class="max-w-xs px-4 py-3 font-medium text-foreground"
+                        >
+                            {{ p.title }}
+                        </td>
+                        <td
+                            class="hidden px-4 py-3 text-muted-foreground md:table-cell"
+                        >
+                            {{ p.university }}
+                        </td>
+                        <td class="hidden px-4 py-3 lg:table-cell">
+                            <span
+                                class="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary"
                             >
-                            <td
-                                class="hidden px-4 py-3 text-muted-foreground md:table-cell"
-                                >{{ p.university }}</td
+                                {{ p.category }}
+                            </span>
+                        </td>
+                        <td class="hidden px-4 py-3 sm:table-cell">
+                            <a
+                                href="mailto:{{ p.contact }}"
+                                class="text-primary underline-offset-2 hover:underline"
                             >
-                            <td class="hidden px-4 py-3 lg:table-cell">
-                                <span
-                                    class="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary"
-                                >
-                                    {{ p.category }}
-                                </span>
-                            </td>
-                            <td class="hidden px-4 py-3 sm:table-cell">
-                                <a
-                                    href="mailto:{{ p.contact }}"
-                                    class="text-primary underline-offset-2 hover:underline"
-                                >
-                                    {{ p.contact }}
-                                </a>
-                            </td>
-                        </tr>
+                                {{ p.contact }}
+                            </a>
+                        </td>
+                    </tr>
                     {% empty %}
-                        <tr>
-                            <td
-                                colspan="5"
-                                class="px-4 py-12 text-center text-muted-foreground"
-                            >
-                                No se encontraron proyectos con los filtros
-                                seleccionados.
-                            </td>
-                        </tr>
+                    <tr>
+                        <td
+                            colspan="5"
+                            class="px-4 py-12 text-center text-muted-foreground"
+                        >
+                            No se encontraron proyectos con los filtros
+                            seleccionados.
+                        </td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
