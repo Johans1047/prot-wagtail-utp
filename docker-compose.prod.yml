@@ -1,0 +1,174 @@
+version: '3.8'
+
+# ==============================================================================
+# PRODUCCIÓN - JIC Wagtail CMS
+# ==============================================================================
+# Este archivo es para despliegue en producción
+# Uso: docker-compose -f docker-compose.prod.yml up -d
+# ==============================================================================
+
+services:
+  # Django/Wagtail Application (Producción)
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: jic_wagtail_prod
+    command: gunicorn mysite.wsgi:application --bind 0.0.0.0:8000 --workers 4 --timeout 60 --access-logfile - --error-logfile -
+    volumes:
+      - static_files:/app/staticfiles
+      - media_files:/app/media
+    expose:
+      - 8000
+    environment:
+      - DEBUG=False
+      - PYTHONUNBUFFERED=1
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_USE_SSL=${MINIO_USE_SSL:-true}
+      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:-jic-media}
+      - MINIO_EXTERNAL_ENDPOINT=${MINIO_EXTERNAL_ENDPOINT}
+    depends_on:
+      - db
+      - minio
+    networks:
+      - jic_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx Proxy Reverso
+  nginx:
+    image: nginx:alpine
+    container_name: jic_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - static_files:/app/staticfiles:ro
+      - media_files:/app/media:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+      - ./certbot/www:/var/www/certbot:ro
+    depends_on:
+      - web
+    networks:
+      - jic_network
+    restart: unless-stopped
+
+  # PostgreSQL Database (Producción)
+  db:
+    image: postgres:15-alpine
+    container_name: jic_postgres_prod
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+      - ./backups:/backups
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=es_ES.UTF-8 --lc-ctype=es_ES.UTF-8
+    networks:
+      - jic_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MinIO Object Storage (Producción)
+  minio:
+    image: minio/minio:latest
+    container_name: jic_minio_prod
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data_prod:/data
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - jic_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # MinIO Client - Inicialización
+  minio-client:
+    image: minio/mc:latest
+    container_name: jic_minio_client_prod
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 10;
+      /usr/bin/mc alias set myminio http://minio:9000 ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY};
+      /usr/bin/mc mb myminio/${MINIO_BUCKET_NAME} --ignore-existing;
+      /usr/bin/mc anonymous set download myminio/${MINIO_BUCKET_NAME};
+      exit 0;
+      "
+    networks:
+      - jic_network
+
+  # Certbot para SSL (Let's Encrypt)
+  certbot:
+    image: certbot/certbot
+    container_name: jic_certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - jic_network
+
+  # Backup automático (opcional)
+  backup:
+    image: postgres:15-alpine
+    container_name: jic_backup
+    depends_on:
+      - db
+    environment:
+      - PGHOST=db
+      - PGDATABASE=${DB_NAME}
+      - PGUSER=${DB_USER}
+      - PGPASSWORD=${DB_PASSWORD}
+    volumes:
+      - ./backups:/backups
+      - ./scripts/backup.sh:/backup.sh:ro
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do /backup.sh; sleep 24h & wait $${!}; done;'"
+    networks:
+      - jic_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data_prod:
+    driver: local
+  minio_data_prod:
+    driver: local
+  static_files:
+    driver: local
+  media_files:
+    driver: local
+
+networks:
+  jic_network:
+    driver: bridge
