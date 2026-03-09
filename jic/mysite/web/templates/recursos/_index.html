@@ -1,0 +1,8 @@
+{% extends '_base.html' %}
+{% block title %}Recursos{% endblock %}
+{% block meta_description %}Página de recursos, documentos, boletines y videos de la JIC{% endblock %}
+
+{% block content %}
+    {% include 'hero.html' with titulo="Recursos" descripcion="Documentos, boletines, memorias, galeria de fotos y videos de la JIC." color="bg-muted-foreground/70" text_color="text-primary-foreground" %}
+    {% include 'recursos/components/tabs_django.html' %}
+{% endblock %}

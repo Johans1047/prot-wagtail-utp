@@ -1,11 +1,11 @@
-{% extends 'base.html' %}
+{% extends '_base.html' %}
 {% block title %}Inicio{% endblock %}
 {% block meta_description %}Página de inicio de la jornada de iniciación científica{% endblock %}
 
 {% block content %}
-  {% include 'inicio/components/title_section.html' %}
-  {% include 'inicio/components/dates_section.html' %}
-  {% include 'inicio/components/quick_section.html' %}
-  {% include 'inicio/components/winners_section.html' %}
-  <!-- {% include 'inicio/components/faqs_section.html' %} -->
+    {% include 'inicio/components/title_section.html' %}
+    {% include 'inicio/components/dates_section.html' %}
+    {% include 'inicio/components/quick_section.html' %}
+    {% include 'inicio/components/winners_section.html' %}
+    {# {% include 'inicio/components/faqs_section.html' %} #}
 {% endblock %}

@@ -1,0 +1,75 @@
+<div class="rounded-xl border border-border bg-card overflow-hidden">
+    <div class="{{ category.accent }} px-6 py-5">
+        <div class="flex items-center gap-3">
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="h-6 w-6"
+                aria-hidden="true"
+            >
+                <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" />
+                <path d="M22 10v6" />
+                <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" />
+            </svg>
+            <div>
+                <h3 class="text-lg font-semibold">{{ category.title }}</h3>
+                <p class="text-sm opacity-80">{{ category.description }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="flex flex-col p-2">
+        {% for resource in category.resources %}
+        <a
+            href="{{ resource.href }}"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm text-foreground transition-colors hover:bg-secondary/45"
+        >
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="h-4 w-4 shrink-0 text-muted-foreground"
+                aria-hidden="true"
+            >
+                <path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" />
+                <path d="M14 2v5a1 1 0 0 0 1 1h5" />
+                <path d="M10 9H8" />
+                <path d="M16 13H8" />
+                <path d="M16 17H8" />
+            </svg>
+            <span>{{ resource.label }}</span>
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="ml-auto h-3 w-3 shrink-0 text-muted-foreground"
+                aria-hidden="true"
+            >
+                <path d="M15 3h6v6" />
+                <path d="M10 14 21 3" />
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+            </svg>
+        </a>
+        {% endfor %}
+    </div>
+</div>

@@ -2,20 +2,23 @@
 <html lang="es">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Mi Sitio{% endblock %}</title>
-  <meta name="description" content="{% block meta_description %}Descripción por defecto{% endblock %}">
-  {% load static %}
-  <link rel="stylesheet" href="{% static 'src/output.css' %}" type="text/css" />
-  {% block extra_head %}{% endblock %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Mi Sitio{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}Descripción por defecto{% endblock %}">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'src/output.css' %}" type="text/css" />
+    {% block extra_head %}{% endblock %}
 </head>
 
-<body class="flex h-screen items-center justify-center">
-  {% include 'header.html' %}
-  {% block content %}{% endblock %}
-  {% include 'footer.html' %}
-  {% if debug %} <script src="http://127.0.0.1:35729/livereload.js"></script> {% endif %}
+<body class="flex flex-col min-h-screen">
+    {% include 'header.html' %}
+    <main class="pt-18 overflow-x-hidden">
+        {% block content %}{% endblock %}
+    </main>
+    {% include 'footer.html' %}
+    {% if debug %} <script src="http://127.0.0.1:35729/livereload.js"></script> {% endif %}
+    <script src="{% static 'js/flowbite.min.js' %}"></script>
 </body>
 
 </html>

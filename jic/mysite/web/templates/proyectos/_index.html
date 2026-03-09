@@ -1,0 +1,10 @@
+{% extends '_base.html' %}
+{% block title %}Proyectos{% endblock %}
+{% block meta_description %}Página de inicio de la jornada de iniciación científica{% endblock %}
+
+{% block content %}
+    {% include 'hero.html' with titulo="Proyectos" descripcion="Repositorio histórico de proyectos de investigación presentados en la JIC." color="bg-cobalt-700/90" text_color="text-primary-foreground" %}
+    {% include 'proyectos/components/tabs_filters.html' %}
+    {% include 'proyectos/components/results.html' %}
+    {% include 'pagination.html' with color="bg-stone-50" %}
+{% endblock %}

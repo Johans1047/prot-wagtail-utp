@@ -1,0 +1,9 @@
+<section class="py-16 lg:py-24 bg-stone-50">
+    <div class="mx-auto max-w-7xl px-4 lg:px-8">
+        <div class="grid gap-6 lg:grid-cols-3">
+            {% for category in resource_categories %}
+            {% include 'participar/components/ui/resource_card.html' %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
