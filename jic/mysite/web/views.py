@@ -1,6 +1,31 @@
 from django.shortcuts import render
+from django.db.utils import OperationalError, ProgrammingError
+
+from .models import ImportantDate
 
 def Inicio(request):
+    try:
+        important_dates = list(
+            ImportantDate.objects.filter(is_active=True).order_by("sort_order", "event_date")
+        )
+    except (OperationalError, ProgrammingError):
+        # Keeps the home page functional before running migrations.
+        important_dates = []
+
+    if not important_dates:
+        important_dates = [
+            {
+                "title": "Apertura de inscripciones",
+                "event_date": "2025-05-15",
+                "description": "Inicio del periodo de inscripcion de proyectos en la plataforma JIC.",
+            },
+            {
+                "title": "Cierre de inscripciones",
+                "event_date": "2025-07-30",
+                "description": "Fecha limite para registrar proyectos de investigacion.",
+            },
+        ]
+
     faqs = {
         'participacion': {
             'title': 'Participación y Equipos',
@@ -128,6 +153,7 @@ def Inicio(request):
     }
     
     context = {
+        'important_dates': important_dates,
         'faqs': faqs,
     }
     

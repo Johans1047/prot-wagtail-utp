@@ -1,2 +1,4 @@
-Django>=5.2,<5.3
-wagtail>=7.2,<7.3
+Django==5.2
+wagtail==7.0
+django-livereload-server==0.4
+django-compressor==4.5.1

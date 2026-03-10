@@ -31,14 +31,14 @@
                 </h3>
                 <ul class="flex flex-col gap-2">
                     <li>
-                        <a class="text-sm opacity-70 transition-opacity hover:opacity-100" href="/">Inicio</a>
+                        <a class="text-sm opacity-70 transition-opacity hover:opacity-100" href="{% url 'Inicio' %}">Inicio</a>
                     </li>
                     <li>
-                        <a class="text-sm opacity-70 transition-opacity hover:opacity-100" href="/jic">La JIC</a>
+                        <a class="text-sm opacity-70 transition-opacity hover:opacity-100" href="{% url 'Jic' %}">La JIC</a>
                     </li>
                     <li>
                         <a class="text-sm opacity-70 transition-opacity hover:opacity-100"
-                            href="/participar">Participar</a>
+                            href="{% url 'Participar' %}">Participar</a>
                     </li>
                 </ul>
             </div>
@@ -49,14 +49,14 @@
                 <ul class="flex flex-col gap-2">
                     <li>
                         <a class="text-sm opacity-70 transition-opacity hover:opacity-100"
-                            href="/proyectos">Proyectos</a>
+                            href="{% url 'Proyectos' %}">Proyectos</a>
                     </li>
                     <li>
                         <a class="text-sm opacity-70 transition-opacity hover:opacity-100"
-                            href="/resultados">Resultados</a>
+                            href="{% url 'Resultados' %}">Resultados</a>
                     </li>
                     <li>
-                        <a class="text-sm opacity-70 transition-opacity hover:opacity-100" href="/recursos">Recursos</a>
+                        <a class="text-sm opacity-70 transition-opacity hover:opacity-100" href="{% url 'Recursos' %}">Recursos</a>
                     </li>
                 </ul>
             </div>

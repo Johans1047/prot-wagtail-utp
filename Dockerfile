@@ -31,7 +31,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r /app/requirements.txt
 
 # Copiar archivos del proyecto
-COPY ./mysite /app/mysite
+COPY ./jic/mysite /app/mysite
 
 # Crear directorios necesarios
 RUN mkdir -p /app/mysite/staticfiles 

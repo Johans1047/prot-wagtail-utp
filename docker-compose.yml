@@ -1,144 +1,371 @@
+# services:
+#   # Django/Wagtail Application
+#   web:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#     container_name: jic_wagtail
+#     command: python mysite/manage.py runserver 0.0.0.0:8000
+#     volumes:
+#       - ./mysite:/app/mysite
+#       - static_files:/app/mysite/staticfiles
+#       # - media_files:/app/media
+#     ports:
+#       - "8000:8000"
+#     environment:
+#       - DEBUG=True
+#       - PYTHONUNBUFFERED=1
+#       - DATABASE_URL=postgresql://jicuser:jicpass@db:5432/jic_db
+#       - MINIO_ENDPOINT=minio:9000
+#       - MINIO_ACCESS_KEY=minioadmin
+#       - MINIO_SECRET_KEY=minioadmin
+#       - MINIO_USE_SSL=false
+#       - MINIO_BUCKET_NAME=jic-media
+#     depends_on:
+#       db:
+#         condition: service_healthy
+#       minio:
+#         condition: service_healthy
+#     networks:
+#       - jic_network
+
+#   # Django LiveReload Server
+#   livereload:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#     container_name: jic_livereload
+#     command: python mysite/manage.py livereload --host=0.0.0.0 --port=35729
+#     volumes:
+#       - ./mysite:/app/mysite
+#     ports:
+#       - "35729:35729"
+#     environment:
+#       - DEBUG=True
+#       - PYTHONUNBUFFERED=1
+#       - DATABASE_URL=postgresql://jicuser:jicpass@db:5432/jic_db
+#     depends_on:
+#       - web
+#     networks:
+#       - jic_network
+
+#   # TailwindCSS Watcher
+#   # tailwind:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile.node
+#     container_name: jic_tailwind
+#     command: sh -c "npx tailwindcss -i /app/mysite/theme/static/src/input.css -o /app/mysite/theme/static/src/output.css --watch"
+#     volumes:
+#       - ./mysite:/app/mysite
+#       - ./tailwind.config.js:/app/tailwind.config.js
+#       - node_modules:/app/node_modules
+#     networks:
+#       - jic_network
+#     depends_on:
+#       - web
+#     restart: unless-stopped
+#     stdin_open: true
+#     tty: true
+
+#   # PostgreSQL Database
+#   db:
+#     image: postgres:15-alpine
+#     container_name: jic_postgres
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+#     environment:
+#       - POSTGRES_DB=jic_db
+#       - POSTGRES_USER=jicuser
+#       - POSTGRES_PASSWORD=jicpass
+#     ports:
+#       - "5432:5432"
+#     networks:
+#       - jic_network
+#     healthcheck:
+#       test: ["CMD-SHELL", "pg_isready -U jicuser -d jic_db"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+
+#   # MinIO Object Storage
+#   minio:
+#     image: minio/minio:latest
+#     container_name: jic_minio
+#     command: server /data --console-address ":9001"
+#     volumes:
+#       - minio_data:/data
+#     environment:
+#       - MINIO_ROOT_USER=minioadmin
+#       - MINIO_ROOT_PASSWORD=minioadmin
+#     ports:
+#       - "9000:9000"  # API
+#       - "9001:9001"  # Console
+#     networks:
+#       - jic_network
+#     healthcheck:
+#       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+#       interval: 30s
+#       timeout: 20s
+#       retries: 3
+
+#   # MinIO Client - Para crear bucket automáticamente
+#   minio-client:
+#     image: minio/mc:latest
+#     container_name: jic_minio_client
+#     depends_on:
+#       minio:
+#         condition: service_healthy
+#     entrypoint: >
+#       /bin/sh -c "
+#       /usr/bin/mc alias set myminio http://minio:9000 minioadmin minioadmin;
+#       /usr/bin/mc mb myminio/jic-media --ignore-existing;
+#       /usr/bin/mc anonymous set download myminio/jic-media;
+#       exit 0;
+#       "
+#     networks:
+#       - jic_network
+#     restart: "no"
+
+# volumes:
+#   postgres_data:
+#     driver: local
+#   minio_data:
+#     driver: local
+#   static_files:
+#     driver: local
+#   media_files:
+#     driver: local
+#   node_modules:
+#     driver: local
+
+# networks:
+#   jic_network:
+#     driver: bridge
+
 services:
-  # Django/Wagtail Application
-  web:
+  jicweb_app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: jic_wagtail
+    container_name: jicweb_app
     command: python mysite/manage.py runserver 0.0.0.0:8000
     volumes:
-      - ./mysite:/app/mysite
+      - ./jic/mysite:/app/mysite
       - static_files:/app/mysite/staticfiles
-      # - media_files:/app/media
     ports:
       - "8000:8000"
     environment:
       - DEBUG=True
       - PYTHONUNBUFFERED=1
-      - DATABASE_URL=postgresql://jicuser:jicpass@db:5432/jic_db
-      - MINIO_ENDPOINT=minio:9000
-      - MINIO_ACCESS_KEY=minioadmin
-      - MINIO_SECRET_KEY=minioadmin
+      # - DB_ENGINE=postgres
+      - DB_NAME=db_jicweb
+      - DB_USER=mast_jicweb
+      - DB_PASSWORD=g0hNw,0p1M\v£Y
+      - DB_HOST=jicweb_master
+      - DB_PORT=5432
+      - MINIO_ENDPOINT=jic_minio_storage:9000
+      - MINIO_ACCESS_KEY=mast_st_jic
+      - MINIO_SECRET_KEY=KtWzuaY3Uy8F
       - MINIO_USE_SSL=false
       - MINIO_BUCKET_NAME=jic-media
     depends_on:
-      db:
+      jicweb_master:
         condition: service_healthy
-      minio:
+      jic_minio_storage:
         condition: service_healthy
     networks:
-      - jic_network
+      - netX
 
-  # Django LiveReload Server
-  livereload:
+  jicweb_app_livereload:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: jic_livereload
+    container_name: jicweb_app_livereload
     command: python mysite/manage.py livereload --host=0.0.0.0 --port=35729
     volumes:
-      - ./mysite:/app/mysite
+      - ./jic/mysite:/app/mysite
     ports:
       - "35729:35729"
     environment:
       - DEBUG=True
       - PYTHONUNBUFFERED=1
-      - DATABASE_URL=postgresql://jicuser:jicpass@db:5432/jic_db
+      # - DB_ENGINE=postgres
+      - DB_NAME=db_jicweb
+      - DB_USER=mast_jicweb
+      - DB_PASSWORD=g0hNw,0p1M\v£Y
+      - DB_HOST=jicweb_master
+      - DB_PORT=5432
     depends_on:
-      - web
+      - jicweb_app
     networks:
-      - jic_network
+      - netX
 
-  # TailwindCSS Watcher
-  # tailwind:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.node
-  #   container_name: jic_tailwind
-  #   command: sh -c "npx tailwindcss -i /app/mysite/theme/static/src/input.css -o /app/mysite/theme/static/src/output.css --watch"
-  #   volumes:
-  #     - ./mysite:/app/mysite
-  #     - ./tailwind.config.js:/app/tailwind.config.js
-  #     - node_modules:/app/node_modules
-  #   networks:
-  #     - jic_network
-  #   depends_on:
-  #     - web
-  #   restart: unless-stopped
-  #   stdin_open: true
-  #   tty: true
-
-  # PostgreSQL Database
-  db:
-    image: postgres:15-alpine
-    container_name: jic_postgres
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_DB=jic_db
-      - POSTGRES_USER=jicuser
-      - POSTGRES_PASSWORD=jicpass
+  jicweb_master:
+    image: 'bitnamilegacy/postgresql:17'
     ports:
-      - "5432:5432"
+      - '5440:5432'
     networks:
-      - jic_network
+      netX:
+        ipv4_address: 172.20.1.85
+    volumes:
+      - 'jicweb_master_data_v1:/bitnami/postgresql'
+    environment:
+      - POSTGRESQL_REPLICATION_MODE=master
+      - POSTGRESQL_POSTGRES_PASSWORD=1*o63U9JlN5bLp
+      - POSTGRESQL_REPLICATION_USER=repl_jicweb
+      - POSTGRESQL_REPLICATION_PASSWORD=2U552^2UP?yU]>
+      - POSTGRESQL_USERNAME=mast_jicweb
+      - POSTGRESQL_PASSWORD=g0hNw,0p1M\v£Y
+      - POSTGRESQL_DATABASE=db_jicweb
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U jicuser -d jic_db"]
+      test: ["CMD-SHELL", "pg_isready -U mast_jicweb -d db_jicweb"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # MinIO Object Storage
-  minio:
-    image: minio/minio:latest
-    container_name: jic_minio
-    command: server /data --console-address ":9001"
-    volumes:
-      - minio_data:/data
-    environment:
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin
+  jicweb_slave:
+    image: 'bitnamilegacy/postgresql:17'
     ports:
-      - "9000:9000"  # API
-      - "9001:9001"  # Console
+      - '5432'
     networks:
-      - jic_network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
-
-  # MinIO Client - Para crear bucket automáticamente
-  minio-client:
-    image: minio/mc:latest
-    container_name: jic_minio_client
+      - netX
     depends_on:
-      minio:
+      jicweb_master:
         condition: service_healthy
-    entrypoint: >
-      /bin/sh -c "
-      /usr/bin/mc alias set myminio http://minio:9000 minioadmin minioadmin;
-      /usr/bin/mc mb myminio/jic-media --ignore-existing;
-      /usr/bin/mc anonymous set download myminio/jic-media;
-      exit 0;
-      "
-    networks:
-      - jic_network
+    environment:
+      - POSTGRESQL_REPLICATION_MODE=slave
+      - POSTGRESQL_REPLICATION_USER=repl_jicweb
+      - POSTGRESQL_REPLICATION_PASSWORD=2U552^2UP?yU]>
+      - POSTGRESQL_MASTER_HOST=172.20.1.85
+      - POSTGRESQL_PASSWORD=g0hNw,0p1M\v£Y
+      - POSTGRESQL_MASTER_PORT_NUMBER=5432
+
+  jic_minio_storage:
     restart: "no"
+    image: bitnamilegacy/minio:latest
+    ports:
+      - 9010:9000
+      - 9011:9001
+    environment:
+      - MINIO_ROOT_USER=mast_st_jic
+      - MINIO_ROOT_PASSWORD=KtWzuaY3Uy8F
+      - MINIO_CONSOLE_ADDRESS=:9001
+      - TZ=UTC
+    networks:
+      netX:
+        ipv4_address: 172.20.0.75
+    volumes:
+      - 'jicst_storage_data:/bitnami/minio/data'
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
-  postgres_data:
+  jicst_storage_data:
     driver: local
-  minio_data:
+  jicweb_master_data_v1:
     driver: local
   static_files:
     driver: local
-  media_files:
-    driver: local
-  node_modules:
-    driver: local
 
 networks:
-  jic_network:
-    driver: bridge
+  netX:
+    name: netX
+    external: true
+
+# services:
+#   jicweb_app:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#     container_name: jicweb_app
+#     command: python mysite/manage.py runserver 0.0.0.0:8000
+#     volumes:
+#       - ./mysite:/app/mysite
+#       - static_files:/app/mysite/staticfiles
+#       # - media_files:/app/media
+#     ports:
+#       - "8000:8000"
+#     environment:
+#       - DEBUG=True
+#       - PYTHONUNBUFFERED=1
+#       - DATABASE_URL=postgresql://jicuser:jicpass@db:5432/jic_db
+#       - MINIO_ENDPOINT=minio:9000
+#       - MINIO_ACCESS_KEY=minioadmin
+#       - MINIO_SECRET_KEY=minioadmin
+#       - MINIO_USE_SSL=false
+#       - MINIO_BUCKET_NAME=jic-media
+#     depends_on:
+#       jicweb_master:
+#         condition: service_healthy
+#       jic_minio_storage:
+#         condition: service_healthy
+#     networks:
+#       - netX
+
+#   jicweb_master:
+#     image: 'bitnamilegacy/postgresql:17'
+#     ports:
+#       - '5440:5432'
+#     networks:
+#       netX:
+#         ipv4_address: 172.20.1.85
+#     volumes:
+#       - 'jicweb_master_data_v1:/bitnami/postgresql'
+#     environment:
+#       - POSTGRESQL_REPLICATION_MODE=master
+#       - POSTGRESQL_POSTGRES_PASSWORD=1*o63U9JlN5bLp
+#       - POSTGRESQL_REPLICATION_USER=repl_jicweb
+#       - POSTGRESQL_REPLICATION_PASSWORD=2U552^2UP?yU]>
+#       - POSTGRESQL_USERNAME=mast_jicweb
+#       - POSTGRESQL_PASSWORD=g0hNw,0p1M\v£Y
+#       - POSTGRESQL_DATABASE=db_jicweb
+
+#   jicweb_slave:
+#     image: 'bitnamilegacy/postgresql:17'
+#     ports:
+#       - '5432'
+#     networks:
+#       - netX
+#     depends_on:
+#       - jicweb_master
+#     environment:
+#       - POSTGRESQL_REPLICATION_MODE=slave
+#       - POSTGRESQL_REPLICATION_USER=repl_jicweb
+#       - POSTGRESQL_REPLICATION_PASSWORD=2U552^2UP?yU]>
+#       - POSTGRESQL_MASTER_HOST=172.20.1.85
+#       - POSTGRESQL_PASSWORD=g0hNw,0p1M\v£Y
+#       - POSTGRESQL_MASTER_PORT_NUMBER=5432
+
+#   jic_minio_storage:
+#     restart: "no"
+#     image: bitnamilegacy/minio:latest
+#     ports:
+#       - 9010:9000
+#       - 9011:9001
+#     environment:
+#       - MINIO_ROOT_USER=mast_st_jic
+#       - MINIO_ROOT_PASSWORD=KtWzuaY3Uy8F
+#       # - MINIO_ACCESS_KEY=mast_st_jic
+#       # - MINIO_SECRET_KEY=KtWzuaY3Uy8F
+#       - MINIO_CONSOLE_ADDRESS=:9001
+#       - TZ=UTC
+#     networks:
+#       netX:
+#         ipv4_address: 172.20.0.75
+#     volumes:
+#       - 'jicst_storage_data:/bitnami/minio/data'
+
+# volumes:
+#   jicst_storage_data:
+#     driver: local
+#   jicweb_master_data_v1:
+#     driver: local
+
+# networks:
+#   netX:
+#     name: netX
+#     external: true

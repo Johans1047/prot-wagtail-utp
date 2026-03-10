@@ -7,11 +7,20 @@ def run_tailwind_watch():
     """
     Runs TailwindCSS in watch mode for automatic recompilation.
     """
-    # Get the project root directory
+    # Obtener el directorio del proyecto y las rutas de los archivos CSS
     project_root = Path(__file__).resolve().parent.parent
     input_css = project_root / 'theme' / 'static' / 'src' / 'input.css'
     output_css = project_root / 'theme' / 'static' / 'src' / 'output.css'
     
+    # Evitar ejecutar sin tener un entorno de node/npm configurado
+    npx_path = shutil.which('npx')
+    if not npx_path:
+        print("\n" + "="*60)
+        print("⚠️ Tailwind watcher omitido: 'npx' no está instalado en este entorno")
+        print("Instala Node.js/NPM o ejecuta el watcher en un contenedor Node dedicado.")
+        print("="*60 + "\n")
+        return True
+
     # Buscar Git Bash
     git_bash_locations = [
         r'C:\Program Files\Git\bin\bash.exe',
