@@ -159,19 +159,24 @@ services:
       - DEBUG=True
       - PYTHONUNBUFFERED=1
       # - DB_ENGINE=postgres
-      - DB_NAME=db_jicweb
-      - DB_USER=mast_jicweb
-      - DB_PASSWORD=g0hNw,0p1M\v£Y
-      - DB_HOST=jicweb_master
+      # - DB_NAME=db_jicweb
+      # - DB_USER=mast_jicweb
+      # - DB_PASSWORD=g0hNw,0p1M\v£Y
+      # - DB_HOST=jicweb_master
+      - DB_NAME=neondb
+      - DB_USER=neondb_owner
+      - DB_PASSWORD=npg_5BbI6jRtUXPx
+      - DB_HOST=ep-autumn-resonance-a8vwe9xp-pooler.eastus2.azure.neon.tech
       - DB_PORT=5432
+      - DB_SSLMODE=require
+      - DB_CHANNEL_BINDING=require
+      - DB_OPTIONS=-c search_path=public
       - MINIO_ENDPOINT=jic_minio_storage:9000
       - MINIO_ACCESS_KEY=mast_st_jic
       - MINIO_SECRET_KEY=KtWzuaY3Uy8F
       - MINIO_USE_SSL=false
       - MINIO_BUCKET_NAME=jic-media
     depends_on:
-      jicweb_master:
-        condition: service_healthy
       jic_minio_storage:
         condition: service_healthy
     networks:
@@ -191,11 +196,14 @@ services:
       - DEBUG=True
       - PYTHONUNBUFFERED=1
       # - DB_ENGINE=postgres
-      - DB_NAME=db_jicweb
-      - DB_USER=mast_jicweb
-      - DB_PASSWORD=g0hNw,0p1M\v£Y
-      - DB_HOST=jicweb_master
+      - DB_NAME=neondb
+      - DB_USER=neondb_owner
+      - DB_PASSWORD=npg_5BbI6jRtUXPx
+      - DB_HOST=ep-autumn-resonance-a8vwe9xp-pooler.eastus2.azure.neon.tech
       - DB_PORT=5432
+      - DB_SSLMODE=require
+      - DB_CHANNEL_BINDING=require
+      - DB_OPTIONS=-c search_path=public
     depends_on:
       - jicweb_app
     networks:
@@ -243,7 +251,7 @@ services:
 
   jic_minio_storage:
     restart: "no"
-    image: bitnamilegacy/minio:latest
+    image: bitnami/minio:latest
     ports:
       - 9010:9000
       - 9011:9001

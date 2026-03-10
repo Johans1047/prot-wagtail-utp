@@ -102,28 +102,33 @@ WSGI_APPLICATION = "mysite.wsgi.application"
 # DB_ENGINE = os.getenv("DB_ENGINE", "sqlite").lower()
 
 # if DB_ENGINE == "postgres":
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.postgresql",
+#         "NAME": os.getenv("DB_NAME", "db_jicweb"),
+#         "USER": os.getenv("DB_USER", "mast_jicweb"),
+#         "PASSWORD": os.getenv("DB_PASSWORD", ""),
+#         "HOST": os.getenv("DB_HOST", "localhost"),
+#         "PORT": os.getenv("DB_PORT", "5432"),
+#         "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
+#     }
+# }
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("DB_NAME", "db_jicweb"),
-        "USER": os.getenv("DB_USER", "mast_jicweb"),
-        "PASSWORD": os.getenv("DB_PASSWORD", ""),
-        "HOST": os.getenv("DB_HOST", "localhost"),
+        "NAME": os.getenv("DB_NAME", "neondb"),
+        "USER": os.getenv("DB_USER", "neondb_owner"),
+        "PASSWORD": os.getenv("DB_PASSWORD", "npg_5BbI6jRtUXPx"),
+        "HOST": os.getenv("DB_HOST", "ep-autumn-resonance-a8vwe9xp-pooler.eastus2.azure.neon.tech"),
         "PORT": os.getenv("DB_PORT", "5432"),
         "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
+        "OPTIONS": {
+            "sslmode": os.getenv("DB_SSLMODE", "require"),
+            "channel_binding": os.getenv("DB_CHANNEL_BINDING", "require"),
+        },
     }
 }
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': os.getenv('DB_NAME', 'jic_db'),
-#         'USER': os.getenv('DB_USER', 'jicuser'),
-#         'PASSWORD': os.getenv('DB_PASSWORD', 'jicpass'),
-#         'HOST': os.getenv('DB_HOST', 'db'),
-#         'PORT': os.getenv('DB_PORT', '5432'),
-#     }
-# }
 
 
 # else:
