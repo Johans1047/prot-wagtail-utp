@@ -99,6 +99,8 @@ build/
 
 # MinIO data (local development)
 minio_data/
+bitnami_minio.tar
+*.tar
 
 # PostgreSQL data (local development)
 postgres_data/
