@@ -51,7 +51,7 @@ class frequently_ask_question(models.Model):
         default="participacion",
         help_text="Identificador interno de la categoría (ej: participacion, plataforma, entregables)",
     )
-    category = models.CharField("Categoría", max_length=150)
+    category = models.CharField("Categoría", max_length=150, choices=CATEGORY_SLUG_CHOICES)
     question  = models.TextField("Pregunta")
     answer = models.TextField("Respuesta")
     sort_order = models.PositiveIntegerField("Orden", default=0)

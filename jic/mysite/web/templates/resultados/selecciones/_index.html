@@ -1,0 +1,337 @@
+{% extends '_base.html' %}
+{% block title %}Selecciones Institucionales{% endblock %}
+{% block meta_description %}Resultados de las selecciones internas de cada universidad participante en la JIC.{% endblock %}
+
+{% block content %}
+    {% include 'hero.html' with titulo="Selecciones Institucionales" descripcion="Resultados de las selecciones internas de cada universidad participante en la JIC." color="bg-primary" text_color="text-primary-foreground" %}
+
+    <!-- Info banner -->
+    <section class="border-b border-border bg-card py-8">
+        <div class="mx-auto max-w-7xl px-4 lg:px-8">
+            <div class="flex items-start gap-3 rounded-lg bg-secondary p-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 text-primary mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <p class="text-sm text-muted-foreground">
+                    La fase institucional determina qué proyectos de cada universidad avanzan a la JIC Nacional. Los resultados se publican a medida que cada institución finaliza su proceso.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- University cards -->
+    <section class="bg-background py-16 lg:py-20">
+        <div class="mx-auto max-w-7xl px-4 lg:px-8">
+            <div class="flex flex-col gap-8">
+                {% for uni in selecciones %}
+                <article class="overflow-hidden rounded-xl border border-border bg-card">
+
+                    <!-- Header -->
+                    <header class="flex items-center justify-between p-6 pb-4">
+                        <div>
+                            <h2 class="font-serif text-xl text-foreground md:text-2xl">{{ uni.university }}</h2>
+                            <p class="mt-1 text-sm text-muted-foreground">{{ uni.shortName }} &middot; JIC {{ uni.year }}</p>
+                        </div>
+                        <span class="rounded-full px-3 py-1 text-xs font-medium
+                            {% if uni.status == 'completada' %}bg-green-100 text-green-800
+                            {% elif uni.status == 'en_proceso' %}bg-amber-100 text-amber-800
+                            {% else %}bg-slate-100 text-slate-600{% endif %}">
+                            {% if uni.status == 'completada' %}Completada
+                            {% elif uni.status == 'en_proceso' %}En proceso
+                            {% else %}Pendiente{% endif %}
+                        </span>
+                    </header>
+
+                    {% if uni.results %}
+                    <!-- Results table -->
+                    <div class="overflow-x-auto px-6 pb-4">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b border-border text-left text-xs text-muted-foreground">
+                                    <th class="pb-2 pr-4 font-medium">Categoría</th>
+                                    <th class="pb-2 px-4 text-center font-medium">Proyectos totales</th>
+                                    <th class="pb-2 pl-4 text-center font-medium">Seleccionados</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in uni.results %}
+                                <tr class="border-t border-border">
+                                    <td class="py-3 pr-4 text-foreground">{{ r.category }}</td>
+                                    <td class="px-4 py-3 text-center text-muted-foreground">{{ r.total }}</td>
+                                    <td class="pl-4 py-3 text-center font-semibold text-primary">{{ r.selected }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endif %}
+
+                    {% if uni.documents %}
+                    <!-- Documents -->
+                    <div class="border-t border-border bg-secondary/30 p-4">
+                        <div class="flex flex-wrap gap-2">
+                            {% for doc in uni.documents %}
+                            <a href="{{ doc.href }}" target="_blank" rel="noopener noreferrer"
+                               class="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm text-foreground transition-colors hover:border-primary/30 hover:bg-primary/5">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                {{ doc.label }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if uni.status == 'pendiente' %}
+                    <div class="border-t border-border bg-secondary/30 p-6 text-center">
+                        <p class="text-sm text-muted-foreground">
+                            Los resultados de {{ uni.shortName }} serán publicados una vez finalice su proceso de selección institucional.
+                        </p>
+                    </div>
+                    {% elif uni.status == 'en_proceso' %}
+                    <div class="border-t border-border bg-amber-50 p-6 text-center">
+                        <p class="text-sm text-amber-800">
+                            {{ uni.shortName }} está actualmente en proceso de evaluación. Los resultados serán publicados próximamente.
+                        </p>
+                    </div>
+                    {% endif %}
+
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Back link -->
+    <section class="bg-card py-12">
+        <div class="mx-auto max-w-7xl px-4 text-center lg:px-8">
+            <a href="{% url 'Resultados' %}"
+               class="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90">
+                Ver resultados nacionales
+            </a>
+        </div>
+    </section>
+{% endblock %}
+import { Footer } from "@/components/footer"
+import { FileText, Download, ExternalLink, Building, Calendar } from "lucide-react"
+import Image from "next/image"
+
+const seleccionesInstitucionales = [
+  {
+    university: "Universidad Tecnologica de Panama",
+    shortName: "UTP",
+    logo: "/images/utp-logo.png",
+    year: 2025,
+    status: "completada",
+    results: [
+      { category: "Ingenieria", selected: 8, total: 24 },
+      { category: "Ciencias de la Salud", selected: 4, total: 12 },
+      { category: "Ciencias Naturales y Exactas", selected: 5, total: 18 },
+      { category: "Ciencias Sociales y Humanisticas", selected: 3, total: 10 },
+    ],
+    documents: [
+      { label: "Acta de resultados UTP 2025", href: "#" },
+      { label: "Lista de proyectos seleccionados", href: "#" },
+    ],
+  },
+  {
+    university: "Universidad de Panama",
+    shortName: "UP",
+    logo: "/images/up-logo.png",
+    year: 2025,
+    status: "completada",
+    results: [
+      { category: "Ingenieria", selected: 5, total: 15 },
+      { category: "Ciencias de la Salud", selected: 6, total: 20 },
+      { category: "Ciencias Naturales y Exactas", selected: 4, total: 14 },
+      { category: "Ciencias Sociales y Humanisticas", selected: 5, total: 16 },
+    ],
+    documents: [
+      { label: "Acta de resultados UP 2025", href: "#" },
+    ],
+  },
+  {
+    university: "Universidad Santa Maria La Antigua",
+    shortName: "USMA",
+    logo: "/images/usma-logo.png",
+    year: 2025,
+    status: "en_proceso",
+    results: [],
+    documents: [],
+  },
+  {
+    university: "Universidad Autonoma de Chiriqui",
+    shortName: "UNACHI",
+    logo: "/images/unachi-logo.png",
+    year: 2025,
+    status: "pendiente",
+    results: [],
+    documents: [],
+  },
+  {
+    university: "Universidad Latina de Panama",
+    shortName: "ULAT",
+    logo: "/images/ulat-logo.png",
+    year: 2025,
+    status: "pendiente",
+    results: [],
+    documents: [],
+  },
+]
+
+const statusLabels = {
+  completada: { label: "Completada", color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" },
+  en_proceso: { label: "En proceso", color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
+  pendiente: { label: "Pendiente", color: "bg-slate-100 text-slate-600 dark:bg-slate-800/50 dark:text-slate-400" },
+}
+
+export default function SeleccionesInstitucionalesPage() {
+  return (
+    <>
+      <Navbar />
+      <main>
+        {/* Header */}
+        <section className="bg-primary py-16 lg:py-20">
+          <div className="mx-auto max-w-7xl px-4 lg:px-8">
+            <div className="max-w-2xl">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary-foreground/10 px-4 py-1.5 text-sm font-medium text-primary-foreground/80">
+                <Building className="h-4 w-4" />
+                Fase Institucional
+              </div>
+              <h1 className="font-serif text-4xl text-primary-foreground md:text-5xl">Selecciones Institucionales</h1>
+              <p className="mt-4 text-lg leading-relaxed text-primary-foreground/70">
+                Resultados de las selecciones internas de cada universidad participante en la JIC 2025.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Info */}
+        <section className="border-b border-border bg-card py-8">
+          <div className="mx-auto max-w-7xl px-4 lg:px-8">
+            <div className="flex items-center gap-3 rounded-lg bg-secondary p-4">
+              <Calendar className="h-5 w-5 shrink-0 text-primary" />
+              <p className="text-sm text-muted-foreground">
+                <strong className="text-foreground">Periodo de selecciones institucionales:</strong> Mayo - Agosto 2025. 
+                Cada universidad realiza su proceso interno de evaluacion y seleccion de proyectos.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Results by university */}
+        <section className="py-12 lg:py-20">
+          <div className="mx-auto max-w-7xl px-4 lg:px-8">
+            <h2 className="mb-8 font-serif text-2xl text-foreground">Resultados por universidad</h2>
+            <div className="flex flex-col gap-6">
+              {seleccionesInstitucionales.map((uni) => {
+                const status = statusLabels[uni.status as keyof typeof statusLabels]
+                return (
+                  <div key={uni.shortName} className="rounded-xl border border-border bg-card overflow-hidden">
+                    {/* Header */}
+                    <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="relative h-14 w-14 shrink-0 rounded-lg bg-secondary">
+                          <Image
+                            src={uni.logo}
+                            alt={`Logo ${uni.shortName}`}
+                            fill
+                            className="rounded-lg object-contain p-2"
+                          />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-foreground">{uni.university}</h3>
+                          <p className="text-sm text-muted-foreground">JIC {uni.year}</p>
+                        </div>
+                      </div>
+                      <span className={`inline-flex w-fit items-center rounded-full px-3 py-1 text-xs font-semibold ${status.color}`}>
+                        {status.label}
+                      </span>
+                    </div>
+
+                    {/* Results table */}
+                    {uni.results.length > 0 && (
+                      <div className="border-t border-border">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="bg-secondary/50">
+                              <th className="px-6 py-3 text-left font-semibold text-foreground">Categoria</th>
+                              <th className="px-6 py-3 text-center font-semibold text-foreground">Presentados</th>
+                              <th className="px-6 py-3 text-center font-semibold text-foreground">Seleccionados</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {uni.results.map((r) => (
+                              <tr key={r.category} className="border-t border-border">
+                                <td className="px-6 py-3 text-foreground">{r.category}</td>
+                                <td className="px-6 py-3 text-center text-muted-foreground">{r.total}</td>
+                                <td className="px-6 py-3 text-center font-semibold text-primary">{r.selected}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+
+                    {/* Documents */}
+                    {uni.documents.length > 0 && (
+                      <div className="border-t border-border bg-secondary/30 p-4">
+                        <div className="flex flex-wrap gap-2">
+                          {uni.documents.map((doc) => (
+                            <a
+                              key={doc.label}
+                              href={doc.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm text-foreground transition-colors hover:border-primary/30 hover:bg-primary/5"
+                            >
+                              <Download className="h-3.5 w-3.5 text-muted-foreground" />
+                              {doc.label}
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Pending message */}
+                    {uni.status === "pendiente" && (
+                      <div className="border-t border-border bg-secondary/30 p-6 text-center">
+                        <p className="text-sm text-muted-foreground">
+                          Los resultados de {uni.shortName} seran publicados una vez finalice su proceso de seleccion institucional.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* In progress message */}
+                    {uni.status === "en_proceso" && (
+                      <div className="border-t border-border bg-amber-50 p-6 text-center dark:bg-amber-900/10">
+                        <p className="text-sm text-amber-800 dark:text-amber-200">
+                          {uni.shortName} esta actualmente en proceso de evaluacion. Los resultados seran publicados proximamente.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* Back link */}
+        <section className="bg-card py-12">
+          <div className="mx-auto max-w-7xl px-4 text-center lg:px-8">
+            <a
+              href="/resultados"
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              Ver resultados nacionales
+              <ExternalLink className="h-4 w-4" />
+            </a>
+          </div>
+        </section>
+      </main>
+      <Footer />
+    </>
+  )
+}

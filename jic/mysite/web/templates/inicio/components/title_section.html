@@ -54,24 +54,3 @@
         </div>
     </div>
 </section>
-
-<script>
-    const logo = document.getElementById('jic-logo');
-    
-    function updateLogoSize() {
-        const width = window.innerWidth;
-
-        // md: 768px, lg: 1024px
-        if (width >= 1024) {
-            logo.style.height = '15rem';
-        } else if (width >= 768) {
-            logo.style.height = '12rem';
-        } else {
-            logo.style.height = '9rem';
-        }
-    }
-    
-    updateLogoSize();
-    
-    window.addEventListener('resize', updateLogoSize);</script>
-</script>

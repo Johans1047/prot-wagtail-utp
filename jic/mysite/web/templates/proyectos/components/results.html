@@ -29,18 +29,21 @@
                         >
                             Categoria
                         </th>
-                        <th
-                            class="hidden px-4 py-3 text-left font-semibold text-foreground sm:table-cell"
-                        >
-                            Contacto
-                        </th>
+                        <th class="hidden px-4 py-3 text-left font-semibold text-foreground sm:table-cell">Asesor</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for p in filtered %}
-                    <tr
-                        class="border-t border-border transition-colors hover:bg-secondary/20"
-                    >
+                    <tr class="cursor-pointer border-t border-border transition-colors hover:bg-secondary/50"
+                        data-title="{{ p.title }}"
+                        data-year="{{ p.year }}"
+                        data-university="{{ p.university }}"
+                        data-category="{{ p.category }}"
+                        data-advisor="{{ p.advisor|default:'' }}"
+                        data-contact="{{ p.contact }}"
+                        data-abstract="{{ p.abstract|default:'' }}"
+                        data-place="{{ p.place|default:'' }}"
+                        onclick="openProjectModal(this)">
                         <td class="px-4 py-3 text-foreground">
                             <div class="flex items-center gap-2">
                                 <div class="w-3.5 h-3.5 shrink-0">
@@ -80,11 +83,7 @@
                                 {{ p.year }}
                             </div>
                         </td>
-                        <td
-                            class="max-w-xs px-4 py-3 font-medium text-foreground"
-                        >
-                            {{ p.title }}
-                        </td>
+                        <td class="max-w-xs px-4 py-3 font-medium text-foreground hover:text-primary">{{ p.title }}</td>
                         <td
                             class="hidden px-4 py-3 text-muted-foreground md:table-cell"
                         >
@@ -97,14 +96,7 @@
                                 {{ p.category }}
                             </span>
                         </td>
-                        <td class="hidden px-4 py-3 sm:table-cell">
-                            <a
-                                href="mailto:{{ p.contact }}"
-                                class="text-primary underline-offset-2 hover:underline"
-                            >
-                                {{ p.contact }}
-                            </a>
-                        </td>
+                        <td class="hidden px-4 py-3 text-muted-foreground sm:table-cell">{{ p.advisor|default:"-" }}</td>
                     </tr>
                     {% empty %}
                     <tr>
@@ -122,3 +114,92 @@
         </div>
     </div>
 </section>
+
+
+<!-- Modal detalle del proyecto -->
+<div id="project-modal"
+     style="display:none"
+     class="fixed inset-0 z-50 flex items-center justify-center bg-foreground/50 p-4"
+     onclick="if(event.target===this)closeProjectModal()">
+    <div class="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-background p-6 shadow-xl">
+        <button onclick="closeProjectModal()"
+            class="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            aria-label="Cerrar">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+
+        <div class="mb-4 flex items-start gap-2">
+            <span id="modal-category" class="inline-block rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary"></span>
+            <span id="modal-year" class="text-xs text-muted-foreground self-center"></span>
+        </div>
+
+        <h2 id="modal-title" class="text-xl font-bold text-foreground"></h2>
+
+        <div class="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+            <div>
+                <span class="text-muted-foreground">Universidad: </span>
+                <span id="modal-university" class="font-medium text-foreground"></span>
+            </div>
+            <div>
+                <span class="text-muted-foreground">Asesor: </span>
+                <span id="modal-advisor" class="font-medium text-foreground"></span>
+            </div>
+            <div>
+                <span class="text-muted-foreground">Contacto: </span>
+                <a id="modal-contact" class="font-medium text-primary hover:underline" href="#"></a>
+            </div>
+        </div>
+
+        <div class="mt-6">
+            <h3 class="mb-2 text-sm font-semibold text-foreground">Resumen / Abstract</h3>
+            <p id="modal-abstract" class="text-sm leading-relaxed text-muted-foreground"></p>
+        </div>
+
+        <div id="modal-winner-banner" class="mt-6 hidden rounded-lg bg-amber-50 p-4 dark:bg-amber-950/20">
+            <p id="modal-winner-text" class="text-sm font-medium text-amber-800 dark:text-amber-200"></p>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    var placeLabels = { '1': 'Primer', '2': 'Segundo', '3': 'Tercer' };
+
+    window.openProjectModal = function (row) {
+        var d = row.dataset;
+        document.getElementById('modal-category').textContent = d.category;
+        document.getElementById('modal-year').textContent = d.year;
+        document.getElementById('modal-title').textContent = d.title;
+        document.getElementById('modal-university').textContent = d.university;
+        document.getElementById('modal-advisor').textContent = d.advisor || '-';
+        var contactEl = document.getElementById('modal-contact');
+        contactEl.textContent = d.contact;
+        contactEl.href = 'mailto:' + d.contact;
+        document.getElementById('modal-abstract').textContent = d.abstract || 'No disponible.';
+
+        var banner = document.getElementById('modal-winner-banner');
+        if (d.place) {
+            document.getElementById('modal-winner-text').textContent =
+                'Este proyecto obtuvo el ' + (placeLabels[d.place] || d.place) +
+                ' Lugar en la JIC Nacional ' + d.year + '.';
+            banner.classList.remove('hidden');
+        } else {
+            banner.classList.add('hidden');
+        }
+
+        document.getElementById('project-modal').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    };
+
+    window.closeProjectModal = function () {
+        document.getElementById('project-modal').style.display = 'none';
+        document.body.style.overflow = '';
+    };
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeProjectModal();
+    });
+}());
+</script>

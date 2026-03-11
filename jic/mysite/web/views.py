@@ -4,7 +4,7 @@ from .viewsdata_types import *
 from .viewsdata_fallback import *
 from .models import *
 
-def Inicio(request):
+def Inicio(request) -> render:
     try:
         important_dates = list(
             important_date.objects.filter(is_active=True).order_by("sort_order", "event_date")
@@ -30,14 +30,48 @@ def Inicio(request):
     if not faqs:
         faqs = faqs_fallback()
     
+    winners_by_place = [
+        {
+            "place": 1,
+            "place_label": "Primer Lugar",
+            "winners": [
+                {"title": "Sistema de monitoreo ambiental con IoT para la detección temprana de contaminantes", "university": "Universidad Tecnológica de Panamá", "category": "Ingeniería", "authors": "J. Pérez, M. Rodríguez"},
+                {"title": "Análisis de biomarcadores en pacientes con diabetes tipo 2 en población panameña", "university": "Universidad de Panamá", "category": "Ciencias de la Salud", "authors": "M. García, L. Sánchez"},
+                {"title": "Modelado matemático de ecosistemas costeros del Golfo de Panamá", "university": "Universidad Tecnológica de Panamá", "category": "Ciencias Naturales y Exactas", "authors": "A. López, C. Martínez"},
+                {"title": "Impacto socioeconómico de la migración en comunidades rurales de Darién", "university": "Universidad de Panamá", "category": "Ciencias Sociales y Humanísticas", "authors": "R. Castillo, E. Vega"},
+            ],
+        },
+        {
+            "place": 2,
+            "place_label": "Segundo Lugar",
+            "winners": [
+                {"title": "Desarrollo de materiales biodegradables a partir de residuos agrícolas", "university": "USMA", "category": "Ingeniería", "authors": "F. Morales, K. Chen"},
+                {"title": "Evaluación de plantas medicinales nativas con propiedades antiinflamatorias", "university": "UNACHI", "category": "Ciencias de la Salud", "authors": "D. Herrera, P. Gutiérrez"},
+                {"title": "Estudio de microplásticos en ríos de la cuenca del Canal de Panamá", "university": "Universidad Tecnológica de Panamá", "category": "Ciencias Naturales y Exactas", "authors": "S. Moreno, J. Batista"},
+                {"title": "Preservación digital del patrimonio cultural Guna", "university": "Universidad Latina", "category": "Ciencias Sociales y Humanísticas", "authors": "M. Obaldia, L. Torres"},
+            ],
+        },
+        {
+            "place": 3,
+            "place_label": "Tercer Lugar",
+            "winners": [
+                {"title": "Optimización de redes eléctricas mediante algoritmos de inteligencia artificial", "university": "Universidad Tecnológica de Panamá", "category": "Ingeniería", "authors": "H. Quintero, N. Salas"},
+                {"title": "Factores de riesgo cardiovascular en jóvenes universitarios panameños", "university": "Universidad de Panamá", "category": "Ciencias de la Salud", "authors": "V. Arauz, B. Montenegro"},
+                {"title": "Inventario de biodiversidad en manglares de Bocas del Toro", "university": "UNACHI", "category": "Ciencias Naturales y Exactas", "authors": "G. Santamaría, I. Pitti"},
+                {"title": "Análisis lingüístico de lenguas criollas en la costa caribeña panameña", "university": "Universidad de Panamá", "category": "Ciencias Sociales y Humanísticas", "authors": "T. Williams, A. Brown"},
+            ],
+        },
+    ]
+
     context = {
         'important_dates': important_dates,
         'faqs': faqs,
+        'winners_by_place': winners_by_place,
     }
     
     return render(request, 'inicio/_index.html', context)
 
-def Jic(request):
+def Jic(request) -> render:
     try:
         background_items = list(background_item.objects.all())
     except (OperationalError, ProgrammingError):
@@ -76,16 +110,33 @@ def Jic(request):
         }
     ]
 
+    coordinadores_nacionales = [
+        {"shortName": "UTP", "coordinator": "Dr. Juan Pérez", "email": "jic.utp@utp.ac.pa"},
+        {"shortName": "UP", "coordinator": "Dra. María Rodríguez", "email": "jic.up@up.ac.pa"},
+        {"shortName": "USMA", "coordinator": "Mgtr. Carlos López", "email": "jic.usma@usma.ac.pa"},
+        {"shortName": "UNACHI", "coordinator": "Dr. Roberto Gómez", "email": "jic.unachi@unachi.ac.pa"},
+        {"shortName": "ULAT", "coordinator": "Mgtr. Ana Torres", "email": "jic.ulat@ulat.ac.pa"},
+    ]
+
+    comite_organizador = [
+        {"name": "Dr. Luis Herrera", "role": "Director General", "institution": "UTP"},
+        {"name": "Dra. Sandra Morales", "role": "Coordinación Académica", "institution": "SENACYT"},
+        {"name": "Mgtr. Ricardo Vega", "role": "Coordinación Logística", "institution": "UTP"},
+        {"name": "Ing. Patricia Salas", "role": "Coordinación Tecnológica", "institution": "UTP"},
+    ]
+
     context = {
         'background_items': background_items,
         'jic_categories': jic_categories,
         'awards': awards,
         'organizations': organizations,
         'sponsors': sponsors,
+        'coordinadores_nacionales': coordinadores_nacionales,
+        'comite_organizador': comite_organizador,
     }
     return render(request, 'jic/_index.html', context)
 
-def Participar(request):
+def Participar(request) -> render:
     try:
         important_dates = list(
             important_date.objects.filter(is_active=True).order_by("sort_order", "event_date")
@@ -150,7 +201,7 @@ def Participar(request):
     }
     return render(request, 'participar/_index..html', context)
 
-def Proyectos(request):
+def Proyectos(request) -> render:
     # Datos de ejemplo de proyectos
     all_projects = [
         {
@@ -159,6 +210,9 @@ def Proyectos(request):
             "university": "UTP",
             "category": "Ingeniería",
             "contact": "proyecto1@utp.ac.pa",
+            "advisor": "Dr. Carlos Méndez",
+            "abstract": "Desarrollo de un sistema de monitoreo ambiental basado en sensores IoT para la detección temprana de contaminantes en zonas industriales de la provincia de Panamá.",
+            "place": 1,
             "winner": True,
         },
         {
@@ -167,6 +221,9 @@ def Proyectos(request):
             "university": "UP",
             "category": "Ciencias de la Salud",
             "contact": "proyecto2@up.ac.pa",
+            "advisor": "Dra. Rosa Jiménez",
+            "abstract": "Estudio de biomarcadores séricos en pacientes con diabetes tipo 2 en la población panameña, buscando indicadores tempranos de complicaciones renales.",
+            "place": 2,
             "winner": True,
         },
         {
@@ -175,6 +232,9 @@ def Proyectos(request):
             "university": "UTP",
             "category": "Ciencias Naturales",
             "contact": "proyecto3@utp.ac.pa",
+            "advisor": "Dr. Federico Ríos",
+            "abstract": "Modelado computacional de la dinámica de ecosistemas costeros del Golfo de Panamá utilizando ecuaciones diferenciales y simulación numérica.",
+            "place": None,
             "winner": False,
         },
         {
@@ -183,6 +243,9 @@ def Proyectos(request):
             "university": "UNIANDES",
             "category": "Tecnología",
             "contact": "proyecto4@uniandes.ac.pa",
+            "advisor": "Mgtr. Ana Valdés",
+            "abstract": "Diseño e implementación de una plataforma de educación digital adaptativa para comunidades rurales con acceso limitado a internet en Panamá.",
+            "place": None,
             "winner": False,
         },
         {
@@ -191,6 +254,9 @@ def Proyectos(request):
             "university": "UTP",
             "category": "Ingeniería Ambiental",
             "contact": "proyecto5@utp.ac.pa",
+            "advisor": "Dr. Héctor Sandoval",
+            "abstract": "Evaluación de técnicas de fitorremediación para el tratamiento de aguas residuales industriales en la cuenca del Canal de Panamá.",
+            "place": 1,
             "winner": True,
         },
     ]
@@ -252,7 +318,7 @@ def Proyectos(request):
     }
     return render(request, 'proyectos/_index.html', context)
 
-def Resultados(request):
+def Resultados(request) -> render:
     # Datos históricos de ediciones anteriores
     historical_results = [
         {
@@ -318,7 +384,7 @@ def Resultados(request):
     }
     return render(request, 'resultados/_index.html', context)
 
-def Recursos(request):
+def Recursos(request) -> render:
     tab = request.GET.get('tab', 'docs')
     
     documents_by_edition = [
@@ -427,6 +493,66 @@ def Recursos(request):
     }
     return render(request, 'recursos/_index.html', context)
 
-def Contacto(request):
+def Selecciones(request) -> render:
+    selecciones = [
+        {
+            "university": "Universidad Tecnológica de Panamá",
+            "shortName": "UTP",
+            "year": 2025,
+            "status": "completada",
+            "results": [
+                {"category": "Ingeniería", "selected": 8, "total": 24},
+                {"category": "Ciencias de la Salud", "selected": 4, "total": 12},
+                {"category": "Ciencias Naturales y Exactas", "selected": 5, "total": 18},
+                {"category": "Ciencias Sociales y Humanísticas", "selected": 3, "total": 10},
+            ],
+            "documents": [
+                {"label": "Acta de resultados UTP 2025", "href": "#"},
+                {"label": "Lista de proyectos seleccionados", "href": "#"},
+            ],
+        },
+        {
+            "university": "Universidad de Panamá",
+            "shortName": "UP",
+            "year": 2025,
+            "status": "completada",
+            "results": [
+                {"category": "Ingeniería", "selected": 5, "total": 15},
+                {"category": "Ciencias de la Salud", "selected": 6, "total": 20},
+                {"category": "Ciencias Naturales y Exactas", "selected": 4, "total": 14},
+                {"category": "Ciencias Sociales y Humanísticas", "selected": 5, "total": 16},
+            ],
+            "documents": [
+                {"label": "Acta de resultados UP 2025", "href": "#"},
+            ],
+        },
+        {
+            "university": "Universidad Santa María La Antigua",
+            "shortName": "USMA",
+            "year": 2025,
+            "status": "en_proceso",
+            "results": [],
+            "documents": [],
+        },
+        {
+            "university": "Universidad Autónoma de Chiriquí",
+            "shortName": "UNACHI",
+            "year": 2025,
+            "status": "pendiente",
+            "results": [],
+            "documents": [],
+        },
+        {
+            "university": "Universidad Latina de Panamá",
+            "shortName": "ULAT",
+            "year": 2025,
+            "status": "pendiente",
+            "results": [],
+            "documents": [],
+        },
+    ]
+    return render(request, 'resultados/selecciones/_index.html', {"selecciones": selecciones})
+
+def Contacto(request) -> render:
     
     return render(request, 'contacto/_index.html')

@@ -8,7 +8,7 @@
     <meta name="description" content="{% block meta_description %}Descripción por defecto{% endblock %}">
     {% load static %}
     <link rel="icon" type="image/svg+xml" href="{% static 'img/Recurso 2JIC LOGO.svg' %}">
-    <link rel="stylesheet" href="{% static 'src/output.css' %}" type="text/css" />
+    <link rel="stylesheet" href="{% static 'src/output.css' %}?v={% now 'U' %}" type="text/css" />
     {% block extra_head %}{% endblock %}
 </head>
 

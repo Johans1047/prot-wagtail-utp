@@ -64,6 +64,7 @@ def faqs_fallback() -> dict[str, FAQCategory]:
                 FAQItem('¿Cuál es el procedimiento para registrar los proyectos?', 'El asesor registra el proyecto, los estudiantes suben documentos y el asesor aprueba finalmente.'),
                 FAQItem('¿Soy asesor y la plataforma no me permite editar datos?', 'Solo los estudiantes cuentan con los permisos para editar los datos del proyecto.'),
                 FAQItem('¿Existe un canal para estar enterados de forma expedita de cualquier información que afecte a los asesores o estudiantes?', 'Puede contactarnos a través de nuestro correo: jornada.cientifica@utp.ac.pa o por WhatsApp: 6958-4483'),
+                FAQItem('¿A qué correo puedo escribir para soporte o consultas sobre la plataforma?', 'Para soporte técnico o consultas relacionadas con la plataforma (accesos, errores del sistema, problemas de registro), puedes escribirnos a: jic.soporte@utp.ac.pa. Para consultas generales e institucionales, utiliza: jornada.cientifica@utp.ac.pa'),
             ],
         ),
         'entregables': FAQCategory(
@@ -212,6 +213,7 @@ def faqs_fallback() -> dict[str, FAQCategory]:
                 FAQItem('¿Cuál es el procedimiento para registrar los proyectos?', 'El asesor registra el proyecto, los estudiantes suben documentos y el asesor aprueba finalmente.'),
                 FAQItem('¿Soy asesor y la plataforma no me permite editar datos?', 'Solo los estudiantes cuentan con los permisos para editar los datos del proyecto.'),
                 FAQItem('¿Existe un canal para estar enterados de forma expedita de cualquier información que afecte a los asesores o estudiantes?', 'Puede contactarnos a través de nuestro correo: jornada.cientifica@utp.ac.pa o por WhatsApp: 6958-4483'),
+                FAQItem('¿A qué correo puedo escribir para soporte o consultas sobre la plataforma?', 'Para soporte técnico o consultas relacionadas con la plataforma (accesos, errores del sistema, problemas de registro), puedes escribirnos a: jic.soporte@utp.ac.pa. Para consultas generales e institucionales, utiliza: jornada.cientifica@utp.ac.pa'),
             ],
         ),
         'entregables': FAQCategory(
