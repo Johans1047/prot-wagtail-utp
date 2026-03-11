@@ -224,7 +224,7 @@ services:
       - POSTGRESQL_REPLICATION_USER=repl_jicweb
       - POSTGRESQL_REPLICATION_PASSWORD=2U552^2UP?yU]>
       - POSTGRESQL_USERNAME=mast_jicweb
-      - POSTGRESQL_PASSWORD=g0hNw,0p1M\v£Y
+      - POSTGRESQL_PASSWORD=g0hNw,0p1MvY
       - POSTGRESQL_DATABASE=db_jicweb
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U mast_jicweb -d db_jicweb"]
@@ -246,7 +246,7 @@ services:
       - POSTGRESQL_REPLICATION_USER=repl_jicweb
       - POSTGRESQL_REPLICATION_PASSWORD=2U552^2UP?yU]>
       - POSTGRESQL_MASTER_HOST=172.20.1.85
-      - POSTGRESQL_PASSWORD=g0hNw,0p1M\v£Y
+      - POSTGRESQL_PASSWORD=g0hNw,0p1MvY
       - POSTGRESQL_MASTER_PORT_NUMBER=5432
 
   jic_minio_storage:
@@ -329,7 +329,7 @@ networks:
 #       - POSTGRESQL_REPLICATION_USER=repl_jicweb
 #       - POSTGRESQL_REPLICATION_PASSWORD=2U552^2UP?yU]>
 #       - POSTGRESQL_USERNAME=mast_jicweb
-#       - POSTGRESQL_PASSWORD=g0hNw,0p1M\v£Y
+#       - POSTGRESQL_PASSWORD=g0hNw,0p1MvY
 #       - POSTGRESQL_DATABASE=db_jicweb
 
 #   jicweb_slave:
@@ -345,7 +345,7 @@ networks:
 #       - POSTGRESQL_REPLICATION_USER=repl_jicweb
 #       - POSTGRESQL_REPLICATION_PASSWORD=2U552^2UP?yU]>
 #       - POSTGRESQL_MASTER_HOST=172.20.1.85
-#       - POSTGRESQL_PASSWORD=g0hNw,0p1M\v£Y
+#       - POSTGRESQL_PASSWORD=g0hNw,0p1MvY
 #       - POSTGRESQL_MASTER_PORT_NUMBER=5432
 
 #   jic_minio_storage:
