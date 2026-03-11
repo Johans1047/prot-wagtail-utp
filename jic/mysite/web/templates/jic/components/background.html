@@ -22,59 +22,22 @@
             </h2>
         </div>
         <div class="relative ml-6 border-l-2 border-primary/30 pl-8">
+            {% for item in background_items %}
             <div class="relative mb-8 last:mb-0">
                 <div
                     class="absolute -left-9.75 top-1 h-3 w-3 rounded-full bg-primary"
                 ></div>
                 <span
                     class="inline-block rounded-full bg-primary/10 px-3 py-0.5 text-xs font-bold text-primary"
-                    >2002</span
+                    >{{ item.year_label }}</span
                 >
                 <p class="mt-2 leading-relaxed text-muted-foreground">
-                    El Dr. Alexis Tejedor inicia el Salón de Iniciación
-                    Científica en el Centro Regional de Veraguas de la Universidad Tecnológica de Panamá.
+                    {{ item.description }}
                 </p>
             </div>
-            <div class="relative mb-8 last:mb-0">
-                <div
-                    class="absolute -left-9.75 top-1 h-3 w-3 rounded-full bg-primary"
-                ></div>
-                <span
-                    class="inline-block rounded-full bg-primary/10 px-3 py-0.5 text-xs font-bold text-primary"
-                    >2015</span
-                >
-                <p class="mt-2 leading-relaxed text-muted-foreground">
-                    Se celebra la primera Jornada de Iniciación Científica a
-                    nivel institucional en la Universidad Tecnológica de Panamá.
-                </p>
-            </div>
-            <div class="relative mb-8 last:mb-0">
-                <div
-                    class="absolute -left-9.75 top-1 h-3 w-3 rounded-full bg-primary"
-                ></div>
-                <span
-                    class="inline-block rounded-full bg-primary/10 px-3 py-0.5 text-xs font-bold text-primary"
-                    >2016</span
-                >
-                <p class="mt-2 leading-relaxed text-muted-foreground">
-                    Firma de convenio con la Secretaría Nacional de Ciencia, Tecnología
-                    e Innovación. La JIC se nacionaliza en el marco del Congreso 
-                    Asociación Panameña para el Avance de la Ciencia (APANAC).
-                </p>
-            </div>
-            <div class="relative mb-8 last:mb-0">
-                <div
-                    class="absolute -left-9.75 top-1 h-3 w-3 rounded-full bg-primary"
-                ></div>
-                <span
-                    class="inline-block rounded-full bg-primary/10 px-3 py-0.5 text-xs font-bold text-primary"
-                    >2017-2025</span
-                >
-                <p class="mt-2 leading-relaxed text-muted-foreground">
-                    La JIC se consolida como el principal evento de
-                    investigación juvenil a nivel nacional.
-                </p>
-            </div>
+            {% empty %}
+            <p class="text-muted-foreground">No hay antecedentes publicados.</p>
+            {% endfor %}
         </div>
     </div>
 </section>

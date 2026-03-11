@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.db.utils import OperationalError, ProgrammingError
+from .viewsdata_types import *
 from .viewsdata_fallback import *
 from .models import *
 
@@ -37,42 +38,47 @@ def Inicio(request):
     return render(request, 'inicio/_index.html', context)
 
 def Jic(request):
-    awards = [
-        {
-            "premio": "Premio Nacional de Innovación Juvenil",
-            "año": "2024",
-            "entidad": "SENACYT",
-            "descripcion": "Reconocimiento a la mejor iniciativa de divulgación científica estudiantil."
-        },
-        {
-            "premio": "Mención de Honor APANAC",
-            "año": "2023",
-            "entidad": "APANAC",
-            "descripcion": "Distinción por fomentar la investigación en universidades públicas."
-        },
-        {
-            "premio": "Premio a la Excelencia Académica",
-            "año": "2022",
-            "entidad": "Ministerio de Educación",
-            "descripcion": "Otorgado por el impacto en la formación científica de jóvenes panameños."
-        },
-    ]
-    
+    try:
+        background_items = list(background_item.objects.all())
+    except (OperationalError, ProgrammingError):
+        background_items = []
+        
+    if not background_items:
+        background_items = background_items_fallback()
+
+    try:
+        jic_categories = list(jic_category.objects.all())
+    except (OperationalError, ProgrammingError):
+        jic_categories = []
+        
+    if not jic_categories:
+        jic_categories = jic_categories_fallback()
+
+    try:
+        awards = list(award.objects.all())
+    except (OperationalError, ProgrammingError):
+        awards = []
+        
+    if not awards:
+        awards = awards_fallback()
+
     organizations = [
         {
             "nombre": "Universidad Tecnológica de Panamá",
             "siglas": "UTP"
         }
     ]
-    
+
     sponsors = [
         {
             "nombre": "Secretaría Nacional de Ciencia, Tecnología e Innovación",
             "siglas": "SENACYT"
         }
     ]
-    
+
     context = {
+        'background_items': background_items,
+        'jic_categories': jic_categories,
         'awards': awards,
         'organizations': organizations,
         'sponsors': sponsors,
@@ -80,14 +86,15 @@ def Jic(request):
     return render(request, 'jic/_index.html', context)
 
 def Participar(request):
-    schedule = [
-        ["Apertura de inscripciones", "Mayo 2025"],
-        ["Cierre de inscripciones", "Julio 2025"],
-        ["Seleccion institucional", "Agosto 2025"],
-        ["Seleccion nacional", "Septiembre - Octubre 2025"],
-        ["JIC Nacional 2025", "Octubre 2025"],
-    ]
-    
+    try:
+        important_dates = list(
+            important_date.objects.filter(is_active=True).order_by("sort_order", "event_date")
+        )
+    except (OperationalError, ProgrammingError):
+        important_dates = []
+    if not important_dates:
+        important_dates = important_dates_fallback()
+
     resource_categories = [
         {
             "title": "Estudiantes",
@@ -138,7 +145,7 @@ def Participar(request):
     ]
     
     context = {
-        'schedule': schedule,
+        'important_dates': important_dates,
         'resource_categories': resource_categories,
     }
     return render(request, 'participar/_index..html', context)
@@ -224,6 +231,15 @@ def Proyectos(request):
     for category in sorted(set(p['category'] for p in all_projects)):
         categories_options.append({"value": category, "label": category})
     
+    try:
+        schedule_dates = list(
+            important_date.objects.filter(is_active=True).order_by("sort_order", "event_date")
+        )
+    except (OperationalError, ProgrammingError):
+        schedule_dates = []
+    if not schedule_dates:
+        schedule_dates = important_dates_fallback()
+
     context = {
         'filtered': filtered,
         'tab': tab,
@@ -232,6 +248,7 @@ def Proyectos(request):
         'category_filter': category_filter,
         'years': years,
         'categories_options': categories_options,
+        'important_dates': schedule_dates,
     }
     return render(request, 'proyectos/_index.html', context)
 

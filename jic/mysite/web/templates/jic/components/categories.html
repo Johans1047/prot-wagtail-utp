@@ -25,48 +25,20 @@
             </h2>
         </div>
         <div class="grid gap-4 sm:grid-cols-2">
+            {% for cat in jic_categories %}
             <div
                 class="rounded-xl border border-border bg-card p-6 transition-colors hover:border-teal/30"
             >
                 <h3 class="text-lg font-semibold text-foreground">
-                    Ingeniería
+                    {{ cat.name }}
                 </h3>
                 <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
-                    Proyectos de investigación en todas las ramas de la
-                    ingeniería.
+                    {{ cat.description }}
                 </p>
             </div>
-            <div
-                class="rounded-xl border border-border bg-card p-6 transition-colors hover:border-teal/30"
-            >
-                <h3 class="text-lg font-semibold text-foreground">
-                    Ciencias de la Salud
-                </h3>
-                <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
-                    Investigaciones en medicina, enfermería y ciencias
-                    biomédicas.
-                </p>
-            </div>
-            <div
-                class="rounded-xl border border-border bg-card p-6 transition-colors hover:border-teal/30"
-            >
-                <h3 class="text-lg font-semibold text-foreground">
-                    Ciencias Naturales y Exactas
-                </h3>
-                <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
-                    Proyectos en matemáticas, física, química y biología.
-                </p>
-            </div>
-            <div
-                class="rounded-xl border border-border bg-card p-6 transition-colors hover:border-teal/30"
-            >
-                <h3 class="text-lg font-semibold text-foreground">
-                    Ciencias Sociales y Humanísticas
-                </h3>
-                <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
-                    Estudios en sociología, psicología, educación y humanidades.
-                </p>
-            </div>
+            {% empty %}
+            <p class="text-muted-foreground col-span-2">No hay categorías publicadas.</p>
+            {% endfor %}
         </div>
     </div>
 </section>

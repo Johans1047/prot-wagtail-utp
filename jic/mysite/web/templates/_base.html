@@ -7,6 +7,7 @@
     <title>{% block title %}Mi Sitio{% endblock %}</title>
     <meta name="description" content="{% block meta_description %}Descripción por defecto{% endblock %}">
     {% load static %}
+    <link rel="icon" type="image/svg+xml" href="{% static 'img/Recurso 2JIC LOGO.svg' %}">
     <link rel="stylesheet" href="{% static 'src/output.css' %}" type="text/css" />
     {% block extra_head %}{% endblock %}
 </head>
@@ -19,6 +20,7 @@
     {% include 'footer.html' %}
     {% if debug %} <script src="http://127.0.0.1:35729/livereload.js"></script> {% endif %}
     <script src="{% static 'js/flowbite.min.js' %}"></script>
+    <script src="{% static 'js/resize.js' %}"></script>
 </body>
 
 </html>

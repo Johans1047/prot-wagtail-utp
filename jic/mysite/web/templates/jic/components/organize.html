@@ -1,0 +1,38 @@
+<div>
+    <div class="mb-8 text-center">
+        <h2 class="font-serif text-2xl text-foreground md:text-3xl">
+            Organiza
+        </h2>
+        <p class="mt-2 text-muted-foreground">
+            Instituciones responsables de la organización de la JIC
+        </p>
+    </div>
+    <div class="flex flex-wrap items-center justify-center gap-8">
+        {% for org in organizations %}
+            <div class="flex flex-col items-center gap-3 group">
+                <!-- Placeholder logo -->
+                <div
+                    class="flex h-24 w-48 items-center justify-center rounded-xl border-2 border-dashed border-border bg-stone-50 transition-colors group-hover:border-primary/30 group-hover:bg-primary/5"
+                >
+                    <div class="text-center px-4">
+                        <p
+                            class="text-lg font-bold text-muted-foreground/50"
+                        >
+                            {{ org.siglas }}
+                        </p>
+                        <p
+                            class="text-2xs text-muted-foreground/40 mt-0.5"
+                        >
+                            Logo
+                        </p>
+                    </div>
+                </div>
+                <p
+                    class="text-sm font-medium text-muted-foreground text-center max-w-45 leading-snug"
+                >
+                    {{ org.nombre }}
+                </p>
+            </div>
+        {% endfor %}
+    </div>
+</div>

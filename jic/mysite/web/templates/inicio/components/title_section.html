@@ -1,3 +1,4 @@
+{% load static %}
 <section class="relative overflow-hidden h-[calc(100dvh-72px)]">
     <div class="absolute inset-0">
         <img
@@ -11,41 +12,29 @@
     </div>
     <div class="relative mx-auto max-w-7xl px-4 py-32 lg:px-8 lg:py-32">
         <div class="max-w-2xl">
-            <div
-                class="mb-6 inline-flex items-center gap-2 rounded-full bg-amber-300/25 text-amber-300 px-4 py-1.5 text-sm font-medium"
-            >
+            <div class="mb-6 inline-flex items-center gap-2 rounded-full bg-amber-300/25 text-amber-300 px-4 py-1.5 text-sm font-medium">
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="size-4"
-                    aria-hidden="true"
-                    ><path d="M8 2v4"></path><path d="M16 2v4"></path><rect
-                        width="18"
-                        height="18"
-                        x="3"
-                        y="4"
-                        rx="2"
-                    ></rect><path d="M3 10h18"></path></svg
-                ><span>JIC Nacional 2025</span>
+                    width="24" height="24" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round"
+                    class="size-4" aria-hidden="true"
+                ><path d="M8 2v4"></path><path d="M16 2v4"></path><rect width="18" height="18" x="3" y="4" rx="2"></rect><path d="M3 10h18"></path></svg>
+                <span>JIC Nacional {% now "Y" %}</span>
             </div>
-            <div class="text-6xl text-white">
-                LOGO
-            </div>
-            <h1
-                class="font-serif text-4xl leading-tight text-background md:text-5xl lg:text-6xl"
-            >
-                Jornada de Iniciación Científica
+
+            <!-- Logo ocupa el lugar del h1, mismo tamaño responsive -->
+            <h1 class="mb-0">
+                <img
+                    id="jic-logo"
+                    src="{% static 'img/Recurso 5JIC LOGO.svg' %}"
+                    style="height: 2.5rem;"
+                    class="w-auto"
+                    alt="Jornada de Iniciación Científica"
+                />
             </h1>
-            <p
-                class="mt-4 max-w-lg text-base leading-relaxed text-background/80 md:text-lg"
-            >
+
+            <p class="mt-4 max-w-lg text-base leading-relaxed text-background/80 md:text-lg">
                 Fomentando la investigación entre jóvenes universitarios a nivel
                 nacional. Una iniciativa de la Secretaría Nacional de Ciencia,
                 Tecnología e Innovación.
@@ -54,26 +43,35 @@
                 <a
                     class="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-300/90 px-6 py-3 text-sm font-semibold text-amber-950 transition-colors hover:bg-amber-400/90"
                     href="{% url 'Participar' %}"
-                    >Participar ahora<svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="size-4"
-                        aria-hidden="true"
-                        ><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"
-                        ></path></svg
-                    ></a
-                ><a
+                >Participar ahora
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                </a>
+                <a
                     class="inline-flex items-center justify-center gap-2 rounded-lg border border-background/30 px-6 py-3 text-sm font-semibold text-background transition-colors hover:bg-background/10"
-                    href="{% url 'Jic' %}">Conocer la JIC</a
-                >
+                    href="{% url 'Jic' %}"
+                >Conocer la JIC</a>
             </div>
         </div>
     </div>
 </section>
+
+<script>
+    const logo = document.getElementById('jic-logo');
+    
+    function updateLogoSize() {
+        const width = window.innerWidth;
+
+        // md: 768px, lg: 1024px
+        if (width >= 1024) {
+            logo.style.height = '15rem';
+        } else if (width >= 768) {
+            logo.style.height = '12rem';
+        } else {
+            logo.style.height = '9rem';
+        }
+    }
+    
+    updateLogoSize();
+    
+    window.addEventListener('resize', updateLogoSize);</script>
+</script>
