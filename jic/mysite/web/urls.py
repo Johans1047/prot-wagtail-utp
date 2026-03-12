@@ -8,6 +8,7 @@ urlpatterns = [
     path('jic/', views.Jic, name='Jic'),
     path('participar/', views.Participar, name='Participar'),
     path('proyectos/', views.Proyectos, name='Proyectos'),
+    path('jic/coordinadores/', views.JicCoordinadores, name='JicCoordinadores'),
     path('resultados/', views.Resultados, name='Resultados'),
     path('resultados/selecciones/', views.Selecciones, name='Selecciones'),
     path('recursos/', views.Recursos, name='Recursos'),

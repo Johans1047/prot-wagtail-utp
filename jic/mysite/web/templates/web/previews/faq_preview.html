@@ -1,0 +1,37 @@
+{% extends "web/previews/_preview_base.html" %}
+{% block content %}
+<section class="bg-white">
+    <div class="py-8 px-4 mx-auto max-w-7xl">
+        <h2 class="font-serif mb-6 text-2xl tracking-tight font-extrabold text-center text-foreground">Preguntas Frecuentes</h2>
+        <p class="mb-6 text-sm tracking-tight font-normal text-center text-muted-foreground">Vista previa</p>
+        <div class="mx-auto max-w-3xl">
+            <details class="border-b border-border group" open>
+                <summary class="flex justify-between items-center py-5 w-full font-bold text-left text-base cursor-pointer transition-colors duration-200 text-muted-foreground hover:text-foreground">
+                    <span>{{ snippet.get_category_display }}</span>
+                    <svg class="w-6 h-6 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </svg>
+                </summary>
+                <div class="pl-4 border-l-2 border-gray-100 mb-2">
+                    <details class="border-b border-border last:border-b-0" open>
+                        <summary class="flex justify-between items-center py-4 w-full font-medium text-left text-sm cursor-pointer transition-colors duration-200 text-muted-foreground hover:text-foreground list-none">
+                            <span class="pr-4">{{ snippet.question }}</span>
+                            <svg class="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                        </summary>
+                        <div class="pb-4">
+                            <p class="text-gray-500 leading-relaxed text-sm">{{ snippet.answer }}</p>
+                        </div>
+                    </details>
+                </div>
+            </details>
+        </div>
+    </div>
+</section>
+<style>
+    summary::-webkit-details-marker { display: none; }
+    details > summary svg { transition: transform 0.3s ease-in-out; }
+    details[open] > summary svg { transform: rotate(180deg); }
+</style>
+{% endblock %}

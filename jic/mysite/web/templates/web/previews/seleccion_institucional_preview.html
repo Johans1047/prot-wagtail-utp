@@ -1,0 +1,68 @@
+{% extends "web/previews/_preview_base.html" %}
+{% block preview_content %}
+<div class="mx-auto max-w-2xl p-6">
+    <article class="overflow-hidden rounded-xl border border-border bg-card">
+
+        <!-- Header -->
+        <header class="flex items-center justify-between p-6 pb-4">
+            <div>
+                <h2 class="font-serif text-xl text-foreground md:text-2xl">{{ seleccion.university }}</h2>
+                <p class="mt-1 text-sm text-muted-foreground">{{ seleccion.shortName }} &middot; JIC {{ seleccion.year }}</p>
+            </div>
+            <span class="rounded-full px-3 py-1 text-xs font-medium
+                {% if seleccion.status == 'completada' %}bg-green-100 text-green-800
+                {% elif seleccion.status == 'en_proceso' %}bg-amber-100 text-amber-800
+                {% else %}bg-slate-100 text-slate-600{% endif %}">
+                {% if seleccion.status == 'completada' %}Completada
+                {% elif seleccion.status == 'en_proceso' %}En proceso
+                {% else %}Pendiente{% endif %}
+            </span>
+        </header>
+
+        {% if seleccion.results %}
+        <div class="overflow-x-auto px-6 pb-4">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-border text-left text-xs text-muted-foreground">
+                        <th class="pb-2 pr-4 font-medium">Categoría</th>
+                        <th class="pb-2 px-4 text-center font-medium">Total</th>
+                        <th class="pb-2 pl-4 text-center font-medium">Seleccionados</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in seleccion.results %}
+                    <tr class="border-t border-border">
+                        <td class="py-3 pr-4 text-foreground">{{ r.category }}</td>
+                        <td class="px-4 py-3 text-center text-muted-foreground">{{ r.total }}</td>
+                        <td class="pl-4 py-3 text-center font-semibold text-primary">{{ r.selected }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        {% if seleccion.documents %}
+        <div class="border-t border-border bg-secondary/30 p-4">
+            <div class="flex flex-wrap gap-2">
+                {% for doc in seleccion.documents %}
+                <span class="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm text-foreground">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    {{ doc.label }}
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if not snippet.is_active %}
+        <div class="border-t border-border bg-amber-50 p-4 text-center">
+            <p class="text-xs font-medium text-amber-700">⚠ Este registro está desactivado (is_active = False) y no aparecerá en la página.</p>
+        </div>
+        {% endif %}
+
+    </article>
+</div>
+{% endblock %}

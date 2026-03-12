@@ -5,7 +5,22 @@ from .viewsdata_types import (
     BackgroundItem,
     JicCategory,
     Award,
+    EventIntro,
+    Coordinator,
+    OrganizerCommitteeMember,
 )
+
+
+def _event_intro_fallback() -> EventIntro:
+    return EventIntro(
+        title="JIC Nacional",
+        main_description="La Jornada de Iniciación Científica es el principal evento de investigación juvenil a nivel nacional panameño. Cada año, estudiantes de las diferentes universidades participantes presentan sus proyectos de investigación en diversas áreas de conocimiento.",
+        secondary_description="Participa con tu proyecto de investigación y sé parte de una comunidad dedicada a la excelencia académica y la innovación científica. Comparte tus descubrimientos con la comunidad científica panameña.",
+        framework_label="En el marco de",
+        framework_text="Congreso IESTEC",
+        logo_fallback_text="Logo JIC",
+        is_active=True,
+    )
 
 
 def important_dates_fallback() -> list[ImportantDate]:
@@ -171,91 +186,125 @@ def awards_fallback() -> list[Award]:
     ]
 
 
-
-def important_dates_fallback() -> list[ImportantDate]:
+def coordinators_fallback() -> list[Coordinator]:
     return [
-        ImportantDate(
-            title="Apertura de inscripciones",
-            event_date="2025-05-15",
-            description="Inicio del periodo de inscripcion de proyectos en la plataforma JIC.",
+        Coordinator(
+            university_short_name="UTP",
+            name="Dr. Juan Pérez",
+            email="jic.utp@utp.ac.pa",
+            sort_order=0,
         ),
-        ImportantDate(
-            title="Cierre de inscripciones",
-            event_date="2025-07-30",
-            description="Fecha limite para registrar proyectos de investigacion.",
+        Coordinator(
+            university_short_name="UP",
+            name="Dra. María Rodríguez",
+            email="jic.up@up.ac.pa",
+            sort_order=1,
+        ),
+        Coordinator(
+            university_short_name="USMA",
+            name="Mgtr. Carlos López",
+            email="jic.usma@usma.ac.pa",
+            sort_order=2,
+        ),
+        Coordinator(
+            university_short_name="UNACHI",
+            name="Dr. Roberto Gómez",
+            email="jic.unachi@unachi.ac.pa",
+            sort_order=3,
+        ),
+        Coordinator(
+            university_short_name="ULAT",
+            name="Mgtr. Ana Torres",
+            email="jic.ulat@ulat.ac.pa",
+            sort_order=4,
         ),
     ]
 
 
-def faqs_fallback() -> dict[str, FAQCategory]:
-    return {
-        'participacion': FAQCategory(
-            title='Participación y Equipos',
-            items=[
-                FAQItem('¿Quiénes pueden participar en la JIC?', 'Pueden participar estudiantes, docentes e investigadores de las universidades acreditadas por el CONEAUPA.'),
-                FAQItem('¿Si mi compañero es de otra facultad, puede participar en mi equipo?', 'Sí, se permite grupos de estudiantes de diferentes facultades, pero el proyecto solo puede estar registrado en una de las facultades.'),
-                FAQItem('¿Puede mi asesor ser de otra facultad o sede?', 'Sí, puede ser de otra facultad o sede, pero el proyecto se registra donde pertenecen los estudiantes.'),
-                FAQItem('¿Va a existir la figura de co-asesor?', 'Sí, los equipos pueden contar con un asesor y un co-asesor.'),
-                FAQItem('¿Un estudiante podrá formar parte de más de un grupo?', 'Sí, los estudiantes pueden participar en más de un grupo simultáneamente.'),
-                FAQItem('¿Cuáles son los pasos para participar?', 'Conformar un equipo de 2 o 3 estudiantes con un asesor y registrarse en la plataforma oficial.'),
-                FAQItem('¿Se puede registrar una investigación individual?', 'No. Los grupos deben ser de 2 o 3 estudiantes más el asesor.'),
-                FAQItem('¿Puedo participar en la JIC si estoy realizando tesis de licenciatura?', 'Sí, mientras aún no tenga el título universitario y se encuentre matriculado en el semestre respectivo.'),
-                FAQItem('¿Es posible participar en la JIC siendo extranjero?', 'Todo estudiante regular de una universidad participante que cumpla los requisitos puede participar.'),
-                FAQItem('¿Puedo participar si ya cuento con una licenciatura?', 'No, el programa de la JIC es para estudiantes que no estén graduados.'),
-                FAQItem('¿Cuál es el siguiente paso para la final JIC?', 'Luego de finalizada la JIC Interna, cada universidad debe registrar a sus participantes en la plataforma. En el caso de la UTP, solo deben actualizar los artículos.'),
-                FAQItem('¿Para participar en la final, el equipo debe registrarse en la plataforma del Congreso?', 'Sí, todos los integrantes del grupo deben registrarse en el Congreso.'),
-            ],
-        ),
-        'plataforma': FAQCategory(
-            title='Plataforma Tecnológica',
-            items=[
-                FAQItem('¿Dónde me registro para participar?', 'Debes ingresar en el enlace oficial: jic.utp.ac.pa/login'),
-                FAQItem('¿Cuál es el procedimiento para registrar los proyectos?', 'El asesor registra el proyecto, los estudiantes suben documentos y el asesor aprueba finalmente.'),
-                FAQItem('¿Soy asesor y la plataforma no me permite editar datos?', 'Solo los estudiantes cuentan con los permisos para editar los datos del proyecto.'),
-                FAQItem('¿Existe un canal para estar enterados de forma expedita de cualquier información que afecte a los asesores o estudiantes?', 'Puede contactarnos a través de nuestro correo: jornada.cientifica@utp.ac.pa o por WhatsApp: 6958-4483'),
-                FAQItem('¿A qué correo puedo escribir para soporte o consultas sobre la plataforma?', 'Para soporte técnico o consultas relacionadas con la plataforma (accesos, errores del sistema, problemas de registro), puedes escribirnos a: jic.soporte@utp.ac.pa. Para consultas generales e institucionales, utiliza: jornada.cientifica@utp.ac.pa'),
-            ],
-        ),
-        'entregables': FAQCategory(
-            title='Entregables y Evaluación',
-            items=[
-                FAQItem('¿Qué documentos pide la JIC final: artículos, pósteres u otros?', 'Todo grupo finalista debe entregar su artículo, póster y video. Estos son requisitos de la SENACYT para la evaluación.'),
-                FAQItem('¿Cuánto debe durar el vídeo que se presenta por YouTube?', 'El vídeo debe tener una duración máxima de 10 minutos, donde los estudiantes presenten el póster de su investigación.'),
-                FAQItem('¿Se cuenta con un formato de artículo y dónde se puede descargar?', 'Sí, se cuenta con un formato de artículo. Puede encontrarlo en...'),
-                FAQItem('¿Se deben eliminar los nombres de los estudiantes, los logos o los nombres de los asesores?', 'Sí, en la versión digital no deben estar los nombres ni logos. El póster impreso para exhibición en congreso nacional organizado por APANAC u otra institución sí puede incluirlos.'),
-                FAQItem('¿Se puede corregir nuevamente el artículo?', 'Sí, teniendo en cuenta la fecha que se asigne para este fin.'),
-                FAQItem('¿Si clasifico a la siguiente etapa debo volver a subir los documentos a la plataforma JIC?', 'Sí. Se les habilitará la plataforma para que puedan subir nuevamente los documentos.'),
-                FAQItem('¿El nombre del asesor va en el artículo? ¿El nombre del asesor va en el póster?', 'En la JIC de Unidades Académicas, los coordinadores deciden si colocan el nombre del asesor. En la JIC final UTP y en la JIC Nacional, el artículo y el póster en versión digital no deben tener nombres ni afiliaciones de asesores o estudiantes. En la sesión de pósteres impresos para la JIC Nacional de SENACYT sí pueden colocarse.'),
-                FAQItem('¿Cómo compruebo el porcentaje de originalidad de mi proyecto?', 'Antes de subir el artículo final, debe pasarlo por un software anti-plagio gratuito y hacer los cambios necesarios si no cumple con el porcentaje mínimo aceptado. El artículo final será sometido a un software anti-plagio por parte de los organizadores.'),
-                FAQItem('¿En cuánto tiempo se debe presentar el proyecto?', 'Se tienen 15 minutos para exponer el trabajo y 5 minutos para preguntas y respuestas. Todo depende de la dinámica establecida.'),
-                FAQItem('¿Cuál es el tamaño y forma del póster?', 'El tamaño del póster es A0 vertical, y el diseño es a libre creatividad del grupo.'),
-                FAQItem('¿En la JIC nacional se pedirá video, aunque sea presencial?', 'Sí. En la JIC Nacional UTP y en la JIC Nacional con SENACYT se solicitará video como material de apoyo para la evaluación.'),
-            ],
-        ),
-    }
-
-
-def background_items_fallback() -> list[BackgroundItem]:
+def organizer_committee_members_fallback() -> list[OrganizerCommitteeMember]:
     return [
-        BackgroundItem("2002", "El Dr. Alexis Tejedor inicia el Salón de Iniciación Científica en el Centro Regional de Veraguas de la Universidad Tecnológica de Panamá."),
-        BackgroundItem("2015", "Se celebra la primera Jornada de Iniciación Científica a nivel institucional en la Universidad Tecnológica de Panamá."),
-        BackgroundItem("2016", "Firma de convenio con la Secretaría Nacional de Ciencia, Tecnología e Innovación. La JIC se nacionaliza en el marco del Congreso Asociación Panameña para el Avance de la Ciencia (APANAC)."),
-        BackgroundItem("2017-2025", "La JIC se consolida como el principal evento de investigación juvenil a nivel nacional."),
+        OrganizerCommitteeMember(
+            name="Dr. Luis Herrera",
+            role="Director General",
+            institution="UTP",
+            sort_order=0,
+        ),
+        OrganizerCommitteeMember(
+            name="Dra. Sandra Morales",
+            role="Coordinación Académica",
+            institution="SENACYT",
+            sort_order=1,
+        ),
+        OrganizerCommitteeMember(
+            name="Mgtr. Ricardo Vega",
+            role="Coordinación Logística",
+            institution="UTP",
+            sort_order=2,
+        ),
+        OrganizerCommitteeMember(
+            name="Ing. Patricia Salas",
+            role="Coordinación Tecnológica",
+            institution="UTP",
+            sort_order=3,
+        ),
     ]
 
 
-def jic_categories_fallback() -> list[JicCategory]:
+def selecciones_fallback() -> list[dict]:
     return [
-        JicCategory("Ingeniería", "Proyectos de investigación en todas las ramas de la ingeniería."),
-        JicCategory("Ciencias de la Salud", "Investigaciones en medicina, enfermería y ciencias biomédicas."),
-        JicCategory("Ciencias Naturales y Exactas", "Proyectos en matemáticas, física, química y biología."),
-        JicCategory("Ciencias Sociales y Humanísticas", "Estudios en sociología, psicología, educación y humanidades."),
-    ]
-
-
-def awards_fallback() -> list[Award]:
-    return [
-        Award("Premio Nacional de Innovación Juvenil", "2024", "SENACYT", "Reconocimiento a la mejor iniciativa de divulgación científica estudiantil."),
-        Award("Mención de Honor APANAC", "2023", "APANAC", "Distinción por fomentar la investigación en universidades públicas."),
-        Award("Premio a la Excelencia Académica", "2022", "Ministerio de Educación", "Otorgado por el impacto en la formación científica de jóvenes panameños."),
+        {
+            "university": "Universidad Tecnológica de Panamá",
+            "shortName": "UTP",
+            "year": 2025,
+            "status": "completada",
+            "results": [
+                {"category": "Ingeniería", "selected": 8, "total": 24},
+                {"category": "Ciencias de la Salud", "selected": 4, "total": 12},
+                {"category": "Ciencias Naturales y Exactas", "selected": 5, "total": 18},
+                {"category": "Ciencias Sociales y Humanísticas", "selected": 3, "total": 10},
+            ],
+            "documents": [
+                {"label": "Acta de resultados UTP 2025", "href": "#"},
+                {"label": "Lista de proyectos seleccionados", "href": "#"},
+            ],
+        },
+        {
+            "university": "Universidad de Panamá",
+            "shortName": "UP",
+            "year": 2025,
+            "status": "completada",
+            "results": [
+                {"category": "Ingeniería", "selected": 5, "total": 15},
+                {"category": "Ciencias de la Salud", "selected": 6, "total": 20},
+                {"category": "Ciencias Naturales y Exactas", "selected": 4, "total": 14},
+                {"category": "Ciencias Sociales y Humanísticas", "selected": 5, "total": 16},
+            ],
+            "documents": [
+                {"label": "Acta de resultados UP 2025", "href": "#"},
+            ],
+        },
+        {
+            "university": "Universidad Santa María La Antigua",
+            "shortName": "USMA",
+            "year": 2025,
+            "status": "en_proceso",
+            "results": [],
+            "documents": [],
+        },
+        {
+            "university": "Universidad Autónoma de Chiriquí",
+            "shortName": "UNACHI",
+            "year": 2025,
+            "status": "pendiente",
+            "results": [],
+            "documents": [],
+        },
+        {
+            "university": "Universidad Latina de Panamá",
+            "shortName": "ULAT",
+            "year": 2025,
+            "status": "pendiente",
+            "results": [],
+            "documents": [],
+        },
     ]

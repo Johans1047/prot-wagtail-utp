@@ -8,72 +8,74 @@
 
         <div class="flex flex-col gap-12">
             <!-- Selecciones institucionales -->
-            <article
-                class="mx-auto w-full p-6 border border-stone-300 bg-card rounded-xl"
-            >
-                <header>
-                    <h3
-                        class="mb-6 text-lg text-foreground font-bold md:text-xl"
+            <article class="rounded-xl border border-border bg-stone-50 p-6">
+                <div
+                    class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="h-6 w-6 text-primary"
+                            >
+                                <rect
+                                    width="16"
+                                    height="20"
+                                    x="4"
+                                    y="2"
+                                    rx="2"
+                                    ry="2"
+                                ></rect>
+                                <path d="M9 22v-4h6v4"></path>
+                                <path d="M8 6h.01"></path>
+                                <path d="M16 6h.01"></path>
+                                <path d="M12 6h.01"></path>
+                                <path d="M8 10h.01"></path>
+                                <path d="M16 10h.01"></path>
+                                <path d="M12 10h.01"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-foreground">
+                                Selecciones Institucionales
+                            </h3>
+                            <p class="text-sm text-muted-foreground">
+                                Resultados de las fases internas de cada
+                                universidad
+                            </p>
+                        </div>
+                    </div>
+                    <a
+                        href="{% url 'Selecciones' %}"
+                        class="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 whitespace-nowrap"
                     >
-                        Selecciones institucionales
-                    </h3>
-                </header>
-                <p class="mb-4 text-sm text-muted-foreground md:text-base">
-                    Consulta la información de las selecciones institucionales
-                    de las universidades participantes:
-                </p>
-                <nav aria-label="Universidades participantes">
-                    <ul
-                        class="flex flex-wrap gap-3 list-none p-0 m-0"
-                        role="list"
-                    >
-                        <li>
-                            <a
-                                href="https://utp.ac.pa"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="rounded-lg border border-border bg-stone-100 hover:bg-stone-200 px-4 py-2 text-xs font-medium text-foreground transition-colors hover:border-primary/30 md:text-sm"
-                                >UTP</a
-                            >
-                        </li>
-                        <li>
-                            <a
-                                href="https://up.ac.pa"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="rounded-lg border border-border bg-stone-100 hover:bg-stone-200 px-4 py-2 text-xs font-medium text-foreground transition-colors hover:border-primary/30 md:text-sm"
-                                >UP</a
-                            >
-                        </li>
-                        <li>
-                            <a
-                                href="https://usma.ac.pa"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="rounded-lg border border-border bg-stone-100 hover:bg-stone-200 px-4 py-2 text-xs font-medium text-foreground transition-colors hover:border-primary/30 md:text-sm"
-                                >USMA</a
-                            >
-                        </li>
-                        <li>
-                            <a
-                                href="https://unachi.ac.pa"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="rounded-lg border border-border bg-stone-100 hover:bg-stone-200 px-4 py-2 text-xs font-medium text-foreground transition-colors hover:border-primary/30 md:text-sm"
-                                >UNACHI</a
-                            >
-                        </li>
-                        <li>
-                            <a
-                                href="https://ulat.ac.pa"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="rounded-lg border border-border bg-stone-100 hover:bg-stone-200 px-4 py-2 text-xs font-medium text-foreground transition-colors hover:border-primary/30 md:text-sm"
-                                >ULAT</a
-                            >
-                        </li>
-                    </ul>
-                </nav>
+                        Ver selecciones
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M17 8l4 4m0 0l-4 4m4-4H3"
+                            ></path>
+                        </svg>
+                    </a>
+                </div>
             </article>
 
             <!-- Resultados pendientes -->
@@ -102,8 +104,8 @@
                 <p
                     class="text-base font-semibold text-foreground md:text-lg lg:text-xl"
                 >
-                    Los resultados de la JIC Nacional {% now "Y" %} serán publicados al
-                    finalizar el evento.
+                    Los resultados de la JIC Nacional {% now "Y" %} serán
+                    publicados al finalizar el evento.
                 </p>
                 <p class="mt-2 text-xs text-muted-foreground md:text-sm">
                     Visita esta página después del evento para ver los

@@ -38,3 +38,42 @@ class Award:
     year: str
     entity: str
     description: str
+
+
+@dataclass
+class EventIntro:
+    title: str
+    main_description: str
+    secondary_description: str
+    framework_label: str = "En el marco de"
+    framework_text: str = ""
+    logo_fallback_text: str = "Logo del evento"
+    is_active: bool = True
+
+
+@dataclass
+class Coordinator:
+    university_short_name: str
+    name: str
+    email: str
+    sort_order: int = 0
+    is_active: bool = True
+    photo: str = None
+
+    @property
+    def shortName(self):
+        return self.university_short_name
+
+    @property
+    def coordinator(self):
+        return self.name
+
+
+@dataclass
+class OrganizerCommitteeMember:
+    name: str
+    role: str
+    institution: str
+    sort_order: int = 0
+    is_active: bool = True
+    photo: str = None

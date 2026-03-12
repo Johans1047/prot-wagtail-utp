@@ -4,11 +4,21 @@
 
 {% block content %}
     {% include 'hero.html' with titulo="Selecciones Institucionales" descripcion="Resultados de las selecciones internas de cada universidad participante en la JIC." color="bg-primary" text_color="text-primary-foreground" %}
+    <div class="border-b border-border bg-background py-4">
+        <div class="mx-auto max-w-7xl px-4 lg:px-8">
+            <a href="{% url 'Resultados' %}" class="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+                </svg>
+                Volver a Resultados
+            </a>
+        </div>
+    </div>
 
     <!-- Info banner -->
-    <section class="border-b border-border bg-card py-8">
+    <section class="bg-stone-50 py-8">
         <div class="mx-auto max-w-7xl px-4 lg:px-8">
-            <div class="flex items-start gap-3 rounded-lg bg-secondary p-4">
+            <div class="flex items-start gap-3 rounded-lg border border-teal/30 bg-teal/5 p-4 text-sm mt-10">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 text-primary mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
@@ -20,7 +30,7 @@
     </section>
 
     <!-- University cards -->
-    <section class="bg-background py-16 lg:py-20">
+    <section class="bg-stone-50 py-16 lg:py-20">
         <div class="mx-auto max-w-7xl px-4 lg:px-8">
             <div class="flex flex-col gap-8">
                 {% for uni in selecciones %}

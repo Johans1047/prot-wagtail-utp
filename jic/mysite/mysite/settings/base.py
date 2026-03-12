@@ -107,8 +107,8 @@ WSGI_APPLICATION = "mysite.wsgi.application"
 #         "ENGINE": "django.db.backends.postgresql",
 #         "NAME": os.getenv("DB_NAME", "db_jicweb"),
 #         "USER": os.getenv("DB_USER", "mast_jicweb"),
-#         "PASSWORD": os.getenv("DB_PASSWORD", ""),
-#         "HOST": os.getenv("DB_HOST", "localhost"),
+#         "PASSWORD": os.getenv("DB_PASSWORD", "g0hNw,0p1MvY"),
+#         "HOST": os.getenv("DB_HOST", "jicweb_master"),
 #         "PORT": os.getenv("DB_PORT", "5432"),
 #         "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
 #     }
@@ -192,11 +192,19 @@ STATIC_URL = "/static/"
 MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = "/media/"
 
+# MinIO Object Storage
+MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "jic_minio_storage:9000")
+MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "mast_st_jic")
+MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "KtWzuaY3Uy8F")
+MINIO_USE_SSL = os.getenv("MINIO_USE_SSL", "false").lower() == "true"
+MINIO_BUCKET_NAME = os.getenv("MINIO_BUCKET_NAME", "jic-media")
+MINIO_EXTERNAL_URL = os.getenv("MINIO_EXTERNAL_URL", "http://localhost:9010")
+
 # Default storage settings
 # See https://docs.djangoproject.com/en/6.0/ref/settings/#std-setting-STORAGES
 STORAGES = {
     "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "BACKEND": "mysite.storage.MinioStorage",
     },
     "staticfiles": {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",

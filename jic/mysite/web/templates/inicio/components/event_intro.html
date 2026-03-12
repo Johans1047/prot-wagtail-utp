@@ -1,77 +1,59 @@
-<section class="py-16 lg:py-20">
-    <div class="mx-auto max-w-7xl px-4 lg:px-8">
-        <div class="grid items-center gap-10 lg:grid-cols-5">
-            <div class="lg:col-span-3">
-                <h2 class="font-serif text-2xl text-foreground md:text-3xl">
-                    JIC Nacional {% now "Y"%}
-                </h2>
-                <p class="mt-4 leading-relaxed text-muted-foreground">
-                    La Jornada de Iniciacion Cientifica 2025 se llevara a cabo
-                    en el marco del
-                    <strong class="text-foreground"
-                        >Congreso Nacional de Ciencia y Tecnologia
-                        APANAC</strong
-                    >, consolidando el espacio mas importante para la
-                    investigacion juvenil en Panama.
-                </p>
-                <p class="mt-3 leading-relaxed text-muted-foreground">
-                    Este ano, la JIC Nacional se desarrollara en la
-                    <strong class="text-foreground">Ciudad del Saber</strong>,
-                    donde jovenes investigadores de todas las universidades del
-                    pais presentaran sus proyectos ante evaluadores expertos,
-                    compitiendo por reconocimientos, premios y oportunidades de
-                    pasantias nacionales e internacionales.
-                </p>
-                <p class="mt-3 leading-relaxed text-muted-foreground">
-                    Te invitamos a ser parte de esta experiencia unica que
-                    fomenta la cultura de investigacion entre los jovenes
-                    universitarios panamenos.
-                </p>
-
-                <!-- Snippets de datos clave -->
-                <div class="mt-8 grid grid-cols-3 gap-3">
-                    <div class="rounded-lg border border-border bg-card px-3 py-4 text-center">
-                        <p class="text-2xl font-bold text-primary">12+</p>
-                        <p class="mt-0.5 text-xs text-muted-foreground">Universidades</p>
-                    </div>
-                    <div class="rounded-lg border border-border bg-card px-3 py-4 text-center">
-                        <p class="text-2xl font-bold text-primary">4</p>
-                        <p class="mt-0.5 text-xs text-muted-foreground">Categor&iacute;as</p>
-                    </div>
-                    <div class="rounded-lg border border-border bg-card px-3 py-4 text-center">
-                        <p class="text-2xl font-bold text-primary">5</p>
-                        <p class="mt-0.5 text-xs text-muted-foreground">Premios</p>
-                    </div>
+{% for intro in introductions %}
+    <section class="py-16 lg:py-20 bg-stone-50">
+        <div class="mx-auto max-w-7xl px-4 lg:px-8">
+            <div class="grid items-center gap-10 lg:grid-cols-5">
+                <div class="lg:col-span-3">
+                    <h2 class="font-serif text-2xl text-foreground md:text-3xl">
+                        {{ intro.title }} {% now "Y"%}
+                    </h2>
+                    <p class="mt-4 leading-relaxed text-muted-foreground">
+                        {{ intro.main_description|linebreaks }}
+                    </p>
+                    <p class="mt-3 leading-relaxed text-muted-foreground">
+                        {{ intro.secondary_description|linebreaks }}
+                    </p>
                 </div>
-            </div>
 
-            <!-- Event logo -->
-            <div class="flex items-center justify-center lg:col-span-2">
-                <div
-                    class="flex flex-col items-center gap-4 rounded-xl border border-border bg-card p-8"
-                >
-                    <div class="flex h-24 w-48 items-center justify-center">
-                        {% load static %}
-                        <img
-                            src="{% static 'img/apanac-logo.png' %}"
-                            alt="Logo APANAC - Asociacion Panamena para el Avance de la Ciencia"
-                            class="h-full w-full object-contain"
-                            onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
-                        />
-                        <div class="hidden h-full w-full items-center justify-center rounded-lg border-2 border-dashed border-border bg-stone-50">
-                            <span class="text-sm font-bold text-muted-foreground/50">APANAC</span>
+                <!-- Event logo -->
+                <div class="flex items-center justify-center lg:col-span-2">
+                    <div class="flex flex-col items-center gap-4 rounded-xl border border-border bg-card p-8">
+                        <div class="flex h-24 w-48 items-center justify-center">
+                            {% if intro.logo_image %}
+                                <img
+                                    src="{{ intro.logo_image.url }}"
+                                    alt="Logo del marco del evento"
+                                    class="h-full w-full object-contain"
+                                    onerror="
+                                        this.style.display = 'none';
+                                        this.nextElementSibling.style.display = 'flex';
+                                    "
+                                />
+                                <div
+                                    class="hidden h-full w-full items-center justify-center rounded-lg border-2 border-dashed border-border bg-stone-50"
+                                >
+                                    <span class="text-sm font-bold text-muted-foreground/50">
+                                        {{ intro.logo_fallback_text }}
+                                    </span>
+                                </div>
+                            {% else %}
+                                <div class="h-full w-full flex items-center justify-center rounded-lg border-2 border-dashed border-border bg-stone-50">
+                                    <span class="text-sm font-bold text-muted-foreground/50">
+                                        {{ intro.logo_fallback_text }}
+                                    </span>
+                                </div>
+                            {% endif %}
                         </div>
-                    </div>
-                    <div class="text-center">
-                        <p class="text-sm font-semibold text-foreground">
-                            En el marco de
-                        </p>
-                        <p class="text-xs text-muted-foreground">
-                            Congreso APANAC 2025
-                        </p>
+                        <div class="text-center">
+                            <p class="text-sm font-semibold text-foreground">
+                                {{ intro.framework_label }}
+                            </p>
+                            <p class="text-xs text-muted-foreground">
+                                {{ intro.framework_text }} {% now "Y"%}
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
+{% endfor %}

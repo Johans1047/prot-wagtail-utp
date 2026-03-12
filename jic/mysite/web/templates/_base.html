@@ -8,19 +8,25 @@
     <meta name="description" content="{% block meta_description %}Descripción por defecto{% endblock %}">
     {% load static %}
     <link rel="icon" type="image/svg+xml" href="{% static 'img/Recurso 2JIC LOGO.svg' %}">
-    <link rel="stylesheet" href="{% static 'src/output.css' %}?v={% now 'U' %}" type="text/css" />
+    <link rel="stylesheet" href="{% static 'src/output.css' %}" type="text/css" />
+    <link rel="stylesheet" href="{% static 'css/alert.css' %}" type="text/css" />
     {% block extra_head %}{% endblock %}
 </head>
 
 <body class="flex flex-col min-h-screen">
+    {% include 'alert.html' with messages=messages %}
+
     {% include 'header.html' %}
     <main class="pt-18 overflow-x-hidden">
         {% block content %}{% endblock %}
     </main>
     {% include 'footer.html' %}
+
     {% if debug %} <script src="http://127.0.0.1:35729/livereload.js"></script> {% endif %}
     <script src="{% static 'js/flowbite.min.js' %}"></script>
     <script src="{% static 'js/resize.js' %}"></script>
+    <script src="{% static 'js/winners_carousel.js' %}"></script>
+    <script src="{% static 'js/alert.js' %}"></script>
 </body>
 
 </html>
