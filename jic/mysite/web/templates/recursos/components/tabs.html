@@ -145,7 +145,7 @@
                     ></path>
                     <rect x="2" y="6" width="14" height="12" rx="2"></rect>
                 </svg>
-                Multimedia
+                Vídeos
             </button>
         </form>
     </div>
@@ -405,6 +405,7 @@
                 {% endfor %}
             </div>
         </div>
+        {% endif %}
 
         <!-- Lightbox Modal -->
         <div
@@ -473,7 +474,21 @@
                             web-share;
                         "
                         allowfullscreen
+                        class="hidden"
                     ></iframe>
+                    
+                    <video
+                        id="video-player"
+                        width="100%"
+                        height="100%"
+                        controls
+                        playsinline
+                        preload="metadata"
+                        class="hidden w-full h-full object-cover bg-black"
+                    >
+                        <source src="" type="video/mp4">
+                        Tu navegador no soporta el tag de video.
+                    </video>
                 </div>
                 <button
                     id="video-lightbox-close"
@@ -492,6 +507,7 @@
             const lightboxImage = document.getElementById("lightbox-image");
             const videoLightbox = document.getElementById("video-lightbox");
             const videoIframe = document.getElementById("video-iframe");
+            const videoPlayer = document.getElementById("video-player");
             const allItems = document.querySelectorAll(".gallery-item");
 
             function updateLightboxImage() {
@@ -550,27 +566,59 @@
                 }
             });
 
-            // Videos - Lightbox con iframe
-            document
-                .querySelectorAll(".video-play-btn, .video-thumbnail")
-                .forEach((btn) => {
-                    btn.addEventListener("click", () => {
-                        const videoUrl = btn.dataset.videoUrl;
-                        if (videoUrl) {
-                            // Convertir URL de YouTube a embed
-                            let embedUrl = videoUrl;
-                            if (videoUrl.includes("youtube.com/watch?v=")) {
-                                const videoId = videoUrl.split("v=")[1];
-                                embedUrl = `https://www.youtube.com/embed/${videoId}`;
-                            } else if (videoUrl.includes("youtu.be/")) {
-                                const videoId = videoUrl.split("youtu.be/")[1];
-                                embedUrl = `https://www.youtube.com/embed/${videoId}`;
-                            }
-                            videoIframe.src = embedUrl;
-                            videoLightbox.classList.remove("hidden");
-                        }
+            // Videos - Lightbox (delegado para que funcione aunque el script
+            // aparezca antes del grid de videos en el HTML)
+            document.addEventListener("click", (event) => {
+                const trigger = event.target.closest(".video-play-btn, .video-thumbnail");
+                if (!trigger) {
+                    return;
+                }
+
+                const videoUrl = trigger.dataset.videoUrl;
+                const videoPoster = trigger.dataset.videoPoster || "";
+                if (!videoUrl) {
+                    return;
+                }
+
+                if (videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be")) {
+                    // Es YouTube - usar iframe
+                    let embedUrl = videoUrl;
+                    if (videoUrl.includes("youtube.com/watch?v=")) {
+                        const videoId = videoUrl.split("v=")[1].split("&")[0];
+                        embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+                    } else if (videoUrl.includes("youtu.be/")) {
+                        const videoId = videoUrl.split("youtu.be/")[1].split("?")[0];
+                        embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+                    }
+
+                    videoIframe.src = embedUrl;
+                    videoIframe.classList.remove("hidden");
+                    videoPlayer.classList.add("hidden");
+                    videoPlayer.pause();
+                    videoPlayer.poster = "";
+                    const source = videoPlayer.querySelector("source");
+                    if (source) {
+                        source.src = "";
+                    }
+                    videoPlayer.load();
+                } else {
+                    // Es video interno - usar tag video
+                    videoPlayer.poster = videoPoster;
+                    const source = videoPlayer.querySelector("source");
+                    if (source) {
+                        source.src = videoUrl;
+                    }
+                    videoPlayer.load();
+                    videoPlayer.classList.remove("hidden");
+                    videoIframe.classList.add("hidden");
+                    videoIframe.src = "";
+                    videoPlayer.play().catch((err) => {
+                        console.log("Autoplay prevented, user interaction required", err);
                     });
-                });
+                }
+
+                videoLightbox.classList.remove("hidden");
+            });
 
             // Cerrar video lightbox
             document
@@ -578,14 +626,27 @@
                 .addEventListener("click", () => {
                     videoLightbox.classList.add("hidden");
                     videoIframe.src = "";
+                    videoPlayer.pause();
+                    const source = videoPlayer.querySelector("source");
+                    if (source) {
+                        source.src = "";
+                    }
+                    videoPlayer.load();
                 });
 
             videoLightbox.addEventListener("click", (e) => {
                 if (e.target === videoLightbox) {
                     videoLightbox.classList.add("hidden");
                     videoIframe.src = "";
+                    videoPlayer.pause();
+                    const source = videoPlayer.querySelector("source");
+                    if (source) {
+                        source.src = "";
+                    }
+                    videoPlayer.load();
                 }
             });
+
 
             // Filtros de galería
             document.querySelectorAll(".filter-btn").forEach((btn) => {
@@ -594,11 +655,28 @@
                         b.classList.remove(
                             "bg-primary",
                             "text-primary-foreground",
+                            "hover:bg-primary/90",
+                            "border-primary",
                         );
-                        b.classList.add("bg-card", "text-foreground");
+                        b.classList.add(
+                            "bg-card",
+                            "text-foreground",
+                            "hover:bg-stone-100",
+                            "border-border",
+                        );
                     });
-                    btn.classList.add("bg-primary", "text-primary-foreground");
-                    btn.classList.remove("bg-card", "text-foreground");
+                    btn.classList.add(
+                        "bg-primary",
+                        "text-primary-foreground",
+                        "hover:bg-primary/90",
+                        "border-primary",
+                    );
+                    btn.classList.remove(
+                        "bg-card",
+                        "text-foreground",
+                        "hover:bg-stone-100",
+                        "border-border",
+                    );
 
                     const category = btn.dataset.category;
                     allItems.forEach((item) => {
@@ -614,7 +692,6 @@
                 });
             });
         </script>
-        {% endif %}
 
         <!-- Videos -->
         {% if tab == 'videos' %}
@@ -635,6 +712,7 @@
                     <div
                         class="video-thumbnail relative aspect-video w-full bg-secondary block overflow-hidden cursor-pointer"
                         data-video-url="{{ v.url }}"
+                        data-video-poster="{{ v.thumbnail }}"
                     >
                         <img
                             src="{{ v.thumbnail }}"
@@ -677,6 +755,7 @@
                                 type="button"
                                 class="video-play-btn inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors cursor-pointer"
                                 data-video-url="{{ v.url }}"
+                                data-video-poster="{{ v.thumbnail }}"
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -688,6 +767,8 @@
                                 </svg>
                                 Reproducir
                             </button>
+                            
+                            {% if 'youtube.com' in v.url or 'youtu.be' in v.url %}
                             <a
                                 href="{{ v.url }}"
                                 target="_blank"
@@ -706,6 +787,29 @@
                                 </svg>
                                 YouTube
                             </a>
+                            {% else %}
+                            <a
+                                href="{{ v.url }}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="inline-flex items-center gap-1.5 rounded-lg border border-primary text-primary px-3 py-1.5 text-xs font-medium hover:bg-primary/10 transition-colors"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    class="h-3.5 w-3.5"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round" 
+                                    stroke-linejoin="round"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                </svg>
+                                Enlace directo
+                            </a>
+                            {% endif %}
                         </div>
                     </div>
                 </div>

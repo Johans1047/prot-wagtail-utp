@@ -1,10 +1,53 @@
 from django.db import models
 from django.db.models import Case, When
+from django.utils import timezone
 from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
 from wagtail.models import PreviewableMixin, Orderable
 from wagtail.admin.panels import FieldPanel, InlinePanel
 from .forms import _FaqAdminForm
+
+
+# ================ Upload Path Helpers ================
+
+def get_gallery_image_path(instance, filename):
+    """
+    Generate path for gallery images: galeria/{year}/{filename}
+    Example: galeria/2025/photo_abc123.jpg
+    """
+    year = timezone.now().year
+    return f"galeria/{year}/{filename}"
+
+
+def get_video_file_path(instance, filename):
+    """
+    Generate path for video files: videos/{year}/{filename}
+    Example: videos/2025/tutorial_abc123.mp4
+    """
+    year = timezone.now().year
+    return f"videos/{year}/{filename}"
+
+
+def get_video_thumbnail_path(instance, filename):
+    """
+    Generate path for video thumbnails: video_thumbnails/{year}/{filename}
+    Example: video_thumbnails/2025/thumb_abc123.jpg
+    """
+    year = timezone.now().year
+    return f"video_thumbnails/{year}/{filename}"
+
+
+def get_document_path(instance, filename):
+    """
+    Generate path for documents: documentos/{doc_type}/{year}/{filename}
+    Example: documentos/lineamientos/2025/lineamientos_jic.pdf
+    """
+    year = timezone.now().year
+    doc_type = getattr(instance, 'doc_type', 'otros').lower()
+    return f"documentos/{doc_type}/{year}/{filename}"
+
+
+# ================ End Upload Path Helpers ================
 
 
 class important_date(PreviewableMixin, models.Model):
@@ -33,7 +76,7 @@ class important_date(PreviewableMixin, models.Model):
         return f"{self.title} ({self.event_date:%Y-%m-%d})"
 
     def get_preview_template(self, request, mode_name):
-        return "web/previews/important_date_preview.html"
+        return "utilidades/previews/important_date_preview.html"
 
     def get_preview_context(self, request, mode_name):
         return {"snippet": self}
@@ -88,7 +131,7 @@ class frequently_ask_question(PreviewableMixin, models.Model):
         return f"{self.category}: {self.question}"
 
     def get_preview_template(self, request, mode_name):
-        return "web/previews/faq_preview.html"
+        return "utilidades/previews/faq_preview.html"
 
     def get_preview_context(self, request, mode_name):
         return {"snippet": self}
@@ -116,7 +159,7 @@ class background_item(PreviewableMixin, models.Model):
         return self.year_label
 
     def get_preview_template(self, request, mode_name):
-        return "web/previews/background_item_preview.html"
+        return "utilidades/previews/background_item_preview.html"
 
     def get_preview_context(self, request, mode_name):
         return {"snippet": self}
@@ -144,7 +187,7 @@ class jic_category(PreviewableMixin, models.Model):
         return self.name
 
     def get_preview_template(self, request, mode_name):
-        return "web/previews/jic_category_preview.html"
+        return "utilidades/previews/jic_category_preview.html"
 
     def get_preview_context(self, request, mode_name):
         return {"snippet": self}
@@ -184,7 +227,7 @@ class award(PreviewableMixin, models.Model):
         return f"{self.prize} ({self.year})"
 
     def get_preview_template(self, request, mode_name):
-        return "web/previews/award_preview.html"
+        return "utilidades/previews/award_preview.html"
 
     def get_preview_context(self, request, mode_name):
         return {"snippet": self}
@@ -272,7 +315,7 @@ class event_intro(PreviewableMixin, models.Model):
         return self.title
 
     def get_preview_template(self, request, mode_name):
-        return "web/previews/event_intro_preview.html"
+        return "utilidades/previews/event_intro_preview.html"
 
     def get_preview_context(self, request, mode_name):
         return {"snippet": self}
@@ -322,7 +365,7 @@ class coordinator(PreviewableMixin, models.Model):
         return self.name
 
     def get_preview_template(self, request, mode_name):
-        return "web/previews/coordinator_preview.html"
+        return "utilidades/previews/coordinator_preview.html"
 
     def get_preview_context(self, request, mode_name):
         return {"snippet": self}
@@ -362,7 +405,7 @@ class organizer_committee_member(PreviewableMixin, models.Model):
         return f"{self.name} - {self.role}"
 
     def get_preview_template(self, request, mode_name):
-        return "web/previews/organizer_committee_member_preview.html"
+        return "utilidades/previews/organizer_committee_member_preview.html"
 
     def get_preview_context(self, request, mode_name):
         return {"snippet": self}
@@ -372,15 +415,21 @@ class organizer_committee_member(PreviewableMixin, models.Model):
         return {"name": self.name, "role": self.role, "institution": self.institution}
 
 
-class seleccion_result(Orderable):
+class selection_result(Orderable):
     """One category row within an institutional selection record."""
 
+    CATEGORIES_CHOICES = [
+        ("ingenieria", "Ingeniería"),
+        ("ciencias_de_la_salud", "Ciencias de la Salud"),
+        ("ciencias_naturales_y_exactas", "Ciencias Naturales y Exactas"),
+        ("ciencias_sociales_y_humanisticas", "Ciencias Sociales y Humanísticas"),
+    ]
     parent = ParentalKey(
-        "seleccion_institucional",
+        "selection_institutional",
         on_delete=models.CASCADE,
         related_name="results",
     )
-    category = models.CharField("Categoría", max_length=150)
+    category = models.CharField("Categoría", max_length=150, choices=CATEGORIES_CHOICES)
     selected = models.PositiveIntegerField("Seleccionados")
     total = models.PositiveIntegerField("Total presentados")
     sort_order = models.PositiveIntegerField("Orden", default=0)
@@ -400,11 +449,11 @@ class seleccion_result(Orderable):
         return f"{self.category}: {self.selected}/{self.total}"
 
 
-class seleccion_document(Orderable):
+class selection_document(Orderable):
     """Downloadable document linked to an institutional selection record."""
 
     parent = ParentalKey(
-        "seleccion_institucional",
+        "selection_institutional",
         on_delete=models.CASCADE,
         related_name="documents",
     )
@@ -426,7 +475,7 @@ class seleccion_document(Orderable):
         return self.label
 
 
-class seleccion_institucional(PreviewableMixin, ClusterableModel):
+class selection_institutional(PreviewableMixin, ClusterableModel):
     """Institutional selection results per university per year."""
 
     STATUS_CHOICES = [
@@ -492,8 +541,188 @@ class seleccion_institucional(PreviewableMixin, ClusterableModel):
         }
 
     def get_preview_template(self, request, mode_name):
-        return "web/previews/seleccion_institucional_preview.html"
+        return "utilidades/previews/seleccion_institucional_preview.html"
 
     def get_preview_context(self, request, mode_name):
         return {"snippet": self, "seleccion": self.to_dict()}
 
+
+class video(PreviewableMixin, models.Model):
+    """Editable video file for multimedia resources."""
+
+    title = models.CharField("Título", max_length=200)
+    description = models.TextField("Descripción", blank=True)
+    video_file = models.FileField(
+        "Archivo de video",
+        upload_to=get_video_file_path,
+        help_text="Formatos soportados: MP4, WebM, Ogg (máx 500MB)"
+    )
+    thumbnail = models.ImageField(
+        "Miniatura",
+        upload_to=get_video_thumbnail_path,
+        null=True,
+        blank=True,
+        help_text="Imagen de previsualización para el video"
+    )
+    duration_seconds = models.PositiveIntegerField(
+        "Duración (segundos)",
+        null=True,
+        blank=True,
+        help_text="Duración total del video en segundos"
+    )
+    category = models.CharField(
+        "Categoría",
+        max_length=100,
+        blank=True,
+        help_text="Ej: Tutorial, Presentación, Promocional"
+    )
+    sort_order = models.PositiveIntegerField("Orden", default=0)
+    is_active = models.BooleanField(
+        "Activo",
+        default=True,
+        help_text="Activar o desactivar este video"
+    )
+    created_at = models.DateTimeField("Fecha de creación", auto_now_add=True)
+    updated_at = models.DateTimeField("Última actualización", auto_now=True)
+
+    panels = [
+        FieldPanel("title"),
+        FieldPanel("description"),
+        FieldPanel("video_file"),
+        FieldPanel("thumbnail"),
+        FieldPanel("duration_seconds"),
+        FieldPanel("category"),
+        FieldPanel("sort_order"),
+        FieldPanel("is_active"),
+    ]
+
+    class Meta:
+        ordering = ["sort_order", "-created_at"]
+        verbose_name = "Video"
+        verbose_name_plural = "Videos"
+
+    def __str__(self) -> str:
+        return self.title
+
+    def get_preview_template(self, request, mode_name):
+        return "utilidades/previews/video_preview.html"
+
+    def get_preview_context(self, request, mode_name):
+        return {"snippet": self}
+
+
+class resource_document(PreviewableMixin, models.Model):
+    """Editable document file for resources, organized by type and year."""
+
+    DOC_TYPE_CHOICES = [
+        ("lineamientos", "Lineamientos"),
+        ("plantillas", "Plantillas"),
+        ("memorias", "Memorias"),
+        ("boletines", "Boletines"),
+        ("actas", "Actas de Resultados"),
+        ("otros", "Otros"),
+    ]
+
+    title = models.CharField("Título", max_length=200)
+    description = models.TextField("Descripción", blank=True)
+    doc_type = models.CharField(
+        "Tipo de documento",
+        max_length=50,
+        choices=DOC_TYPE_CHOICES,
+        default="otros",
+        help_text="Clasificación del documento"
+    )
+    document_file = models.FileField(
+        "Archivo",
+        upload_to=get_document_path,
+        help_text="Formatos soportados: PDF, DOCX, XLS, etc."
+    )
+    year = models.PositiveIntegerField(
+        "Año JIC",
+        null=True,
+        blank=True,
+        help_text="Año al que corresponde el documento (ej: 2025, 2024)"
+    )
+    sort_order = models.PositiveIntegerField("Orden", default=0)
+    is_active = models.BooleanField(
+        "Activo",
+        default=True,
+        help_text="Activar o desactivar este documento"
+    )
+    created_at = models.DateTimeField("Fecha de creación", auto_now_add=True)
+    updated_at = models.DateTimeField("Última actualización", auto_now=True)
+
+    panels = [
+        FieldPanel("title"),
+        FieldPanel("description"),
+        FieldPanel("doc_type"),
+        FieldPanel("document_file"),
+        FieldPanel("year"),
+        FieldPanel("sort_order"),
+        FieldPanel("is_active"),
+    ]
+
+    class Meta:
+        ordering = ["doc_type", "-year", "sort_order"]
+        verbose_name = "Documento de Recurso"
+        verbose_name_plural = "Documentos de Recursos"
+
+    def __str__(self) -> str:
+        return f"{self.get_doc_type_display()} - {self.title}"
+
+    def get_preview_template(self, request, mode_name):
+        return "utilidades/previews/resource_document_preview.html"
+
+    def get_preview_context(self, request, mode_name):
+        return {"snippet": self}
+
+
+class Gallery(ClusterableModel):
+    """
+    Singleton gallery snippet to manage ordered images.
+    Uses InlinePanel for drag-and-drop reordering of images.
+    """
+    _singleton_id = 1
+    
+    title = models.CharField("Título de la galería", max_length=150, default="Galería Principal")
+    description = models.TextField("Descripción", blank=True, help_text="Descripción opcional de la galería.")
+    
+    def save(self, *args, **kwargs):
+        self.pk = self._singleton_id
+        super().save(*args, **kwargs)
+        
+    def delete(self, *args, **kwargs):
+        pass # Prevent deletion
+        
+    panels = [
+        FieldPanel("title"),
+        FieldPanel("description"),
+        InlinePanel("gallery_images", label="Imágenes ordenables"),
+    ]
+    
+    class Meta:
+        verbose_name = "Galería de Fotos"
+        verbose_name_plural = "Galería de Fotos"
+        
+    def __str__(self):
+        return self.title
+
+
+class GalleryImage(Orderable):
+    gallery = ParentalKey(Gallery, on_delete=models.CASCADE, related_name="gallery_images")
+    image = models.ForeignKey(
+        'wagtailimages.Image',
+        on_delete=models.CASCADE,
+        related_name='+',
+        verbose_name="Imagen"
+    )
+    caption = models.CharField("Categoría / Leyenda", max_length=250, blank=True, help_text="Categoría o texto alternativo")
+    
+    panels = [
+        FieldPanel("image"),
+        FieldPanel("caption"),
+    ]
+    
+    class Meta(Orderable.Meta):
+        verbose_name = "Gallery Image"
+        verbose_name_plural = "Gallery Images"

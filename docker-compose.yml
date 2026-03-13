@@ -172,11 +172,11 @@ services:
       - DB_SSLMODE=require
       - DB_CHANNEL_BINDING=require
       # - DB_OPTIONS=-c search_path=public
-      - MINIO_ENDPOINT=jic_minio_storage:9000
-      - MINIO_ACCESS_KEY=mast_st_jic
-      - MINIO_SECRET_KEY=KtWzuaY3Uy8F
-      - MINIO_USE_SSL=false
-      - MINIO_BUCKET_NAME=jic-media
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_USE_SSL=${MINIO_USE_SSL}
+      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME}
     depends_on:
       jic_minio_storage:
         condition: service_healthy
@@ -210,6 +210,11 @@ services:
       - DB_SSLMODE=require
       - DB_CHANNEL_BINDING=require
       # - DB_OPTIONS=-c search_path=public
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_USE_SSL=${MINIO_USE_SSL}
+      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME}
     depends_on:
       - jicweb_app
     networks:
@@ -262,13 +267,12 @@ services:
       - 9010:9000
       - 9011:9001
     environment:
-      - MINIO_ROOT_USER=mast_st_jic
-      - MINIO_ROOT_PASSWORD=KtWzuaY3Uy8F
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
       - MINIO_CONSOLE_ADDRESS=:9001
-      - MINIO_DEFAULT_BUCKETS=jic-media:public
+      - MINIO_DEFAULT_BUCKETS=${MINIO_BUCKET_NAME}:public
       - MINIO_SCHEME=http
-      - MINIO_SERVER_URL=http://localhost:9000
-      - MINIO_SKIP_CLIENT=yes
+      - MINIO_SKIP_CLIENT=no
       - TZ=UTC
     networks:
       netX:
@@ -281,10 +285,65 @@ services:
       timeout: 5s
       retries: 5
 
+  jic_minio_backup:
+    image: bitnami/minio:latest
+    entrypoint: |
+      /bin/bash -c "
+        mc alias set src http://172.20.0.75:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+        while true; do
+          TIMESTAMP=$$(date +%Y%m%d_%H%M%S);
+          echo \"[$$TIMESTAMP] Iniciando backup de MinIO...\";
+          mc mirror --overwrite src/${MINIO_BUCKET_NAME} /bitnami/minio/backups/$$(date +%Y%m%d)/ || echo \"[$$TIMESTAMP] ERROR: Falló el backup\";
+          echo \"[$$TIMESTAMP] Backup completado en /bitnami/minio/backups/$$(date +%Y%m%d)/\";
+          sleep 86400;
+        done
+      "
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME}
+    volumes:
+      - jicst_backup_data:/bitnami/minio/backups
+    depends_on:
+      jic_minio_storage:
+        condition: service_healthy
+    networks:
+      - netX
+    restart: unless-stopped
+
+  jic_db_backup:
+    image: bitnamilegacy/postgresql:17
+    entrypoint: |
+      /bin/bash -c "
+        export PGPASSWORD=1*o63U9JlN5bLp;
+        while true; do
+          TIMESTAMP=$$(date +%Y%m%d_%H%M%S);
+          BACKUP_FILE=/bitnami/postgresql/backups/$$(date +%Y%m%d)/db_jicweb_$$TIMESTAMP.sql.gz;
+          mkdir -p /bitnami/postgresql/backups/$$(date +%Y%m%d);
+          echo \"[$$TIMESTAMP] Iniciando backup de PostgreSQL...\";
+          pg_dump -h 172.20.1.85 -U mast_jicweb -d db_jicweb | gzip > $$BACKUP_FILE || echo \"[$$TIMESTAMP] ERROR: Falló el backup\";
+          echo \"[$$TIMESTAMP] Backup completado: $$BACKUP_FILE\";
+          find /bitnami/postgresql/backups -name '*.sql.gz' -mtime +30 -delete;
+          sleep 86400;
+        done
+      "
+    volumes:
+      - jicweb_master_data_backup_v1:/bitnami/postgresql/backups
+    depends_on:
+      jicweb_master:
+        condition: service_healthy
+    networks:
+      - netX
+    restart: unless-stopped
+
 volumes:
   jicst_storage_data:
     driver: local
+  jicst_backup_data:
+    driver: local
   jicweb_master_data_v1:
+    driver: local
+  jicweb_master_data_backup_v1:
     driver: local
   static_files:
     driver: local

@@ -1,0 +1,225 @@
+{% extends '_base.html' %}
+{% load static wagtailcore_tags %}
+
+{% block title %}Búsqueda{% endblock %}
+
+{% block meta_description %}Busca en nuestros proyectos de investigación y contenido{% endblock %}
+
+{% block content %}
+<section class="py-12 lg:py-16 bg-background min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 lg:px-8">
+        
+        <!-- Search Header -->
+        <div class="mb-12 text-center">
+            <h1 class="text-4xl font-bold text-foreground mb-3">Búsqueda</h1>
+            <p class="text-muted-foreground text-lg">Encuentra proyectos, investigaciones y contenido</p>
+        </div>
+
+        <!-- Search Form -->
+        <form action="{% url 'Busqueda' %}" method="get" class="max-w-2xl mx-auto mb-12">
+            <div class="relative flex gap-2">
+                <input 
+                    type="text" 
+                    name="query" 
+                    {% if search_query %}value="{{ search_query }}"{% endif %}
+                    class="w-full px-4 py-3 border border-border rounded-lg bg-card text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent focus:outline-none shadow-sm"
+                    placeholder="Buscar proyectos, investigadores, categorías..."
+                    autocomplete="off"
+                >
+                <button type="submit" class="px-6 py-3 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+        </form>
+
+        {% if search_query %}
+            <div class="space-y-10">
+                
+                <!-- Project Results -->
+                {% if project_results %}
+                <section>
+                    <div class="flex items-center gap-3 mb-8 pb-3 border-b border-border">
+                        <h2 class="text-2xl font-bold text-foreground">Proyectos de Investigación</h2>
+                        <span class="px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary">
+                            {{ project_results|length }}
+                        </span>
+                    </div>
+
+                    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        {% for project in project_results %}
+                        <article class="bg-card border border-border rounded-lg p-6 hover:shadow-md transition-shadow hover:border-primary/30 flex flex-col h-full">
+                            <div class="mb-4">
+                                <span class="inline-block px-2.5 py-1 text-xs font-medium bg-secondary/50 text-foreground rounded-md mb-3">
+                                    {{ project.category }}
+                                </span>
+                                <h3 class="text-lg font-bold text-foreground mb-1 line-clamp-2">
+                                    <a href="{% url 'ProyectoDetalle' project.id %}" class="hover:text-primary transition-colors">
+                                        {{ project.title }}
+                                    </a>
+                                </h3>
+                                <p class="text-xs text-muted-foreground">{{ project.university }} • {{ project.year }}</p>
+                            </div>
+                            
+                            <p class="text-sm text-muted-foreground mb-4 flex-grow line-clamp-3">
+                                {{ project.abstract|truncatewords:20 }}
+                            </p>
+                            
+                            <div class="pt-4 border-t border-border/50">
+                                <a href="{% url 'ProyectoDetalle' project.id %}" class="inline-flex items-center text-sm font-medium text-primary hover:text-primary/80 transition-colors">
+                                    Ver detalles
+                                    <svg class="ml-1.5 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                                    </svg>
+                                </a>
+                            </div>
+                        </article>
+                        {% endfor %}
+                    </div>
+                </section>
+                {% endif %}
+
+                <!-- Documents Results -->
+                {% if document_results %}
+                <section>
+                    <div class="flex items-center gap-3 mb-8 pb-3 border-b border-border">
+                        <h2 class="text-2xl font-bold text-foreground">Documentos</h2>
+                        <span class="px-3 py-1 rounded-full text-sm font-medium bg-secondary/50 text-foreground">
+                            {{ document_results|length }}
+                        </span>
+                    </div>
+
+                    <div class="grid gap-4">
+                        {% for doc in document_results %}
+                        <div class="bg-card border border-border rounded-lg p-6 hover:shadow-md hover:border-primary/30 transition-all group">
+                            <div class="flex items-start gap-4">
+                                <!-- Document Icon -->
+                                <div class="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                    </svg>
+                                </div>
+                                
+                                <!-- Document Info -->
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="text-lg font-semibold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                                        {{ doc.title }}
+                                    </h4>
+                                    
+                                    {% if doc.description %}
+                                    <p class="text-sm text-muted-foreground mb-3 line-clamp-2">
+                                        {{ doc.description }}
+                                    </p>
+                                    {% endif %}
+                                    
+                                    <div class="flex gap-2 flex-wrap">
+                                        <span class="inline-block px-2.5 py-1 text-xs font-medium bg-secondary/50 text-foreground rounded-md">
+                                            {{ doc.get_doc_type_display }}
+                                        </span>
+                                        {% if doc.year %}
+                                        <span class="inline-block px-2.5 py-1 text-xs font-medium bg-secondary/30 text-muted-foreground rounded-md">
+                                            {{ doc.year }}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <!-- Download Link -->
+                                <div class="flex-shrink-0">
+                                    <a href="{{ doc.document_file.url }}" download class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors" title="Descargar documento">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                        </svg>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </section>
+                {% endif %}
+
+                <!-- Wagtail Content Results -->
+                {% if search_results %}
+                <section>
+                    <div class="flex items-center gap-3 mb-8 pb-3 border-b border-border">
+                        <h2 class="text-2xl font-bold text-foreground">Páginas y Contenido</h2>
+                        <span class="px-3 py-1 rounded-full text-sm font-medium bg-secondary/50 text-foreground">
+                            {{ search_results.paginator.count }}
+                        </span>
+                    </div>
+
+                    <div class="bg-card border border-border rounded-lg divide-y divide-border overflow-hidden">
+                        {% for result in search_results %}
+                        <div class="p-6 hover:bg-secondary/30 transition-colors group">
+                            <h4 class="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+                                <a href="{% pageurl result %}" class="">
+                                    {{ result }}
+                                </a>
+                            </h4>
+                            {% if result.search_description %}
+                                <p class="text-sm text-muted-foreground line-clamp-2">
+                                    {{ result.search_description }}
+                                </p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if search_results.has_previous or search_results.has_next %}
+                    <div class="mt-8 flex justify-center gap-2">
+                        {% if search_results.has_previous %}
+                        <a href="{% url 'Busqueda' %}?query={{ search_query|urlencode }}&amp;page={{ search_results.previous_page_number }}" class="px-4 py-2.5 text-sm font-medium text-foreground bg-card border border-border rounded-lg hover:bg-secondary/30 transition-colors">
+                            ← Anterior
+                        </a>
+                        {% endif %}
+                        
+                        {% if search_results.has_next %}
+                        <a href="{% url 'Busqueda' %}?query={{ search_query|urlencode }}&amp;page={{ search_results.next_page_number }}" class="px-4 py-2.5 text-sm font-medium text-foreground bg-card border border-border rounded-lg hover:bg-secondary/30 transition-colors">
+                            Siguiente →
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </section>
+                {% endif %}
+
+                {% if not search_results and not project_results %}
+                    <div class="text-center py-16 bg-card border-2 border-dashed border-border/50 rounded-lg">
+                        <svg class="mx-auto h-12 w-12 text-muted-foreground opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        <h3 class="mt-3 text-lg font-bold text-foreground">No se encontraron resultados</h3>
+                        <p class="mt-1 text-sm text-muted-foreground">No pudimos encontrar nada que coincida con "<strong>{{ search_query }}</strong>".</p>
+                    </div>
+                {% endif %}
+            </div>
+
+        {% else %}
+            <!-- Empty State -->
+            <div class="text-center py-20">
+                <div class="inline-flex items-center justify-center p-4 bg-secondary/30 rounded-full mb-4">
+                    <svg class="h-8 w-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-foreground">¿Qué estás buscando?</h2>
+                <p class="text-muted-foreground mt-1 max-w-md mx-auto">Usa la barra arriba para buscar proyectos de investigación, autores, universidades y más contenido del sitio.</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Floating Search Button -->
+<div class="fixed bottom-8 right-8 z-40">
+    <a href="{% url 'Busqueda' %}" 
+       class="group flex items-center justify-center w-14 h-14 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+       title="Buscar proyectos e investigaciones">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 group-hover:scale-110 transition-transform" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+        </svg>
+    </a>
+</div>
+{% endblock %}

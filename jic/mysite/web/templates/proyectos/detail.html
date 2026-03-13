@@ -1,0 +1,54 @@
+{% extends '_base.html' %}
+{% block title %}{{ project.title }}{% endblock %}
+{% block meta_description %}{{ project.abstract|truncatechars:150 }}{% endblock %}
+
+{% block content %}
+<div class="bg-stone-50 py-12">
+    <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+        <a href="{% url 'Proyectos' %}" class="mb-6 inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary">
+            <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Volver a Proyectos
+        </a>
+        
+        <div class="overflow-hidden rounded-xl bg-card shadow-sm border border-border">
+            <div class="p-6 md:p-8">
+                <div class="mb-6 flex flex-wrap items-center gap-3">
+                    <span class="rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">{{ project.category }}</span>
+                    <span class="text-sm text-muted-foreground">{{ project.year }}</span>
+                    {% if project.winner %}
+                        <span class="rounded-full bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-800">Ganador</span>
+                    {% endif %}
+                </div>
+                
+                <h1 class="mb-6 text-2xl font-bold text-foreground md:text-3xl">{{ project.title }}</h1>
+                
+                <div class="grid gap-6 md:grid-cols-2 mb-8">
+                    <div>
+                        <h3 class="mb-1 text-sm font-semibold text-muted-foreground">Universidad</h3>
+                        <p class="font-medium text-foreground">{{ project.university }}</p>
+                    </div>
+                     <div>
+                        <h3 class="mb-1 text-sm font-semibold text-muted-foreground">Asesor</h3>
+                        <p class="font-medium text-foreground">{{ project.advisor|default:'-' }}</p>
+                    </div>
+                </div>
+
+                <div class="mb-8">
+                    <h3 class="mb-3 text-lg font-semibold text-foreground">Resumen / Abstract</h3>
+                    <div class="prose max-w-none text-muted-foreground">
+                        <p class="leading-relaxed">{{ project.abstract }}</p>
+                    </div>
+                </div>
+
+                <div class="border-t border-border pt-6">
+                    <h3 class="mb-2 text-sm font-semibold text-foreground">Contacto</h3>
+                    <a href="mailto:{{ project.contact }}" class="inline-flex items-center text-primary hover:underline">
+                        <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        {{ project.contact }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

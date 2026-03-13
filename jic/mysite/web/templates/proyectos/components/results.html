@@ -1,88 +1,53 @@
 <section class="py-8 lg:py-12 bg-stone-50">
     <div class="mx-auto max-w-7xl px-4 lg:px-8">
-        <p class="mb-4 text-sm text-muted-foreground">
-            {{ filtered|length }}
-            proyecto{{ filtered|length|pluralize:"s" }}
-            encontrado{{ filtered|length|pluralize:"s" }}
-        </p>
+        <div class="mb-4 flex items-center justify-between gap-4">
+            <p class="text-sm text-muted-foreground">
+                Mostrando {{ page_obj.start_index }} a {{ page_obj.end_index }} de {{ page_obj.paginator.count }} proyectos
+            </p>
+            <p class="hidden text-xs italic text-muted-foreground sm:block">Haz clic en una fila para ver más información</p>
+        </div>
         <div class="overflow-x-auto rounded-xl border border-border">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="bg-secondary/45">
-                        <th
-                            class="px-4 py-3 text-left font-semibold text-foreground"
-                        >
-                            Año
-                        </th>
-                        <th
-                            class="px-4 py-3 text-left font-semibold text-foreground"
-                        >
-                            Titulo
-                        </th>
-                        <th
-                            class="hidden px-4 py-3 text-left font-semibold text-foreground md:table-cell"
-                        >
-                            Universidad
-                        </th>
-                        <th
-                            class="hidden px-4 py-3 text-left font-semibold text-foreground lg:table-cell"
-                        >
-                            Categoria
-                        </th>
+                        <th class="px-4 py-3 text-left font-semibold text-foreground">Año</th>
+                        <th class="px-4 py-3 text-left font-semibold text-foreground">Título</th>
+                        <th class="hidden px-4 py-3 text-left font-semibold text-foreground md:table-cell">Universidad</th>
+                        <th class="hidden px-4 py-3 text-left font-semibold text-foreground lg:table-cell">Categoría</th>
                         <th class="hidden px-4 py-3 text-left font-semibold text-foreground sm:table-cell">Asesor</th>
+                        <th class="w-12 px-4 py-3 text-center font-semibold text-foreground"></th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for p in filtered %}
-                    <tr class="cursor-pointer border-t border-border transition-colors hover:bg-secondary/50"
-                        data-title="{{ p.title }}"
-                        data-year="{{ p.year }}"
-                        data-university="{{ p.university }}"
-                        data-category="{{ p.category }}"
-                        data-advisor="{{ p.advisor|default:'' }}"
-                        data-contact="{{ p.contact }}"
-                        data-abstract="{{ p.abstract|default:'' }}"
-                        data-place="{{ p.place|default:'' }}"
-                        onclick="openProjectModal(this)">
-                        <td class="px-4 py-3 text-foreground">
-                            <div class="flex items-center gap-2">
-                                <div class="w-3.5 h-3.5 shrink-0">
-                                    {% if p.place == 1 %}
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 text-amber-500" aria-hidden="true"><path d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978"></path><path d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978"></path><path d="M18 9h1.5a1 1 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"></path><path d="M6 9H4.5a1 1 0 0 1 0-5H6"></path></svg>
-                                    {% elif p.place == 2 %}
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 text-slate-400" aria-hidden="true"><path d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978"></path><path d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978"></path><path d="M18 9h1.5a1 1 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"></path><path d="M6 9H4.5a1 1 0 0 1 0-5H6"></path></svg>
-                                    {% elif p.place == 3 %}
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 text-amber-700" aria-hidden="true"><path d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978"></path><path d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978"></path><path d="M18 9h1.5a1 1 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"></path><path d="M6 9H4.5a1 1 0 0 1 0-5H6"></path></svg>
-                                    {% endif %}
-                                </div>
-                                {{ p.year }}
-                            </div>
-                        </td>
-                        <td class="max-w-xs px-4 py-3 font-medium text-foreground hover:text-primary">{{ p.title }}</td>
-                        <td
-                            class="hidden px-4 py-3 text-muted-foreground md:table-cell"
+                    {% for project in page_obj.object_list %}
+                        <tr
+                            class="group cursor-pointer border-t border-border transition-colors hover:bg-secondary/50"
+                            data-id="{{ project.id }}"
+                            data-url="{% url 'ProyectoDetalle' project.id %}"
+                            data-title="{{ project.title|escape }}"
+                            data-year="{{ project.year|escape }}"
+                            data-university="{{ project.university|escape }}"
+                            data-category="{{ project.category|escape }}"
+                            data-advisor="{{ project.advisor|escape }}"
+                            data-contact="{{ project.contact|escape }}"
+                            data-abstract="{{ project.abstract|escape }}"
+                            onclick="openProjectModal(this)"
                         >
-                            {{ p.university }}
-                        </td>
-                        <td class="hidden px-4 py-3 lg:table-cell">
-                            <span
-                                class="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary"
-                            >
-                                {{ p.category }}
-                            </span>
-                        </td>
-                        <td class="hidden px-4 py-3 text-muted-foreground sm:table-cell">{{ p.advisor|default:"-" }}</td>
-                    </tr>
+                            <td class="px-4 py-3 text-foreground">{{ project.year }}</td>
+                            <td class="max-w-xs px-4 py-3 font-medium text-foreground group-hover:text-primary">{{ project.title }}</td>
+                            <td class="hidden px-4 py-3 text-muted-foreground md:table-cell">{{ project.university }}</td>
+                            <td class="hidden px-4 py-3 lg:table-cell"><span class="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">{{ project.category }}</span></td>
+                            <td class="hidden px-4 py-3 text-muted-foreground sm:table-cell">{{ project.advisor|default:'-' }}</td>
+                            <td class="px-4 py-3 text-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-muted-foreground transition-colors group-hover:text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </td>
+                        </tr>
                     {% empty %}
-                    <tr>
-                        <td
-                            colspan="5"
-                            class="px-4 py-12 text-center text-muted-foreground"
-                        >
-                            No se encontraron proyectos con los filtros
-                            seleccionados.
-                        </td>
-                    </tr>
+                        <tr>
+                            <td colspan="6" class="px-4 py-12 text-center text-muted-foreground">No se encontraron proyectos con los filtros seleccionados.</td>
+                        </tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -90,13 +55,15 @@
     </div>
 </section>
 
-
-<!-- Modal detalle del proyecto -->
-<div id="project-modal"
-     style="display:none"
+<!-- MODAL -->
+<div id="project-modal" style="display:none"
      class="fixed inset-0 z-50 flex items-center justify-center bg-foreground/50 p-4"
      onclick="if(event.target===this)closeProjectModal()">
-    <div class="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-card p-6 shadow-xl">
+    <div class="scrollbar-hide relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-card p-6 shadow-xl">
+        <style>
+            .scrollbar-hide::-webkit-scrollbar { display: none; }
+            .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        </style>
         <button onclick="closeProjectModal()"
             class="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             aria-label="Cerrar">
@@ -104,73 +71,62 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
         </button>
-
         <div class="mb-4 flex items-start gap-3">
-            <div id="modal-medal" class="hidden flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978"></path><path d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978"></path><path d="M18 9h1.5a1 1 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"></path><path d="M6 9H4.5a1 1 0 0 1 0-5H6"></path></svg>
-            </div>
             <div>
                 <span id="modal-category" class="inline-block rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary"></span>
-                <span id="modal-year" class="ml-2 text-xs text-muted-foreground self-center"></span>
+                <span id="modal-year" class="ml-2 self-center text-xs text-muted-foreground"></span>
             </div>
         </div>
-
         <h2 id="modal-title" class="text-xl font-bold text-foreground"></h2>
-
         <div class="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
-            <div>
-                <span class="text-muted-foreground">Universidad: </span>
-                <span id="modal-university" class="font-medium text-foreground"></span>
-            </div>
-            <div>
-                <span class="text-muted-foreground">Asesor: </span>
-                <span id="modal-advisor" class="font-medium text-foreground"></span>
-            </div>
-            <div>
-                <span class="text-muted-foreground">Contacto: </span>
-                <a id="modal-contact" class="font-medium text-primary hover:underline" href="#"></a>
-            </div>
+            <div><span class="text-muted-foreground">Universidad: </span><span id="modal-university" class="font-medium text-foreground"></span></div>
+            <div><span class="text-muted-foreground">Asesor: </span><span id="modal-advisor" class="font-medium text-foreground"></span></div>
+            <div><span class="text-muted-foreground">Contacto: </span><a id="modal-contact" class="font-medium text-primary hover:underline" href="#"></a></div>
         </div>
-
         <div class="mt-6">
             <h3 class="mb-2 text-sm font-semibold text-foreground">Resumen / Abstract</h3>
             <p id="modal-abstract" class="text-sm leading-relaxed text-muted-foreground"></p>
-        </div>
-
-        <div id="modal-winner-banner" class="mt-6 hidden rounded-lg bg-amber-50 p-4 dark:bg-amber-950/20">
-            <p id="modal-winner-text" class="text-sm font-medium text-amber-800 dark:text-amber-200"></p>
+            <a id="modal-view-more" href="" class="mt-2 inline-flex items-center text-sm font-medium text-primary hover:underline hidden">
+                Ver más
+                <svg class="ml-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                </svg>
+            </a>
         </div>
     </div>
 </div>
 
+<!-- SCRIPT -->
 <script>
 (function () {
-    var placeLabels = { '1': 'Primer', '2': 'Segundo', '3': 'Tercer' };
-
     window.openProjectModal = function (row) {
         var d = row.dataset;
-        document.getElementById('modal-category').textContent = d.category;
-        document.getElementById('modal-year').textContent = d.year;
-        document.getElementById('modal-title').textContent = d.title;
-        document.getElementById('modal-university').textContent = d.university;
+        document.getElementById('modal-category').textContent = d.category || '';
+        document.getElementById('modal-year').textContent = d.year || '';
+        document.getElementById('modal-title').textContent = d.title || '';
+        document.getElementById('modal-university').textContent = d.university || '';
         document.getElementById('modal-advisor').textContent = d.advisor || '-';
-        var contactEl = document.getElementById('modal-contact');
-        contactEl.textContent = d.contact;
-        contactEl.href = 'mailto:' + d.contact;
-        document.getElementById('modal-abstract').textContent = d.abstract || 'No disponible.';
 
-        var banner = document.getElementById('modal-winner-banner');
-        var medal = document.getElementById('modal-medal');
-        if (d.place) {
-            var bgColors = { '1': 'bg-amber-500', '2': 'bg-slate-400', '3': 'bg-amber-700' };
-            medal.className = 'flex h-10 w-10 shrink-0 items-center justify-center rounded-full ' + (bgColors[d.place] || 'bg-primary');
-            document.getElementById('modal-winner-text').textContent =
-                'Este proyecto obtuvo el ' + (placeLabels[d.place] || d.place) +
-                ' Lugar en la JIC Nacional ' + d.year + '.';
-            banner.classList.remove('hidden');
+        var contactEl = document.getElementById('modal-contact');
+        contactEl.textContent = d.contact || '';
+        contactEl.href = d.contact ? 'mailto:' + d.contact : '#';
+
+        var abstractCount = 350;
+        var abstractText = d.abstract || 'No disponible.';
+        var modalAbstract = document.getElementById('modal-abstract');
+        var viewMoreEl = document.getElementById('modal-view-more');
+
+        if (abstractText.length > abstractCount) {
+            modalAbstract.textContent = abstractText.substring(0, abstractCount) + '...';
         } else {
-            medal.className = 'hidden';
-            banner.classList.add('hidden');
+            modalAbstract.textContent = abstractText;
+        }
+
+        if (d.url) {
+            viewMoreEl.href = d.url;
+            viewMoreEl.classList.remove('hidden');
+        } else {
+            viewMoreEl.classList.add('hidden');
         }
 
         document.getElementById('project-modal').style.display = 'flex';

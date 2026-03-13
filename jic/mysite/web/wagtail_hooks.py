@@ -1,5 +1,10 @@
+from django.urls import reverse
+from wagtail import hooks
+from wagtail.admin.menu import MenuItem, SubmenuMenuItem, Menu
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet, SnippetViewSetGroup
+from wagtail.images.models import Image
+from wagtail.documents.models import Document
 
 from .models import (
     important_date,
@@ -10,11 +15,14 @@ from .models import (
     event_intro,
     coordinator,
     organizer_committee_member,
-    seleccion_institucional,
+    selection_institutional,
+    video,
+    resource_document,
+    Gallery,
 )
 
 
-# ─── Inicio ──────────────────────────────────────────────────────────
+# ─── Home ─────────────────────────────────────────────────────────────
 
 class ImportantDateViewSet(SnippetViewSet):
     model = important_date
@@ -108,7 +116,7 @@ class JicGroup(SnippetViewSetGroup):
 # ─── Resultados ──────────────────────────────────────────────────────
 
 class SeleccionInstitucionalViewSet(SnippetViewSet):
-    model = seleccion_institucional
+    model = selection_institutional
     menu_label = "Selecciones institucionales"
     icon = "list-ul"
     list_display = ("university", "short_name", "year", "status", "is_active", "sort_order")
@@ -123,8 +131,57 @@ class ResultadosGroup(SnippetViewSetGroup):
     items = (SeleccionInstitucionalViewSet,)
 
 
+# ─── Recursos ────────────────────────────────────────────────────────
+
+class VideoViewSet(SnippetViewSet):
+    model = video
+    menu_label = "Videos"
+    icon = "media"
+    list_display = ("title", "category", "sort_order", "is_active", "created_at")
+    list_filter = ("category", "is_active")
+    search_fields = ("title", "description", "category")
+
+
+class ResourceDocumentViewSet(SnippetViewSet):
+    model = resource_document
+    menu_label = "Documentos de Recursos"
+    icon = "doc-full"
+    list_display = ("title", "doc_type", "year", "sort_order", "is_active")
+    list_filter = ("doc_type", "year", "is_active")
+    search_fields = ("title", "description")
+
+
+class GalleryViewSet(SnippetViewSet):
+    model = Gallery
+    menu_label = "Galería Ordenable"
+    icon = "image"
+    list_display = ("title",)
+    search_fields = ("title",)
+
+
+@hooks.register("register_admin_menu_item")
+def register_recursos_menu():
+    recursos_menu = Menu(items=[
+        MenuItem("Imágenes", reverse("wagtailimages:index"), icon_name="image"),
+        MenuItem("Galería Ordenable", reverse("wagtailsnippets_web_gallery:list"), icon_name="image"),
+        MenuItem("Documentos", reverse("wagtaildocs:index"), icon_name="doc-full"),
+        MenuItem("Videos", reverse("wagtailsnippets_web_video:list"), icon_name="media"),
+    ])
+    
+    return SubmenuMenuItem("Recursos", recursos_menu, icon_name="folder-open-inverse", order=103)
+
+@hooks.register("construct_main_menu")
+def hide_original_menus(request, menu_items):
+    """Hide the original top-level items so they only appear inside Resources."""
+    hidden_items = ['images', 'documents']
+    menu_items[:] = [item for item in menu_items if item.name not in hidden_items]
+
+
 # ─── Register all groups ─────────────────────────────────────────────
 
 register_snippet(InicioGroup)
 register_snippet(JicGroup)
 register_snippet(ResultadosGroup)
+register_snippet(VideoViewSet)
+register_snippet(ResourceDocumentViewSet)
+register_snippet(GalleryViewSet)

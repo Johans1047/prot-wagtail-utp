@@ -1,9 +1,14 @@
+import json
+
 from django.shortcuts import render, redirect
+from django.http import Http404
 from django.contrib import messages
+from django.core.paginator import Paginator
 from django.db.utils import OperationalError, ProgrammingError
 from .viewsdata_types import *
 from .viewsdata_fallback import *
 from .models import *
+from wagtail.images.models import Image
 
 
 def Inicio(request) -> render:
@@ -249,177 +254,212 @@ def Participar(request) -> render:
     }
     return render(request, 'participar/_index..html', context)
 
-def Proyectos(request) -> render:
-    # Datos de ejemplo de proyectos
-    all_projects = [
+def _get_raw_projects_data():
+    return json.loads(
+        """
         {
-            "title": "Sistema de monitoreo ambiental con IoT",
-            "university": "UTP",
-            "category": "Ingeniería",
-            "year": 2024,
-            "contact": "jperez@utp.ac.pa",
-            "advisor": "Dr. Carlos Méndez",
-            "place": 1,
-            "winner": True,
-            "abstract": "Este proyecto desarrolla un sistema de monitoreo ambiental basado en IoT para la detección temprana de contaminantes en zonas urbanas. Utilizando sensores de bajo costo y tecnología de comunicación inalámbrica, el sistema permite el monitoreo en tiempo real de la calidad del aire, agua y suelo.",
-        },
+          "total": 13,
+          "proyectos": [
+            {
+              "id": 606,
+              "ano": 2024,
+              "titulo": "Percepción, implicación y consecuencias del acoso escolar en instituciones educativas particulares y oficiales, en una muestra de docentes y estudiantes de distintas provincias de Panamá",
+              "abstract": "El acoso escolar es una problemática cotidiana en el entorno educativo a nivel mundial. El objetivo de esta investigación fue analizar la percepción, implicación y consecuencias del acoso escolar en instituciones educativas, particulares y oficiales, en una muestra de docentes y estudiantes de distintas provincias de Panamá.",
+              "asesor": "Abdel Alexander Solís Rodríguez",
+              "contacto": "abdelsolis@gmail.com",
+              "universidad": "Universidad Católica Santa María la Antigua",
+              "categoria": "Ciencias Sociales y Humanísticas"
+            },
+            {
+              "id": 647,
+              "ano": 2024,
+              "titulo": "Densidad poblacional del mono tití panameño (Oedipomidas geoffroyi) en dos sitios del distrito de Chame, Panamá",
+              "abstract": "El mono tití panameño (Oedipomidas geoffroyi) es considerado tolerante a perturbaciones antropogénica. Sin embargo, la última evaluación del estado de conservación lo consideran Casi Amenazado.",
+              "asesor": "Pedro G Méndez Carvajal",
+              "contacto": "giprimatologia.up@gmail.com",
+              "universidad": "Universidad de Panamá",
+              "categoria": "Ciencias Naturales y Exactas"
+            },
+            {
+              "id": 633,
+              "ano": 2024,
+              "titulo": "Uso de los sentidos por Alouatta coibensis en la evaluación/aceptación de frutos de Spondias mombin en Isla Coiba, Panamá",
+              "abstract": "Los frutos de jobo (Spondias mombin) han sido reportados frecuentemente en la dieta del mono aullador (Alouatta sp.), usando sus sentidos para evaluar de manera efectiva la palatabilidad a estos frutos.",
+              "asesor": "Karol M. Gutiérrez Pineda",
+              "contacto": "gutierrezpinedakm@gmail.com",
+              "universidad": "Universidad de Panamá",
+              "categoria": "Ciencias Naturales y Exactas"
+            },
+            {
+              "id": 629,
+              "ano": 2024,
+              "titulo": "Identificación molecular de filogrupos y patotipos de cepas de Escherichia coli resistentes a los aminoglucósidos aisladas de aguas residuales y naturales en la Ciudad de Panamá.",
+              "abstract": "El crecimiento poblacional, la urbanización, el cambio climático y la creciente demanda de agua han llevado a la degradación de muchas fuentes hídricas.",
+              "asesor": "Jordi Querol",
+              "contacto": "jordi.querol@up.ac.pa",
+              "universidad": "Universidad de Panamá",
+              "categoria": "Ciencias de la Salud"
+            },
+            {
+              "id": 610,
+              "ano": 2024,
+              "titulo": "Restauración del parque recreacional de Buena Vista",
+              "abstract": "El Parque Recreacional de Buena Vista en Tocumen, Panamá, ha experimentado un deterioro significativo en su infraestructura, afectando la calidad de vida de la comunidad.",
+              "asesor": "Maricela Ivonne Rodríguez C",
+              "contacto": "mrodriguez@unicyt.net",
+              "universidad": "Universidad Internacional de Ciencia y Tecnología",
+              "categoria": "Ciencias Sociales y Humanísticas"
+            },
+            {
+              "id": 617,
+              "ano": 2024,
+              "titulo": "Aplicación y Efectividad de las Leyes de Protección de Afluentes Primarios en Los Algarrobos, Veraguas.",
+              "abstract": "Panamá es un país rico en biodiversidad y recursos naturales, uno de éstos son los recursos hídricos.",
+              "asesor": "Zoila Chilan",
+              "contacto": "zchilan16@gmail.com",
+              "universidad": "Universidad Metropolitana de Educación, Ciencia y Tecnología",
+              "categoria": "Ciencias Sociales y Humanísticas"
+            },
+            {
+              "id": 420,
+              "ano": 2024,
+              "titulo": "Valoración de la capacidad antioxidante del puam (Muntingia calabura) y su potencial como alimento funcional",
+              "abstract": "El árbol Muntingia calabura (puam) es de gran abundancia y accesibilidad en la República de Panamá.",
+              "asesor": "Jhonny Correa",
+              "contacto": "jhonny.correa@utp.ac.pa",
+              "universidad": "Universidad Tecnológica de Panamá",
+              "categoria": "Ciencias Naturales y Exactas"
+            },
+            {
+              "id": 247,
+              "ano": 2024,
+              "titulo": "Impacto de campos electromagnéticos en el crecimiento de plantas: Un estudio experimental",
+              "abstract": "Cuando la semilla se encuentra en un proceso germinativo, existen muchas condiciones fundamentales.",
+              "asesor": "Hector Vergara",
+              "contacto": "hector.vergara@utp.ac.pa",
+              "universidad": "Universidad Tecnológica de Panamá",
+              "categoria": "Ciencias Naturales y Exactas"
+            },
+            {
+              "id": 388,
+              "ano": 2024,
+              "titulo": "Prototipo de una aplicación móvil para el reconocimiento, diagnóstico y sugerencias de tratamiento para melanomas",
+              "abstract": "El cáncer de piel es causado por células cancerosas en tejidos de la piel.",
+              "asesor": "Mariluz Centella",
+              "contacto": "mariluz.centella@utp.ac.pa",
+              "universidad": "Universidad Tecnológica de Panamá",
+              "categoria": "Ingeniería"
+            },
+            {
+              "id": 476,
+              "ano": 2024,
+              "titulo": "Desarrollo de estrategias para potenciar el crecimiento de emprendimientos estudiantiles de la Universidad Tecnológica de Panamá",
+              "abstract": "Este artículo aborda el impacto de factores como la asignatura Formación de Emprendedores y el uso de los servicios de la DGTC.",
+              "asesor": "Enith González",
+              "contacto": "enith.gonzalez@utp.ac.pa",
+              "universidad": "Universidad Tecnológica de Panamá",
+              "categoria": "Ciencias Sociales y Humanísticas"
+            },
+            {
+              "id": 626,
+              "ano": 2024,
+              "titulo": "Biodiversidad Vegetal del Parque Nacional Camino de Cruces",
+              "abstract": "Este proyecto se enfoca en obtener información biológica descriptiva sobre las especies vegetales presentes en el área protegida Parque Nacional Camino de Cruces.",
+              "asesor": "Carlos Patricio Guerra Torres",
+              "contacto": "guerrcarlos@gmail.com",
+              "universidad": "Universidad de Panamá",
+              "categoria": "Ciencias Naturales y Exactas"
+            },
+            {
+              "id": 302,
+              "ano": 2024,
+              "titulo": "Propuesta de un índice técnico de caminabilidad (ICM) para microentornos educativos: diagnóstico de los alrededores del Campus Víctor Levi Sasso",
+              "abstract": "Este estudio propone un Índice Técnico de Caminabilidad (ICM) para evaluar microentornos educativos, tomando como caso de estudio el Campus Víctor Levi Sasso.",
+              "asesor": "Analissa Icaza",
+              "contacto": "analissa.icaza@utp.ac.pa",
+              "universidad": "Universidad Tecnológica de Panamá",
+              "categoria": "Ciencias Sociales y Humanísticas"
+            },
+            {
+              "id": 332,
+              "ano": 2024,
+              "titulo": "Modelo metodológico para la evaluación de agua y saneamiento con soluciones a corto plazo para comunidades emergentes: Caso de Calle 50 y La Isla en la Cuenca del Río Mocambo",
+              "abstract": "El agua es un recurso esencial y un derecho humano; este estudio evalúa soluciones a corto plazo para comunidades emergentes.",
+              "asesor": "Viccelda María Domínguez de Franco",
+              "contacto": "viccelda.dominguez@utp.ac.pa",
+              "universidad": "Universidad Tecnológica de Panamá",
+              "categoria": "Ingeniería"
+            },
+            {
+              "id": 411,
+              "ano": 2024,
+              "titulo": "Desarrollo de un adaptador electrónico basado en LoRaWAN para la medición remota de agua en dispositivos tradicionales",
+              "abstract": "Con el objetivo de lograr un mundo más interconectado, se diseñó un prototipo para medir consumo de agua y transmitirlo por LoRaWAN.",
+              "asesor": "Héctor Poveda",
+              "contacto": "hector.poveda@utp.ac.pa",
+              "universidad": "Universidad Tecnológica de Panamá",
+              "categoria": "Ingeniería"
+            }
+          ]
+        }
+        """
+    )
+
+
+def _get_processed_projects():
+    projects_payload = _get_raw_projects_data()
+    return [
         {
-            "title": "Análisis de biomarcadores en diabetes tipo 2",
-            "university": "UP",
-            "category": "Ciencias de la Salud",
-            "year": 2024,
-            "contact": "mgarcia@up.ac.pa",
-            "advisor": "Dra. Ana Rodríguez",
-            "place": 2,
-            "winner": True,
-            "abstract": "Investigación enfocada en la identificación de biomarcadores genéticos y metabólicos asociados a la diabetes tipo 2 en la población panameña.",
-        },
-        {
-            "title": "Modelado matemático de ecosistemas costeros",
-            "university": "UTP",
-            "category": "Ciencias Naturales y Exactas",
-            "year": 2024,
-            "contact": "alopez@utp.ac.pa",
-            "advisor": "Dr. Roberto Sánchez",
-            "place": 3,
-            "winner": True,
-            "abstract": "Desarrollo de modelos matemáticos para simular la dinámica de ecosistemas costeros del Golfo de Panamá utilizando ecuaciones diferenciales y métodos numéricos.",
-        },
-        {
-            "title": "Impacto de redes sociales en la educación superior",
-            "university": "USMA",
-            "category": "Ciencias Sociales y Humanísticas",
-            "year": 2024,
-            "contact": "lrodriguez@usma.ac.pa",
-            "advisor": "Lic. María Castillo",
-            "place": 1,
-            "winner": True,
-            "abstract": "Estudio sobre el impacto de las redes sociales en el rendimiento académico y los hábitos de estudio de estudiantes universitarios en Panamá.",
-        },
-        {
-            "title": "Desarrollo de materiales biodegradables a partir de almidón",
-            "university": "UTP",
-            "category": "Ingeniería",
-            "year": 2024,
-            "contact": "csmith@utp.ac.pa",
-            "advisor": "Ing. Luis Pérez",
-            "place": None,
-            "winner": False,
-            "abstract": "Investigación sobre la síntesis de materiales biodegradables utilizando almidón de yuca como materia prima para desarrollar alternativas sostenibles a los plásticos.",
-        },
-        {
-            "title": "Aplicación móvil para detección temprana de plagas",
-            "university": "UNACHI",
-            "category": "Ciencias Naturales y Exactas",
-            "year": 2023,
-            "contact": "rmartinez@unachi.ac.pa",
-            "advisor": "Dr. Fernando González",
-            "place": 1,
-            "winner": True,
-            "abstract": "Desarrollo de una aplicación móvil que utiliza visión por computadora e inteligencia artificial para identificar plagas agrícolas a partir de fotografías.",
-        },
-        {
-            "title": "Evaluación de la calidad del agua en ríos urbanos",
-            "university": "UTP",
-            "category": "Ciencias Naturales y Exactas",
-            "year": 2023,
-            "contact": "ddiaz@utp.ac.pa",
-            "advisor": "Dra. Patricia Herrera",
-            "place": 2,
-            "winner": True,
-            "abstract": "Estudio integral de la calidad del agua en los principales ríos de la Ciudad de Panamá, evaluando parámetros fisicoquímicos y biológicos.",
-        },
-        {
-            "title": "Inteligencia artificial aplicada a diagnóstico médico",
-            "university": "UP",
-            "category": "Ciencias de la Salud",
-            "year": 2023,
-            "contact": "fhernandez@up.ac.pa",
-            "advisor": "Dr. Miguel Torres",
-            "place": None,
-            "winner": False,
-            "abstract": "Aplicación de técnicas de deep learning para el análisis de imágenes médicas y apoyo al diagnóstico clínico con datos de pacientes panameños.",
-        },
-        {
-            "title": "Diseño de prótesis de bajo costo con impresión 3D",
-            "university": "UTP",
-            "category": "Ingeniería",
-            "year": 2023,
-            "contact": "jcastro@utp.ac.pa",
-            "advisor": "Ing. Carolina Vega",
-            "place": 1,
-            "winner": True,
-            "abstract": "Proyecto de desarrollo de prótesis de extremidad superior usando tecnología de impresión 3D y materiales de bajo costo accesibles para poblaciones de escasos recursos.",
-        },
-        {
-            "title": "Percepción ciudadana de la seguridad pública",
-            "university": "ULAT",
-            "category": "Ciencias Sociales y Humanísticas",
-            "year": 2022,
-            "contact": "mflores@ulat.ac.pa",
-            "advisor": "Lic. Jorge Morales",
-            "place": 2,
-            "winner": True,
-            "abstract": "Investigación sociológica sobre la percepción de la seguridad pública en barrios urbanos de Panamá mediante encuestas y grupos focales.",
-        },
-        {
-            "title": "Robot autónomo para agricultura de precisión",
-            "university": "UTP",
-            "category": "Ingeniería",
-            "year": 2022,
-            "contact": "ktorres@utp.ac.pa",
-            "advisor": "Dr. Eduardo Ríos",
-            "place": 1,
-            "winner": True,
-            "abstract": "Diseño y construcción de un robot autónomo para agricultura de precisión con sensores y GPS para navegación autónoma y monitoreo de cultivos.",
-        },
-        {
-            "title": "Biodiversidad en manglares panameños",
-            "university": "UP",
-            "category": "Ciencias Naturales y Exactas",
-            "year": 2022,
-            "contact": "pvargas@up.ac.pa",
-            "advisor": "Dra. Lucía Fernández",
-            "place": None,
-            "winner": False,
-            "abstract": "Caracterización de la biodiversidad en ecosistemas de manglar de la costa del Pacífico de Panamá, evaluando el estado de conservación y amenazas.",
-        },
+            "id": project["id"],
+            "title": project["titulo"],
+            "university": project["universidad"],
+            "category": project["categoria"],
+            "year": project["ano"],
+            "contact": project["contacto"],
+            "advisor": project["asesor"],
+            "winner": project.get("winner", False),
+            "abstract": project["abstract"],
+        }
+        for project in projects_payload["proyectos"]
     ]
-    
-    # Obtener parámetros de filtro
+
+
+def Proyectos(request) -> render:
+    all_projects = _get_processed_projects()
+
     tab = request.GET.get('tab', 'all')
-    search = request.GET.get('search', '')
+    search = request.GET.get('search', '').strip()
     year_filter = request.GET.get('year', 'all')
     category_filter = request.GET.get('category', 'all')
     university_filter = request.GET.get('university', 'all')
-    
-    # Filtrar proyectos
+
     filtered = all_projects
-    
+
     if tab == 'winners':
         filtered = [p for p in filtered if p['winner']]
-    
+
     if search:
         search_lower = search.lower()
-        filtered = [p for p in filtered if search_lower in p['title'].lower() or search_lower in p['university'].lower()]
-    
+        filtered = [
+            p for p in filtered
+            if search_lower in p['title'].lower() or search_lower in p['university'].lower()
+        ]
+
     if year_filter != 'all':
         try:
             year_filter_int = int(year_filter)
             filtered = [p for p in filtered if p['year'] == year_filter_int]
         except ValueError:
             pass
-    
+
     if category_filter != 'all':
         filtered = [p for p in filtered if p['category'] == category_filter]
 
     if university_filter != 'all':
         filtered = [p for p in filtered if p['university'] == university_filter]
-    
-    # Obtener lista de años únicos
+
     years = sorted(set(p['year'] for p in all_projects), reverse=True)
-    
-    # Obtener opciones de categorías únicas
+
     categories_options = [
         {"value": "all", "label": "Todas las categorías"},
     ]
@@ -431,7 +471,14 @@ def Proyectos(request) -> render:
     ]
     for uni in sorted(set(p['university'] for p in all_projects)):
         universities_options.append({"value": uni, "label": uni})
-    
+
+    paginator = Paginator(filtered, 10)
+    page_obj = paginator.get_page(request.GET.get('page', 1))
+
+    query_params = request.GET.copy()
+    query_params.pop('page', None)
+    page_query = query_params.urlencode()
+
     try:
         schedule_dates = list(
             important_date.objects.filter(is_active=True).order_by("sort_order", "event_date")
@@ -443,6 +490,7 @@ def Proyectos(request) -> render:
 
     context = {
         'filtered': filtered,
+        'page_obj': page_obj,
         'tab': tab,
         'search': search,
         'year_filter': year_filter,
@@ -451,9 +499,21 @@ def Proyectos(request) -> render:
         'years': years,
         'categories_options': categories_options,
         'universities_options': universities_options,
+        'page_query': page_query,
         'important_dates': schedule_dates,
     }
     return render(request, 'proyectos/_index.html', context)
+
+def ProyectoDetalle(request, project_id: int):
+    projects = _get_processed_projects()
+    project = next((p for p in projects if p["id"] == int(project_id)), None)
+    
+    if not project:
+         # Debug info to understand why it's not found
+         available_ids = [p["id"] for p in projects]
+         raise Http404(f"Proyecto no encontrado. Buscando ID: {project_id} (tipo {type(project_id)}). IDs disponibles: {available_ids}")
+         
+    return render(request, 'proyectos/detail.html', {'project': project})
 
 def Resultados(request) -> render:
     # Datos históricos de ediciones anteriores
@@ -587,37 +647,120 @@ def Recursos(request) -> render:
         },
     ]
     
-    gallery_images = [
-        {"src": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=500&h=500&fit=crop", "alt": "Investigadores en laboratorio", "category": "Investigación"},
-        {"src": "https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=500&h=500&fit=crop", "alt": "Presentación de proyecto", "category": "Presentaciones"},
-        {"src": "https://images.unsplash.com/photo-1576086213369-97a306d36557?w=500&h=500&fit=crop", "alt": "Equipo científico", "category": "Investigación"},
-        {"src": "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=500&h=500&fit=crop", "alt": "Conferencia científica", "category": "Eventos"},
-        {"src": "https://images.unsplash.com/photo-1516534775068-bb57b6439066?w=500&h=500&fit=crop", "alt": "Investigadores colaborando", "category": "Investigación"},
-        {"src": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=500&h=500&fit=crop", "alt": "Presentación en auditorio", "category": "Presentaciones"},
-        {"src": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500&h=500&fit=crop", "alt": "Evento científico", "category": "Eventos"},
-        {"src": "https://images.unsplash.com/photo-1537128191892-8ac93e876401?w=500&h=500&fit=crop", "alt": "Trabajo en equipo", "category": "Investigación"},
-    ]
     
-    videos = [
-        {
-            "title": "Video promocional JIC Nacional",
-            "thumbnail": "/static/images/hero-jic.jpg",
-            "url": "https://www.youtube.com/watch?v=oispNb8t79o",
-            "description": "Conoce la JIC Nacional, el evento de investigacion mas importante para jovenes en Panama.",
-        },
-        {
-            "title": "¿Cómo preparar tu proyecto de investigación?",
-            "thumbnail": "/static/images/categories-science.jpg",
-            "url": "https://www.youtube.com/watch?v=7VAMa-C7wG0",
-            "description": "Conoce la JIC Nacional, el evento de investigacion mas importante para jovenes en Panama.",
-        },
-        {
-            "title": "Inducción a la JIC 2024",
-            "thumbnail": "/static/images/hero-jic.jpg",
-            "url": "https://youtu.be/zxKc3FreHTQ?si=CORhb6r9ZoPpMf9d",
-            "description": "Recursos sobre cómo presentar tu proyecto en la JIC.",
-        },
-    ]
+    try:
+        # Try to get the ordered gallery snippet first
+        gallery = Gallery.objects.first()
+        gallery_images = []
+        
+        if gallery and gallery.gallery_images.exists():
+            for item in gallery.gallery_images.all():
+                if item.image:
+                    gallery_images.append({
+                        "src": item.image.file.url,
+                        "alt": item.image.title,
+                        "category": item.caption if item.caption else "General",
+                    })
+        else:
+            # Fallback to fetching latest images if no gallery snippet exists or it's empty
+            db_images = Image.objects.all().order_by('-created_at').prefetch_related('tags')#[:24]
+            for img in db_images:
+                # Use the first tag as category, default to "General"
+                category = "General"
+                tags = img.tags.all()
+                if tags:
+                    category = tags[0].name.title()
+                    
+                gallery_images.append({
+                    "src": img.file.url,
+                    "alt": img.title,
+                    "category": category,
+                })
+    except (OperationalError, ProgrammingError, Exception):
+        # Fallback if DB not ready or empty
+        gallery_images = []
+    
+    if not gallery_images:
+        gallery_images = [
+            {"src": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=500&h=500&fit=crop", "alt": "Investigadores en laboratorio", "category": "Investigación"},
+            {"src": "https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=500&h=500&fit=crop", "alt": "Presentación de proyecto", "category": "Presentaciones"},
+            {"src": "https://images.unsplash.com/photo-1576086213369-97a306d36557?w=500&h=500&fit=crop", "alt": "Equipo científico", "category": "Investigación"},
+            {"src": "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=500&h=500&fit=crop", "alt": "Conferencia científica", "category": "Eventos"},
+            {"src": "https://images.unsplash.com/photo-1516534775068-bb57b6439066?w=500&h=500&fit=crop", "alt": "Investigadores colaborando", "category": "Investigación"},
+            {"src": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=500&h=500&fit=crop", "alt": "Presentación en auditorio", "category": "Presentaciones"},
+            {"src": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500&h=500&fit=crop", "alt": "Evento científico", "category": "Eventos"},
+            {"src": "https://images.unsplash.com/photo-1537128191892-8ac93e876401?w=500&h=500&fit=crop", "alt": "Trabajo en equipo", "category": "Investigación"},
+        ]
+    
+    gallery_categories = sorted(set(img['category'] for img in gallery_images))
+    
+    if tab == 'galeria':
+        paginator = Paginator(gallery_images, 24)
+        page_obj = paginator.get_page(request.GET.get('page', 1))
+        gallery_images = page_obj
+    
+    try:
+        db_videos = video.objects.filter(is_active=True).order_by("sort_order", "-created_at")
+        videos = []
+        for v in db_videos:
+            thumb_url = v.thumbnail.url if v.thumbnail else "/static/images/hero-jic.jpg"
+            video_url = v.video_file.url if v.video_file else "#"
+            videos.append({
+                "title": v.title,
+                "thumbnail": thumb_url,
+                "url": video_url,
+                "description": v.description,
+            })
+    except (OperationalError, ProgrammingError, Exception):
+        videos = []
+        
+    if not videos:
+        videos = [
+            {
+                "title": "Video promocional JIC Nacional",
+                "thumbnail": "/static/images/hero-jic.jpg",
+                "url": "https://www.youtube.com/watch?v=oispNb8t79o",
+                "description": "Conoce la JIC Nacional, el evento de investigacion mas importante para jovenes en Panama.",
+            },
+            {
+                "title": "¿Cómo preparar tu proyecto de investigación?",
+                "thumbnail": "/static/images/categories-science.jpg",
+                "url": "https://www.youtube.com/watch?v=7VAMa-C7wG0",
+                "description": "Conoce la JIC Nacional, el evento de investigacion mas importante para jovenes en Panama.",
+            },
+            {
+                "title": "Guía de Investigación Científica",
+                "thumbnail": "/static/images/hero-jic.jpg",
+                "url": "https://youtu.be/bP2KW-TbApc?si=nW7pLA7U0spGEPsH",
+                "description": "Tutorial completo sobre metodología y pasos para realizar investigación científica.",
+            },
+            {
+                "title": "Inducción a la JIC 2024",
+                "thumbnail": "/static/images/hero-jic.jpg",
+                "url": "https://youtu.be/zxKc3FreHTQ?si=CORhb6r9ZoPpMf9d",
+                "description": "Recursos sobre cómo presentar tu proyecto en la JIC.",
+            },
+            {
+                "title": "Prueba de Video Interno",
+                "thumbnail": "/static/images/hero-jic.jpg",
+                "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                "description": "Este es un video de prueba (mp4) para verificar el reproductor interno en el modal.",
+            },
+        ]
+
+    page_obj = None # Default value
+    
+    if tab == 'videos':
+        paginator = Paginator(videos, 12)
+        page_obj = paginator.get_page(request.GET.get('page', 1))
+        videos = page_obj
+    elif tab == 'galeria':
+        # Already paginated above, grab the page_obj from gallery_images
+        page_obj = gallery_images
+
+    query_params = request.GET.copy()
+    query_params.pop('page', None)
+    page_query = query_params.urlencode()
     
     context = {
         'tab': tab,
@@ -625,15 +768,17 @@ def Recursos(request) -> render:
         'boletines': boletines,
         'memorias': memorias,
         'gallery_images': gallery_images,
-        'gallery_categories': sorted(set(img['category'] for img in gallery_images)),
+        'gallery_categories': gallery_categories,
         'videos': videos,
+        'page_obj': page_obj,
+        'page_query': page_query, 
     }
     return render(request, 'recursos/_index.html', context)
 
 def Selecciones(request) -> render:
     try:
         all_selecciones = list(
-            seleccion_institucional.objects.prefetch_related("results", "documents").order_by("sort_order", "university")
+            selection_institutional.objects.prefetch_related("results", "documents").order_by("sort_order", "university")
         )
     except (OperationalError, ProgrammingError):
         # DB error — redirect with message

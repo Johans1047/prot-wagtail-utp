@@ -12,7 +12,7 @@ urlpatterns = [
     path("django-admin/", admin.site.urls),
     path("panel/admin/", include(wagtailadmin_urls)),
     path("panel/documents/", include(wagtaildocs_urls)),
-    path("search/", search_views.search, name="search"),
+    path("busqueda/", search_views.search, name="Busqueda"),
     path('', include('web.urls')),
 ]
 

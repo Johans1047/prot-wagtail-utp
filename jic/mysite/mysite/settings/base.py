@@ -237,3 +237,7 @@ WAGTAILADMIN_BASE_URL = "http://example.com"
 # if untrusted users are allowed to upload files -
 # see https://docs.wagtail.org/en/stable/advanced_topics/deploying.html#user-uploaded-files
 WAGTAILDOCS_EXTENSIONS = ['csv', 'docx', 'key', 'odt', 'pdf', 'pptx', 'rtf', 'txt', 'xlsx', 'zip']
+
+# Allowed file extensions for videos
+# Supported video formats: MP4, WebM, Ogg
+WAGTAIL_VIDEO_EXTENSIONS = ['mp4', 'webm', 'ogg', 'mov', 'avi']

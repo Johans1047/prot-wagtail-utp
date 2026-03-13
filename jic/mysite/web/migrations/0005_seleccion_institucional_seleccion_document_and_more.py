@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='seleccion_institucional',
+            name='selection_institutional',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('university', models.CharField(max_length=300, verbose_name='Universidad')),
@@ -32,13 +32,13 @@ class Migration(migrations.Migration):
             bases=(wagtail.models.preview.PreviewableMixin, models.Model),
         ),
         migrations.CreateModel(
-            name='seleccion_document',
+            name='selection_document',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('label', models.CharField(max_length=200, verbose_name='Etiqueta')),
                 ('href', models.URLField(help_text='URL pública del documento', verbose_name='Enlace')),
                 ('sort_order', models.PositiveIntegerField(default=0, verbose_name='Orden')),
-                ('parent', modelcluster.fields.ParentalKey(on_delete=django.db.models.deletion.CASCADE, related_name='documents', to='web.seleccion_institucional')),
+                ('parent', modelcluster.fields.ParentalKey(on_delete=django.db.models.deletion.CASCADE, related_name='documents', to='web.selection_institutional')),
             ],
             options={
                 'verbose_name': 'Documento',
@@ -48,14 +48,14 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='seleccion_result',
+            name='selection_result',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('category', models.CharField(max_length=150, verbose_name='Categoría')),
                 ('selected', models.PositiveIntegerField(verbose_name='Seleccionados')),
                 ('total', models.PositiveIntegerField(verbose_name='Total presentados')),
                 ('sort_order', models.PositiveIntegerField(default=0, verbose_name='Orden')),
-                ('parent', modelcluster.fields.ParentalKey(on_delete=django.db.models.deletion.CASCADE, related_name='results', to='web.seleccion_institucional')),
+                ('parent', modelcluster.fields.ParentalKey(on_delete=django.db.models.deletion.CASCADE, related_name='results', to='web.selection_institutional')),
             ],
             options={
                 'verbose_name': 'Resultado por categoría',
