@@ -144,6 +144,59 @@
 #     driver: bridge
 
 services:
+
+  # jicweb_app:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.prod
+  #   container_name: jicweb_app
+  #   command: >
+  #     gunicorn
+  #     --chdir /app/mysite
+  #     --config /app/gunicorn_config.py
+  #     mysite.wsgi:application
+  #   volumes:
+  #     - ./jic/mysite:/app/mysite
+  #     - static_files:/app/mysite/staticfiles
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS}
+  #     - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+  #     - DEBUG=False
+  #     - PYTHONUNBUFFERED=${PYTHONUNBUFFERED}
+  #     - DB_REPLICATION_ENABLED=${DB_REPLICATION_ENABLED}
+  #     - DB_NAME=${DB_NAME}
+  #     - DB_USER=${DB_USER}
+  #     - DB_PASSWORD=${DB_PASSWORD}
+  #     - DB_HOST=${DB_HOST}
+  #     - DB_PORT=${DB_PORT}
+  #     - DB_SSLMODE=${DB_SSLMODE}
+  #     - DB_CHANNEL_BINDING=${DB_CHANNEL_BINDING}
+  #     - MINIO_ENDPOINT=${MINIO_ENDPOINT}
+  #     - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+  #     - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+  #     - MINIO_USE_SSL=${MINIO_USE_SSL}
+  #     - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME}
+  #     # Gunicorn
+  #     - GUNICORN_WORKERS=${GUNICORN_WORKERS}
+  #     - GUNICORN_THREADS=${GUNICORN_THREADS}
+  #     - GUNICORN_WORKER_CLASS=${GUNICORN_WORKER_CLASS}
+  #     - GUNICORN_MAX_REQUESTS=${GUNICORN_MAX_REQUESTS}
+  #     - GUNICORN_MAX_REQUESTS_JITTER=${GUNICORN_MAX_REQUESTS_JITTER}
+  #     - GUNICORN_TIMEOUT=${GUNICORN_TIMEOUT}
+  #     - GUNICORN_GRACEFUL_TIMEOUT=${GUNICORN_GRACEFUL_TIMEOUT}
+  #     - GUNICORN_BIND=${GUNICORN_BIND}
+  #     - GUNICORN_ACCESS_LOG=${GUNICORN_ACCESS_LOG}
+  #     - GUNICORN_ERROR_LOG=${GUNICORN_ERROR_LOG}
+  #   depends_on:
+  #     jic_minio_storage:
+  #       condition: service_healthy
+  #   restart: unless-stopped
+  #   networks:
+  #     - netX
+
+
   jicweb_app:
     build:
       context: .
@@ -156,21 +209,22 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DEBUG=True
-      - PYTHONUNBUFFERED=1
+      - DEBUG=${DEBUG}
+      - PYTHONUNBUFFERED=${PYTHONUNBUFFERED}
+      - DB_REPLICATION_ENABLED=${DB_REPLICATION_ENABLED}
       # - DB_ENGINE=postgres
-      # - DB_NAME=db_jicweb
-      # - DB_USER=mast_jicweb
-      # - DB_PASSWORD=g0hNw,0p1M\v£Y
-      # - DB_HOST=jicweb_master
-      # - DB_PORT=5432
-      - DB_NAME=neondb
-      - DB_USER=neondb_owner
-      - DB_PASSWORD=npg_5BbI6jRtUXPx
-      - DB_HOST=ep-autumn-resonance-a8vwe9xp-pooler.eastus2.azure.neon.tech
-      - DB_PORT=5432
-      - DB_SSLMODE=require
-      - DB_CHANNEL_BINDING=require
+      # - DB_NAME=${DB_LOCAL_MASTER_DATABASE}
+      # - DB_USER=${DB_LOCAL_MASTER_USER}
+      # - DB_PASSWORD=${DB_LOCAL_MASTER_PASSWORD}
+      # - DB_HOST=${DB_LOCAL_MASTER_HOST}
+      # - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_SSLMODE=${DB_SSLMODE}
+      - DB_CHANNEL_BINDING=${DB_CHANNEL_BINDING}
       # - DB_OPTIONS=-c search_path=public
       - MINIO_ENDPOINT=${MINIO_ENDPOINT}
       - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
@@ -194,21 +248,19 @@ services:
     ports:
       - "35729:35729"
     environment:
-      - DEBUG=True
-      - PYTHONUNBUFFERED=1
       # - DB_ENGINE=postgres
-      # - DB_NAME=db_jicweb
-      # - DB_USER=mast_jicweb
-      # - DB_PASSWORD=g0hNw,0p1M\v£Y
-      # - DB_HOST=jicweb_master
-      # - DB_PORT=5432
-      - DB_NAME=neondb
-      - DB_USER=neondb_owner
-      - DB_PASSWORD=npg_5BbI6jRtUXPx
-      - DB_HOST=ep-autumn-resonance-a8vwe9xp-pooler.eastus2.azure.neon.tech
-      - DB_PORT=5432
-      - DB_SSLMODE=require
-      - DB_CHANNEL_BINDING=require
+      # - DB_NAME=${DB_LOCAL_MASTER_DATABASE}
+      # - DB_USER=${DB_LOCAL_MASTER_USER}
+      # - DB_PASSWORD=${DB_LOCAL_MASTER_PASSWORD}
+      # - DB_HOST=${DB_LOCAL_MASTER_HOST}
+      # - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_SSLMODE=${DB_SSLMODE}
+      - DB_CHANNEL_BINDING=${DB_CHANNEL_BINDING}
       # - DB_OPTIONS=-c search_path=public
       - MINIO_ENDPOINT=${MINIO_ENDPOINT}
       - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}

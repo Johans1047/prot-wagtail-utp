@@ -2,11 +2,18 @@ from .base import *
 
 DEBUG = False
 
-# ManifestStaticFilesStorage is recommended in production, to prevent
-# outdated JavaScript / CSS assets being served from cache
-# (e.g. after a Wagtail upgrade).
-# See https://docs.djangoproject.com/en/6.0/ref/contrib/staticfiles/#manifeststaticfilesstorage
-STORAGES["staticfiles"]["BACKEND"] = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
+# Use WhiteNoise for static files management instead of ManifestStaticFilesStorage
+# WhiteNoise is more robust and handles compression automatically
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,testserver").split(",")
 
 try:
     from .local import *

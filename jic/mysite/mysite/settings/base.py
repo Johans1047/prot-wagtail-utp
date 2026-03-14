@@ -23,6 +23,11 @@ BASE_DIR = PROJECT_DIR.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-0$hb3)ta6z_952&)u2#zwc)kschwkjf2tmfksd=a^vg4gz^4jj")
+
+# SECURITY WARNING: define the correct hosts in production!
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,testserver").split(",")
 
 # Start TailwindCSS watcher in DEBUG mode
 DEBUG = True
@@ -58,7 +63,6 @@ INSTALLED_APPS = [
     'compressor',
     'theme',
     'web',
-    'livereload',
 ]
 
 MIDDLEWARE = [
