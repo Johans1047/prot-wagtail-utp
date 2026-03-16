@@ -2,6 +2,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
 @import "tailwindcss";
 
+@source "../../../web/templates";
+@source "../../../home/templates";
+@source "../../../templates";
+
 @import "flowbite/src/themes/default";
 @plugin "flowbite/plugin";
 @source "../../node_modules/flowbite";

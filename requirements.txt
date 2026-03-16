@@ -25,3 +25,4 @@ django-compressor==4.5.1
 
 # Utils
 python-dotenv==1.0.0
+pandas==3.0.0

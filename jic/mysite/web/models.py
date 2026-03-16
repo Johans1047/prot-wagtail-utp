@@ -6,49 +6,7 @@ from modelcluster.models import ClusterableModel
 from wagtail.models import PreviewableMixin, Orderable
 from wagtail.admin.panels import FieldPanel, InlinePanel
 from .forms import _FaqAdminForm
-
-
-# ================ Upload Path Helpers ================
-
-def get_gallery_image_path(instance, filename):
-    """
-    Generate path for gallery images: galeria/{year}/{filename}
-    Example: galeria/2025/photo_abc123.jpg
-    """
-    year = timezone.now().year
-    return f"galeria/{year}/{filename}"
-
-
-def get_video_file_path(instance, filename):
-    """
-    Generate path for video files: videos/{year}/{filename}
-    Example: videos/2025/tutorial_abc123.mp4
-    """
-    year = timezone.now().year
-    return f"videos/{year}/{filename}"
-
-
-def get_video_thumbnail_path(instance, filename):
-    """
-    Generate path for video thumbnails: video_thumbnails/{year}/{filename}
-    Example: video_thumbnails/2025/thumb_abc123.jpg
-    """
-    year = timezone.now().year
-    return f"video_thumbnails/{year}/{filename}"
-
-
-def get_document_path(instance, filename):
-    """
-    Generate path for documents: documentos/{doc_type}/{year}/{filename}
-    Example: documentos/lineamientos/2025/lineamientos_jic.pdf
-    """
-    year = timezone.now().year
-    doc_type = getattr(instance, 'doc_type', 'otros').lower()
-    return f"documentos/{doc_type}/{year}/{filename}"
-
-
-# ================ End Upload Path Helpers ================
-
+from .utils import get_video_file_path, get_video_thumbnail_path, get_document_path
 
 class important_date(PreviewableMixin, models.Model):
     """Editable timeline item for the home page."""
@@ -726,3 +684,210 @@ class GalleryImage(Orderable):
     class Meta(Orderable.Meta):
         verbose_name = "Gallery Image"
         verbose_name_plural = "Gallery Images"
+
+
+class title_section_image(Orderable):
+    """Carousel image for the title/hero section."""
+    
+    parent = ParentalKey(
+        "title_section",
+        on_delete=models.CASCADE,
+        related_name="carousel_images",
+    )
+    image = models.ForeignKey(
+        'wagtailimages.Image',
+        on_delete=models.CASCADE,
+        related_name='+',
+        verbose_name="Imagen del carrusel"
+    )
+    alt_text = models.CharField(
+        "Texto alternativo",
+        max_length=300,
+        help_text="Descripción para accesibilidad"
+    )
+    
+    panels = [
+        FieldPanel("image"),
+        FieldPanel("alt_text"),
+    ]
+    
+    class Meta(Orderable.Meta):
+        verbose_name = "Imagen del carrusel"
+        verbose_name_plural = "Imágenes del carrusel"
+        ordering = ["sort_order"]
+    
+    def __str__(self):
+        return f"Imagen {self.sort_order + 1}"
+
+
+class title_section_button(Orderable):
+    """Action button for the title/hero section."""
+    
+    parent = ParentalKey(
+        "title_section",
+        on_delete=models.CASCADE,
+        related_name="action_buttons",
+    )
+    label = models.CharField("Etiqueta del botón", max_length=100)
+    url = models.CharField(
+        "URL / Ruta",
+        max_length=500,
+        help_text="URL externa (ej: https://...) o ruta de Django (ej: nombre_vista)"
+    )
+    button_type = models.CharField(
+        "Tipo de botón",
+        max_length=20,
+        choices=[
+            ("primary", "Primario (Destacado)"),
+            ("secondary", "Secundario"),
+        ],
+        default="primary"
+    )
+    sort_order = models.PositiveIntegerField("Orden", default=0)
+    
+    panels = [
+        FieldPanel("label"),
+        FieldPanel("url"),
+        FieldPanel("button_type"),
+        FieldPanel("sort_order"),
+    ]
+    
+    class Meta(Orderable.Meta):
+        verbose_name = "Botón de acción"
+        verbose_name_plural = "Botones de acción"
+        ordering = ["sort_order"]
+    
+    def __str__(self):
+        return self.label
+
+
+class title_section(PreviewableMixin, ClusterableModel):
+    """Editable hero/title section with carousel for the home page."""
+    
+    title = models.CharField(
+        "Título/Subtítulo",
+        max_length=200,
+        default="JIC Nacional",
+        help_text="Texto mostrado en la etiqueta superior (ej: 'JIC Nacional {año}'), el año se calcula automáticamente y no debe incluirse aquí",
+        editable=False,
+    )
+    description = models.TextField(
+        "Descripción",
+        default="Fomentando la investigación entre jóvenes universitarios a nivel nacional. Una iniciativa de la Secretaría Nacional de Ciencia, Tecnología e Innovación.",
+        help_text="Párrafo descriptivo principal"
+    )
+    carousel_interval = models.PositiveIntegerField(
+        "Intervalo del carrusel (ms)",
+        default=8000,
+        help_text="Milisegundos entre cambios automáticos (8000 = 8 segundos)"
+    )
+    is_active = models.BooleanField(
+        "Activo",
+        default=True,
+        help_text="Mostrar u ocultar esta sección"
+    )
+    sort_order = models.PositiveIntegerField("Orden", default=0)
+    
+    panels = [
+        FieldPanel("title", read_only=True),
+        FieldPanel("description"),
+        FieldPanel("carousel_interval"),
+        InlinePanel("carousel_images", label="Imágenes del carrusel", max_num=10),
+        InlinePanel("action_buttons", label="Botones de acción", max_num=5),
+        FieldPanel("is_active"),
+        FieldPanel("sort_order"),
+    ]
+    
+    class Meta:
+        verbose_name = "Sección de Título/Hero"
+        verbose_name_plural = "Secciones de Título/Hero"
+        ordering = ["sort_order"]
+    
+    def __str__(self):
+        return f"Hero Section - {self.title}"
+    
+    def get_preview_template(self, request, mode_name):
+        return "utilidades/previews/title_section_preview.html"
+    
+    def get_preview_context(self, request, mode_name):
+        return {"snippet": self}
+
+
+class consultant(models.Model):
+    """Advisor/teacher for research projects."""
+
+    name = models.CharField("Nombre", max_length=200)
+    email = models.EmailField("Correo electrónico", blank=True)
+    institution = models.CharField("Institución", max_length=255, blank=True)
+    is_active = models.BooleanField("Activo", default=True)
+
+    panels = [
+        FieldPanel("name"),
+        FieldPanel("email"),
+        FieldPanel("institution"),
+        FieldPanel("is_active"),
+    ]
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name = "Asesor"
+        verbose_name_plural = "Asesores"
+
+    def __str__(self) -> str:
+        return self.name
+
+
+class project(PreviewableMixin, models.Model):
+    """Research/investigation projects by students."""
+
+    WINNER_CHOICES = [
+        (0, "No ganador"),
+        (1, "Primer lugar"),
+        (2, "Segundo lugar"),
+        (3, "Tercer lugar"),
+    ]
+
+    year = models.PositiveIntegerField("Año")
+    title = models.CharField("Título", max_length=500)
+    abstract = models.TextField("Resumen")
+    advisor = models.ForeignKey(
+        consultant,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="investigations",
+        verbose_name="Asesor",
+    )
+    university = models.CharField("Universidad", max_length=255)    
+    university_short_name = models.CharField("Siglas", max_length=50, blank=True, null=True, help_text="Siglas de la Universidad")    
+    category = models.CharField("Categoría", max_length=255)
+    winner = models.PositiveSmallIntegerField(
+        "Estado de Premio",
+        choices=WINNER_CHOICES,
+        default=0,
+    )
+
+    panels = [
+        FieldPanel("year"),
+        FieldPanel("title"),
+        FieldPanel("abstract"),
+        FieldPanel("advisor"),
+        FieldPanel("university"),
+        FieldPanel("university_short_name"),
+        FieldPanel("category"),
+        FieldPanel("winner"),
+    ]
+
+    class Meta:
+        ordering = ["-year", "title"]
+        verbose_name = "Investigación"
+        verbose_name_plural = "Investigaciones"
+
+    def __str__(self) -> str:
+        return self.title
+
+    def get_preview_template(self, request, mode_name):
+        return "utilidades/previews/investigacion_preview.html"
+
+    def get_preview_context(self, request, mode_name):
+        return {"snippet": self}

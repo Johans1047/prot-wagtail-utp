@@ -3,8 +3,8 @@ from django.template.response import TemplateResponse
 from django.db.models import Q
 
 from wagtail.models import Page
-from web.views import _get_processed_projects
 from web.models import resource_document
+from web.utils import get_processed_projects
 
 # To enable logging of search queries for use with the "Promoted search results" module
 # <https://docs.wagtail.org/en/stable/reference/contrib/searchpromotions.html>
@@ -27,7 +27,7 @@ def search(request):
         
         # Search in projects (local JSON data)
         try:
-            all_projects = _get_processed_projects()
+            all_projects = get_processed_projects()
             query_lower = search_query.lower()
             project_results = [
                 p for p in all_projects

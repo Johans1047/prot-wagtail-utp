@@ -21,7 +21,7 @@
                     <p class="text-sm text-primary-foreground/70">JIC Nacional 2024</p>
                 </div>
             </div>
-            <a href="{% url 'Proyectos' %}"
+            <a href="{% url 'Proyectos' %}?{{ winners_filters }}"
                 class="inline-flex items-center gap-2 rounded-lg border border-primary-foreground/30 px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-foreground/10">
                 Ver todos los ganadores
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"

@@ -1,0 +1,6 @@
+titulo,año,universidad,resumen,categoria,asesor,premio
+"Sistema de Predicción de Demanda usando Machine Learning",2024,"Universidad Nacional de Colombia","Este proyecto desarrolla un modelo de machine learning para predicción de demanda en cadenas de suministro, utilizando redes neuronales convolucionales...","Inteligencia Artificial","Dr. Juan Carlos Pérez Silva",1
+"Plataforma de Educación Virtual con IA","2024","Pontificia Universidad Javeriana","Desarrollo de una plataforma educativa que utiliza inteligencia artificial para personalizar el aprendizaje de estudiantes...","Educación y Tecnología","Dra. María Alejandra García López",2
+"Análisis de Sostenibilidad en Industrias Manufactureras",2024,"Universidad de Ibagué","Estudio cualitativo y cuantitativo del impacto ambiental en sistemas de manufactura moderna...","Sostenibilidad","Ing. Carlos Andrés Rodríguez Martínez",0
+"Blockchain para Trazabilidad Agrícola",2023,"Universidad del Cauca","Implementación de tecnología blockchain para rastrear productos agrícolas desde la producción hasta el consumidor...","Cadena de Bloques",nan,3
+"Framework para Desarrollo Ágil de Aplicaciones Empresariales",2023,"Universidad Tecnológica de Bolívar","Propuesta de un nuevo framework que integra metodologías ágiles con arquitectura empresarial...","Ingeniería de Software","Dr. Fabio García Castañeda",0

@@ -1,4 +1,4 @@
-from .viewsdata_types import (
+from .data_types import (
     FAQItem,
     FAQCategory,
     ImportantDate,
@@ -8,10 +8,48 @@ from .viewsdata_types import (
     EventIntro,
     Coordinator,
     OrganizerCommitteeMember,
+    TitleSectionObject,
+    TitleSectionImageObject,
+    TitleSectionButtonObject,
 )
 
 
-def _event_intro_fallback() -> EventIntro:
+def title_section_fallback() -> TitleSectionObject:
+    ts = TitleSectionObject(
+        title="JIC Nacional 2024",
+        description="Fomentando la investigación entre jóvenes universitarios a nivel nacional. Una iniciativa de la Secretaría Nacional de Ciencia, Tecnología e Innovación.",
+        carousel_interval=8000,
+        _images=[
+            TitleSectionImageObject(
+                alt_text="Estudiantes presentando proyectos de investigación en la Jornada de Iniciación Científica",
+                url="https://flowbite.s3.amazonaws.com/docs/gallery/square/image-1.jpg"
+            ),
+            TitleSectionImageObject(
+                alt_text="Proyectos",
+                url="https://flowbite.s3.amazonaws.com/docs/gallery/square/image-2.jpg"
+            ),
+            TitleSectionImageObject(
+                alt_text="Innovación",
+                url="https://flowbite.s3.amazonaws.com/docs/gallery/square/image-3.jpg"
+            )
+        ],
+        _buttons=[
+            TitleSectionButtonObject(
+                label="Participar ahora",
+                url="Participar",
+                button_type="primary"
+            ),
+            TitleSectionButtonObject(
+                label="Conocer la JIC",
+                url="Jic",
+                button_type="secondary"
+            )
+        ]
+    )
+    return ts
+
+
+def event_intro_fallback() -> EventIntro:
     return EventIntro(
         title="JIC Nacional",
         main_description="La Jornada de Iniciación Científica es el principal evento de investigación juvenil a nivel nacional panameño. Cada año, estudiantes de las diferentes universidades participantes presentan sus proyectos de investigación en diversas áreas de conocimiento.",

@@ -14,11 +14,10 @@
     {% endif %}
     
     {% if snippet.video_file %}
-        <div style="margin: 20px 0; border: 1px solid #ddd; border-radius: 4px; overflow: hidden;">
+        <div class="my-5 border border-[#ddd] rounded overflow-hidden">
             {% if snippet.thumbnail %}
-                <img src="{{ snippet.thumbnail.url }}" alt="{{ snippet.title }}" style="width: 100%; height: auto; max-width: 400px; display: block;">
-            {% endif %}
-            <video width="100%" height="auto" controls style="max-width: 400px;">
+                <img src="{{ snippet.thumbnail.url }}" alt="{{ snippet.title }}" class="w-full h-auto max-w-[400px] block">          {% endif %}
+            <video width="100%" height="auto" controls class="max-w-100">
                 <source src="{{ snippet.video_file.url }}" type="video/mp4">
                 Tu navegador no soporta la etiqueta de video.
             </video>

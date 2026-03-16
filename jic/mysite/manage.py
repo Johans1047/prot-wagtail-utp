@@ -6,7 +6,10 @@ import sys
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings.base")
+    # Usar settings de desarrollo por defecto si DEBUG está activo
+    debug = os.environ.get("DEBUG", "False").lower() in ("true", "1", "yes")
+    default_settings = "mysite.settings.dev" if debug else "mysite.settings.base"
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", default_settings)
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

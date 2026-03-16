@@ -5,8 +5,11 @@
 {% block content %}
 <div class="bg-stone-50 py-12">
     <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-        <a href="{% url 'Proyectos' %}" class="mb-6 inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary">
-            <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        
+        <a href="{% url 'Proyectos' %}" class="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+            </svg>
             Volver a Proyectos
         </a>
         
@@ -34,7 +37,7 @@
                 </div>
 
                 <div class="mb-8">
-                    <h3 class="mb-3 text-lg font-semibold text-foreground">Resumen / Abstract</h3>
+                    <h3 class="mb-3 text-lg font-semibold text-foreground">Resumen</h3>
                     <div class="prose max-w-none text-muted-foreground">
                         <p class="leading-relaxed">{{ project.abstract }}</p>
                     </div>
@@ -42,7 +45,7 @@
 
                 <div class="border-t border-border pt-6">
                     <h3 class="mb-2 text-sm font-semibold text-foreground">Contacto</h3>
-                    <a href="mailto:{{ project.contact }}" class="inline-flex items-center text-primary hover:underline">
+                    <a href="mailto:{{ project.contact }}" class="inline-flex gap-1 items-center text-primary hover:underline">
                         <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                         {{ project.contact }}
                     </a>

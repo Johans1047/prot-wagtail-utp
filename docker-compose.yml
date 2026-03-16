@@ -248,6 +248,8 @@ services:
     ports:
       - "35729:35729"
     environment:
+      - DEBUG=${DEBUG}
+      - PYTHONUNBUFFERED=${PYTHONUNBUFFERED}
       # - DB_ENGINE=postgres
       # - DB_NAME=${DB_LOCAL_MASTER_DATABASE}
       # - DB_USER=${DB_LOCAL_MASTER_USER}

@@ -1,0 +1,155 @@
+{% extends "wagtailadmin/generic/base.html" %}
+{% load wagtailadmin_tags %}
+
+{% block main_content %}
+
+        <p style="margin-top: 1rem; color: var(--w-color-text-meta);">
+            Cargue archivos CSV o XLSX para importar datos de asesores/consultores y proyectos.
+            Se evitará automáticamente la duplicación de registros.
+        </p>
+
+        {% if error %}
+        <div class="messages" role="status" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
+            <ul>
+                <li class="error" style="opacity: 1; transform: none; position: relative;">
+                    <svg class="icon icon-warning messages-icon" aria-hidden="true"><use href="#icon-warning"></use></svg>
+                    <span><strong>Error:</strong> {{ error }}</span>
+                </li>
+            </ul>
+        </div>
+        {% endif %}
+
+        {% if resultado %}
+        <div class="messages" role="status" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
+            <ul>
+                <li class="success" style="opacity: 1; transform: none; position: relative; display: block; padding-bottom: 1rem;">
+                    <svg class="icon icon-success messages-icon" aria-hidden="true"><use href="#icon-success"></use></svg>
+                    <span><strong>✓ Importación completada</strong></span>
+                    <ul style="margin: 0.5rem 0 0 2.5rem; line-height: 1.5; opacity: 0.9;">
+                        {% if resultado.creados_asesores %}
+                        <li><strong>{{ resultado.creados_asesores }}</strong> asesor(es) creado(s)</li>
+                        {% endif %}
+                        {% if resultado.actualizados_asesores %}
+                        <li><strong>{{ resultado.actualizados_asesores }}</strong> asesor(es) actualizado(s)</li>
+                        {% endif %}
+                        {% if resultado.creados_proyectos %}
+                        <li><strong>{{ resultado.creados_proyectos }}</strong> proyecto(s) creado(s)</li>
+                        {% endif %}
+                        {% if resultado.actualizados_proyectos %}
+                        <li><strong>{{ resultado.actualizados_proyectos }}</strong> proyecto(s) actualizado(s)</li>
+                        {% endif %}
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        {% if resultado.errores %}
+        <div class="messages" role="status" style="margin-bottom: 1.5rem;">
+            <ul>
+                <li class="warning" style="opacity: 1; transform: none; position: relative; display: block; padding-bottom: 1rem;">
+                    <svg class="icon icon-warning messages-icon" aria-hidden="true"><use href="#icon-warning"></use></svg>
+                    <span><strong>⚠ Errores encontrados ({{ resultado.total_errores }})</strong></span>
+                    <div style="margin-top: 1rem; margin-left: 2.5rem; overflow-x: auto;">
+                        <table class="listing" style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>Fila</th>
+                                    <th>Modelo</th>
+                                    <th>Error</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for error_item in resultado.errores %}
+                                <tr>
+                                    <td>{{ error_item.fila }}</td>
+                                    <td>{{ error_item.modelo }}</td>
+                                    <td class="error" style="color: var(--w-color-critical-200);">{{ error_item.error }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        {% endif %}
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" class="w-mt-8 w-max-w-2xl">
+            {% csrf_token %}
+            
+            <fieldset>
+                <div class="w-field__wrapper" data-field-wrapper="">
+                    <label class="w-field__label" for="{{ form.archivo.id_for_label }}">
+                        {{ form.archivo.label }}<span class="w-required-mark">*</span>
+                    </label>
+                    <div class="w-field w-field--file_input" data-field="">
+                        <div class="w-field__input" data-field-input="">
+                            {{ form.archivo }}
+                        </div>
+                        {% if form.archivo.help_text %}
+                        <div class="w-field__help" data-field-help="">
+                            {{ form.archivo.help_text }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="w-field__wrapper w-mt-6" data-field-wrapper="">
+                    <div class="w-field w-field--boolean_field w-field--checkbox_input" data-field="">
+                        <div class="w-field__input" data-field-input="">
+                            <label class="w-flex w-items-center w-gap-2">
+                                {{ form.actualizar }}
+                                <span class="w-label-3">{{ form.actualizar.label }}</span>
+                            </label>
+                        </div>
+                        {% if form.actualizar.help_text %}
+                        <div class="w-field__help" data-field-help="">
+                            {{ form.actualizar.help_text }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="w-mt-8">
+                <button type="submit" class="button action-save button-longrunning" data-controller="w-progress" data-action="w-progress#activate" data-w-progress-active-value="Importando...">
+                    <svg class="icon icon-spinner default" aria-hidden="true"><use href="#icon-spinner"></use></svg>
+                    <em data-w-progress-target="label">Importar datos</em>
+                </button>
+            </div>
+        </form>
+
+        <div class="w-mt-12 w-p-6 w-bg-surface-page w-rounded-md w-border w-border-border-furniture">
+            <h3 class="w-h3 w-mt-0">Instrucciones para importar</h3>
+            
+            <p class="w-help-text w-mb-4 w-mt-6">El archivo unificado debe contener estas columnas exactas:</p>
+            <table class="listing w-text-14">
+                <thead>
+                    <tr><th>Columna</th><th>Requerido</th><th>Descripción</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>titulo</strong></td><td>Sí</td><td>Título de la investigación</td></tr>
+                    <tr><td><strong>año</strong></td><td>Sí</td><td>Año del proyecto (ej. 2024)</td></tr>
+                    <tr><td><strong>universidad</strong></td><td>Sí</td><td>Universidad participante</td></tr>
+                    <tr><td><strong>siglas</strong></td><td>No</td><td>Siglas de la Universidad (ej. UTP)</td></tr>
+                    <tr><td><strong>resumen</strong></td><td>No</td><td>Descripción del proyecto</td></tr>
+                    <tr><td><strong>categoria</strong></td><td>No</td><td>Categoría del proyecto dentro de JIC</td></tr>
+                    <tr><td><strong>premio</strong></td><td>No</td><td>0=No ganador, 1=Primer lugar, 2=Segundo lugar, 3=Tercer lugar</td></tr>
+                    <tr><td><strong>asesor</strong></td><td>No</td><td>Nombre exacto del Asesor/Consultor</td></tr>
+                    <tr><td><strong>email</strong></td><td>No</td><td>Correo electrónico del asesor</td></tr>
+                    <tr><td><strong>institucion</strong></td><td>No</td><td>Institución a la que pertenece el asesor</td></tr>
+                    <tr><td><strong>activo</strong></td><td>No</td><td>true/false o sí/no (Estado del asesor)</td></tr>
+                </tbody>
+            </table>
+
+            <h4 class="w-h4 w-mt-8">Notas de rendimiento:</h4>
+            <ul class="w-list-disc w-pl-5 w-text-14 w-text-text-meta w-space-y-1">
+                <li>Los nombres de columnas deben estar en <strong>minúsculas</strong> y sin espacios (para <code>año</code> puede usar 'ano' o 'año').</li>
+                <li>Con un solo archivo se cargarán y enlazarán los proyectos con sus respectivos asesores.</li>
+                <li>Habilitar la opción <strong>"Actualizar existentes"</strong> usará el nombre (Asesores) o título+año (Proyectos) para reemplazar datos antiguos.</li>
+                <li>Si no se habilita la deduplicación, omitirá automáticamente los registros que considere duplicados para proteger la base de datos de sobreescritura.</li>
+            </ul>
+        </div>
+
+{% endblock %}

@@ -52,6 +52,54 @@ class EventIntro:
 
 
 @dataclass
+class TitleSectionImageObject:
+    alt_text: str
+    url: str
+
+    @property
+    def image(self):
+        class _ImageObj:
+            def __init__(self, url):
+                self.url = url
+        return _ImageObj(self.url)
+
+
+@dataclass
+class TitleSectionButtonObject:
+    label: str
+    url: str
+    button_type: str
+
+
+@dataclass
+class TitleSectionObject:
+    title: str
+    description: str
+    carousel_interval: int
+    _images: list[TitleSectionImageObject] = field(default_factory=list)
+    _buttons: list[TitleSectionButtonObject] = field(default_factory=list)
+
+    @property
+    def carousel_images(self):
+        class _ImageManager:
+            def __init__(self, items):
+                self.items = items
+            def all(self):
+                return self.items
+        return _ImageManager(self._images)
+
+    @property
+    def action_buttons(self):
+        class _ButtonManager:
+            def __init__(self, items):
+                self.items = items
+            def all(self):
+                return self.items
+        return _ButtonManager(self._buttons)
+    is_active: bool = True
+
+
+@dataclass
 class Coordinator:
     university_short_name: str
     name: str

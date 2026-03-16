@@ -1,16 +1,21 @@
 {% load static %}
-<section class="relative overflow-hidden h-[calc(100dvh-72px)]">
-    <div class="absolute inset-0">
-        <img
-            alt="Estudiantes presentando proyectos de investigación en la Jornada de Iniciación Científica"
-            decoding="async"
-            data-nimg="fill"
-            class="object-cover absolute h-full w-full text-transparent inset-0"
-            src="https://vm-p3jvdkhwi90bvhoegay57v.vusercontent.net//images/hero-jic.jpg"
-        />
-        <div class="absolute inset-0 bg-black/65"></div>
+<section id="gallery" class="relative overflow-hidden h-[calc(100dvh-72px)]" data-carousel="slide" data-carousel-interval="{{ title_section.carousel_interval }}">
+    <!-- Carousel wrapper -->
+    <div class="absolute inset-0 z-0 overflow-hidden">
+        {% for carousel_image in title_section.carousel_images.all %}
+        <div class="hidden duration-700 ease-in-out" data-carousel-item{% if forloop.first %}="active"{% endif %}>
+            {% if carousel_image.image.file.url %}
+                <img src="{{ carousel_image.image.file.url }}" class="object-cover absolute h-full w-full inset-0" alt="{{ carousel_image.alt_text }}">
+            {% endif %}
+        </div>
+        {% endfor %}
     </div>
-    <div class="relative mx-auto max-w-7xl px-4 py-32 lg:px-8 lg:py-32">
+    
+    <!-- Filtro oscuro (desactivamos puntero para que no bloquee clics) -->
+    <div class="absolute inset-0 bg-black/45 z-10 pointer-events-none"></div>
+
+    <!-- Contenido encima del slider -->
+    <div class="relative mx-auto max-w-7xl px-4 py-32 lg:px-8 lg:py-32 z-20">
         <div class="max-w-2xl">
             <div class="mb-6 inline-flex items-center gap-2 rounded-full bg-amber-300/25 text-amber-300 px-4 py-1.5 text-sm font-medium">
                 <svg
@@ -20,37 +25,49 @@
                     stroke-linecap="round" stroke-linejoin="round"
                     class="size-4" aria-hidden="true"
                 ><path d="M8 2v4"></path><path d="M16 2v4"></path><rect width="18" height="18" x="3" y="4" rx="2"></rect><path d="M3 10h18"></path></svg>
-                <span>JIC Nacional {% now "Y" %}</span>
+                <span>{{ title_section.title }} {% now "Y"%}</span>
             </div>
 
             <!-- Logo ocupa el lugar del h1, mismo tamaño responsive -->
             <h1 class="mb-0">
                 <img
-                    id="jic-logo"
                     src="{% static 'img/Recurso 5JIC LOGO.svg' %}"
-                    style="height: 2.5rem;"
-                    class="w-auto"
+                    class="w-auto h-38 md:h-48 lg:h-60"
                     alt="Jornada de Iniciación Científica"
                 />
             </h1>
 
             <p class="mt-4 max-w-lg text-base leading-relaxed text-background/80 md:text-lg">
-                Fomentando la investigación entre jóvenes universitarios a nivel
-                nacional. Una iniciativa de la Secretaría Nacional de Ciencia,
-                Tecnología e Innovación.
+                {{ title_section.description }}
             </p>
             <div class="mt-8 flex flex-col gap-3 sm:flex-row">
-                <a
-                    class="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-300/90 px-6 py-3 text-sm font-semibold text-amber-950 transition-colors hover:bg-amber-400/90"
-                    href="{% url 'Participar' %}"
-                >Participar ahora
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-                </a>
-                <a
-                    class="inline-flex items-center justify-center gap-2 rounded-lg border border-background/30 px-6 py-3 text-sm font-semibold text-background transition-colors hover:bg-background/10"
-                    href="{% url 'Jic' %}"
-                >Conocer la JIC</a>
+                {% for button in title_section.action_buttons.all %}
+                    {% if button.button_type == "primary" %}
+                        <a href="{% if button.url == 'Participar' or button.url == 'Jic' %}{% url button.url %}{% else %}{{ button.url }}{% endif %}" class="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-300/90 px-6 py-3 text-sm font-semibold text-amber-950 transition-colors hover:bg-amber-400/90">
+                            {{ button.label }}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                        </a>
+                    {% else %}
+                        <a href="{% if button.url == 'Participar' or button.url == 'Jic' %}{% url button.url %}{% else %}{{ button.url }}{% endif %}" class="inline-flex items-center justify-center gap-2 rounded-lg border border-background/30 px-6 py-3 text-sm font-semibold text-background transition-colors hover:bg-background/10">
+                            {{ button.label }}
+                        </a>
+                    {% endif %}
+                {% endfor %}
             </div>
         </div>
     </div>
+
+    <!-- Slider controls (Posicionados correctamente en el nivel z-30 de la section) -->
+    <button type="button" class="absolute top-0 start-0 z-30 flex items-center justify-center h-full px-4 cursor-pointer group focus:outline-none" data-carousel-prev>
+        <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/30 dark:bg-gray-800/30 group-hover:bg-white/50 dark:group-hover:bg-gray-800/60 group-focus:ring-4 group-focus:ring-white dark:group-focus:ring-gray-800/70 group-focus:outline-none">
+            <svg class="w-5 h-5 text-white rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 19-7-7 7-7"/></svg>
+            <span class="sr-only">Previous</span>
+        </span>
+    </button>
+    <button type="button" class="absolute top-0 end-0 z-30 flex items-center justify-center h-full px-4 cursor-pointer group focus:outline-none" data-carousel-next>
+        <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/30 dark:bg-gray-800/30 group-hover:bg-white/50 dark:group-hover:bg-gray-800/60 group-focus:ring-4 group-focus:ring-white dark:group-focus:ring-gray-800/70 group-focus:outline-none">
+            <svg class="w-5 h-5 text-white rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7"/></svg>
+            <span class="sr-only">Next</span>
+        </span>
+    </button>
 </section>
