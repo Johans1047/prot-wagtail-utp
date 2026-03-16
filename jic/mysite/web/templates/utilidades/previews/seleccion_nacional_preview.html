@@ -1,0 +1,20 @@
+{% extends "wagtailadmin/base.html" %}
+{% block content %}
+<div style="padding: 20px;">
+    <h2>Vista Previa: JIC Nacional {{ seleccion.year }}</h2>
+    <p>Estado: {{ seleccion.status }}</p>
+    <p>Sede: {{ seleccion.host_university }}</p>
+    <h3>Resultados:</h3>
+    <ul>
+        {% for r in seleccion.results %}
+            <li>{{ r.category }}: {{ r.winners }} ganadores / {{ r.participating_projects }} participantes</li>
+        {% endfor %}
+    </ul>
+    <h3>Documentos:</h3>
+    <ul>
+        {% for d in seleccion.documents %}
+            <li><a href="{{ d.href }}">{{ d.label }} ({{ d.type }})</a></li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

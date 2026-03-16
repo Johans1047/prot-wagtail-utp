@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 from django.db.models import Case, When
 from django.utils import timezone
 from modelcluster.fields import ParentalKey
@@ -252,8 +253,8 @@ class event_intro(PreviewableMixin, models.Model):
     ]
 
     class Meta:
-        verbose_name = "Intro del Evento"
-        verbose_name_plural = "Intro del Evento"
+        verbose_name = "Introducción del Evento"
+        verbose_name_plural = "Introducción del Evento"
 
     def save(self, *args, **kwargs):
         """Override save to enforce singleton behavior - always use the same primary key."""
@@ -621,12 +622,18 @@ class resource_document(PreviewableMixin, models.Model):
     ]
 
     class Meta:
-        ordering = ["doc_type", "-year", "sort_order"]
+        ordering = ["-year", "doc_type", "sort_order"]
         verbose_name = "Documento de Recurso"
         verbose_name_plural = "Documentos de Recursos"
 
     def __str__(self) -> str:
-        return f"{self.get_doc_type_display()} - {self.title}"
+        year_display = f"JIC {self.year}" if self.year else "Sin año"
+        return f"{year_display} - {self.get_doc_type_display()}"
+    
+    def get_year_type_display(self) -> str:
+        """Returns a readable combination of year and type for easier filtering."""
+        year_display = f"JIC {self.year}" if self.year else "Sin año"
+        return f"{year_display} - {self.get_doc_type_display()}"
 
     def get_preview_template(self, request, mode_name):
         return "utilidades/previews/resource_document_preview.html"
@@ -645,6 +652,11 @@ class Gallery(ClusterableModel):
     title = models.CharField("Título de la galería", max_length=150, default="Galería Principal")
     description = models.TextField("Descripción", blank=True, help_text="Descripción opcional de la galería.")
     
+    def clean(self):
+        # Prevent creating more than one instance
+        if not self.pk and Gallery.objects.exists():
+            raise ValidationError("Ya existe una galería creada. Solo se permite una galería principal.")
+            
     def save(self, *args, **kwargs):
         self.pk = self._singleton_id
         super().save(*args, **kwargs)
@@ -811,6 +823,150 @@ class title_section(PreviewableMixin, ClusterableModel):
     
     def get_preview_context(self, request, mode_name):
         return {"snippet": self}
+
+
+
+class selection_national_result(Orderable):
+    """One category row within a national selection record."""
+
+    CATEGORIES_CHOICES = [
+        ("ingenieria", "Ingeniería"),
+        ("ciencias_de_la_salud", "Ciencias de la Salud"),
+        ("ciencias_naturales_y_exactas", "Ciencias Naturales y Exactas"),
+        ("ciencias_sociales_y_humanisticas", "Ciencias Sociales y Humanísticas"),
+    ]
+    parent = ParentalKey(
+        "selection_national",
+        on_delete=models.CASCADE,
+        related_name="results",
+    )
+    category = models.CharField("Categoría", max_length=150, choices=CATEGORIES_CHOICES)
+    participating_projects = models.PositiveIntegerField("Proyectos Participantes")
+    winners = models.PositiveIntegerField("Ganadores")
+    sort_order = models.PositiveIntegerField("Orden", default=0)
+
+    panels = [
+        FieldPanel("category"),
+        FieldPanel("participating_projects"),
+        FieldPanel("winners"),
+        FieldPanel("sort_order"),
+    ]
+
+    class Meta(Orderable.Meta):
+        verbose_name = "Resultado Nacional por categoría"
+        verbose_name_plural = "Resultados Nacionales por categoría"
+
+    def __str__(self) -> str:
+        return f"{self.category}: {self.winners} ganadores / {self.participating_projects} participantes"
+
+
+class selection_national_document(Orderable):
+    """Downloadable document linked to a national selection record."""
+
+    parent = ParentalKey(
+        "selection_national",
+        on_delete=models.CASCADE,
+        related_name="documents",
+    )
+    label = models.CharField("Etiqueta", max_length=200)
+    document_type = models.CharField("Tipo (ej: PDF, XLS)", max_length=50, default="PDF")
+    href = models.URLField("Enlace", help_text="URL pública del documento")
+    sort_order = models.PositiveIntegerField("Orden", default=0)
+
+    panels = [
+        FieldPanel("label"),
+        FieldPanel("document_type"),
+        FieldPanel("href"),
+        FieldPanel("sort_order"),
+    ]
+
+    class Meta(Orderable.Meta):
+        verbose_name = "Documento Nacional"
+        verbose_name_plural = "Documentos Nacionales"
+
+    def __str__(self) -> str:
+        return self.label
+
+
+class selection_national(PreviewableMixin, ClusterableModel):
+    """National selection results per year."""
+
+    STATUS_CHOICES = [
+        ("completada", "Completada"),
+        ("en_proceso", "En proceso"),
+        ("pendiente", "Pendiente"),
+    ]
+
+    year = models.PositiveIntegerField("Año JIC", unique=True)
+    status = models.CharField(
+        "Estado",
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="pendiente",
+    )
+    total_projects = models.PositiveIntegerField("Total de Proyectos (Histórico)", default=0, help_text="Para datos históricos, si no se usan los resultados por categoría.")
+    host_university = models.CharField(
+        "Universidad Sede", 
+        max_length=300, 
+        blank=True, 
+        null=True,
+        help_text="Universidad anfitriona del evento nacional (Opcional)"
+    )
+    universities_count = models.PositiveIntegerField("Universidades Participantes", default=5)
+    is_active = models.BooleanField(
+        "Activo",
+        default=True,
+        help_text="Activar para mostrar estos resultados nacionales en la página.",
+    )
+    sort_order = models.PositiveIntegerField("Orden", default=0)
+
+    panels = [
+        FieldPanel("year"),
+        FieldPanel("status"),
+        FieldPanel("total_projects"),
+        FieldPanel("host_university"),
+        FieldPanel("universities_count"),
+        FieldPanel("is_active"),
+        FieldPanel("sort_order"),
+        InlinePanel("results", label="Resultados por categoría"),
+        InlinePanel("documents", label="Documentos descargables"),
+    ]
+
+    class Meta:
+        ordering = ["-year", "sort_order"]
+        verbose_name = "Selección Nacional"
+        verbose_name_plural = "Selecciones Nacionales"
+
+    def __str__(self) -> str:
+        return f"JIC Nacional {self.year} ({self.get_status_display()})"
+
+    def to_dict(self):
+        """Normalize to a dict structure."""
+        return {
+            "year": self.year,
+            "status": self.status,
+            "totalProjects": self.total_projects,
+            "universities": self.universities_count,
+            "host_university": self.host_university,
+            "results": [
+                {
+                    "category": r.category, 
+                    "participating_projects": r.participating_projects, 
+                    "winners": r.winners
+                }
+                for r in self.results.all().order_by("sort_order")
+            ],
+            "documents": [
+                {"label": d.label, "type": d.document_type, "href": d.href}
+                for d in self.documents.all().order_by("sort_order")
+            ],
+        }
+
+    def get_preview_template(self, request, mode_name):
+        return "utilidades/previews/seleccion_nacional_preview.html"
+
+    def get_preview_context(self, request, mode_name):
+        return {"snippet": self, "seleccion": self.to_dict()}
 
 
 class consultant(models.Model):

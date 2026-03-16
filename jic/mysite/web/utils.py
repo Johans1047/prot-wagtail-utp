@@ -1,5 +1,25 @@
 import json
+from django.urls import reverse
 from django.utils import timezone
+from wagtail.admin.menu import MenuItem
+
+
+class LazyMenuItem(MenuItem):
+    def __init__(self, label, url_name, **kwargs):
+        self._url_name = url_name
+        super().__init__(label, "#", **kwargs)
+
+    @property
+    def url(self):
+        try:
+            return reverse(self._url_name)
+        except Exception:
+            return "#"
+
+    @url.setter
+    def url(self, value):
+        pass
+    
 
 def get_raw_projects_data():
     return json.loads(

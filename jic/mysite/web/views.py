@@ -516,8 +516,15 @@ def ProyectoDetalle(request, project_id: int):
     return render(request, 'proyectos/detail.html', {'project': project})
 
 def Resultados(request) -> render:
-    # Datos históricos de ediciones anteriores
-    historical_results = [
+
+    # Obtain results from the database, prefetching related documents and results
+    # Only active national selections that have year <= current year or whatever logic
+    qs = selection_national.objects.filter(is_active=True).prefetch_related("results", "documents").order_by("-year")
+
+    historical_results_db = [sn.to_dict() for sn in qs]
+
+    # Datos históricos de ediciones anteriores (Fallback)
+    historical_results_fallback = [
         {
             "year": 2024,
             "totalProjects": 47,
@@ -575,9 +582,9 @@ def Resultados(request) -> render:
             ]
         },
     ]
-    
+
     context = {
-        'historical_results': historical_results,
+        'historical_results': historical_results_db if historical_results_db else historical_results_fallback,
     }
     return render(request, 'resultados/_index.html', context)
 

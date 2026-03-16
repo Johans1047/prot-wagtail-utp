@@ -1,11 +1,14 @@
 from django.urls import reverse, path
+from django.db.models import Q
+from collections import OrderedDict
 from wagtail import hooks
 from wagtail.admin.menu import MenuItem, SubmenuMenuItem, Menu
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet, SnippetViewSetGroup
 from wagtail.images.models import Image
 from wagtail.documents.models import Document
-
+from .policies import SingletonPermissionPolicy
+from .utils import LazyMenuItem
 from .models import (
     important_date,
     frequently_ask_question,
@@ -16,6 +19,7 @@ from .models import (
     coordinator,
     organizer_committee_member,
     selection_institutional,
+    selection_national,
     video,
     resource_document,
     Gallery,
@@ -65,7 +69,7 @@ class InicioGroup(SnippetViewSetGroup):
     menu_label = "Inicio"
     menu_icon = "home"
     menu_order = 100
-    items = (ImportantDateViewSet, FrequentlyAskQuestionViewSet, EventIntroViewSet, TitleSectionViewSet)
+    items = (TitleSectionViewSet, EventIntroViewSet, ImportantDateViewSet, FrequentlyAskQuestionViewSet)
 
 
 # ─── JIC ─────────────────────────────────────────────────────────────
@@ -136,11 +140,21 @@ class SeleccionInstitucionalViewSet(SnippetViewSet):
     search_fields = ("university", "short_name")
 
 
+
+class SeleccionNacionalViewSet(SnippetViewSet):
+    model = selection_national
+    menu_label = "Selecciones nacionales"
+    icon = "list-ul"
+    list_display = ("year", "status", "host_university", "is_active", "sort_order")
+    list_filter = ("status", "is_active")
+    search_fields = ("year", "host_university")
+
 class ResultadosGroup(SnippetViewSetGroup):
     menu_label = "Resultados"
     menu_icon = "success"
-    menu_order = 102
-    items = (SeleccionInstitucionalViewSet,)
+    menu_order = 103
+    items = (SeleccionInstitucionalViewSet, SeleccionNacionalViewSet)
+
 
 
 # ─── Proyectos ───────────────────────────────────────────────────────
@@ -166,7 +180,7 @@ class InvestigacionViewSet(SnippetViewSet):
 class ProyectosGroup(SnippetViewSetGroup):
     menu_label = "Proyectos"
     menu_icon = "folder-open-inverse"
-    menu_order = 103
+    menu_order = 102
     items = (AsesorViewSet, InvestigacionViewSet)
 
 
@@ -185,9 +199,10 @@ class ResourceDocumentViewSet(SnippetViewSet):
     model = resource_document
     menu_label = "Documentos de Recursos"
     icon = "doc-full"
-    list_display = ("title", "doc_type", "year", "sort_order", "is_active")
-    list_filter = ("doc_type", "year", "is_active")
-    search_fields = ("title", "description")
+    list_display = ("title", "year", "doc_type", "is_active", "sort_order")
+    list_filter = ("year", "doc_type", "is_active")
+    search_fields = ("title", "description", "doc_type")
+    ordering = ["-year", "doc_type", "sort_order"]
 
 
 class GalleryViewSet(SnippetViewSet):
@@ -196,18 +211,18 @@ class GalleryViewSet(SnippetViewSet):
     icon = "image"
     list_display = ("title",)
     search_fields = ("title",)
+    permission_policy = SingletonPermissionPolicy(Gallery)
 
 
 ## class RecursosGroup(SnippetViewSetGroup): ##
 @hooks.register("register_admin_menu_item")
 def register_recursos_menu():
     recursos_menu = Menu(items=[
-        MenuItem("Imágenes", reverse("wagtailimages:index"), icon_name="image"),
-        MenuItem("Galería Ordenable", reverse("wagtailsnippets_web_gallery:list"), icon_name="image"),
-        MenuItem("Documentos", reverse("wagtaildocs:index"), icon_name="doc-full"),
-        MenuItem("Videos", reverse("wagtailsnippets_web_video:list"), icon_name="media"),
+        LazyMenuItem("Documentos", "wagtaildocs:index", icon_name="doc-full"),
+        LazyMenuItem("Imágenes", "wagtailimages:index", icon_name="image"),
+        LazyMenuItem("Galería Ordenable", "wagtailsnippets_web_gallery:list", icon_name="image"),
+        LazyMenuItem("Videos", "wagtailsnippets_web_video:list", icon_name="media"),
     ])
-    
     return SubmenuMenuItem("Recursos", recursos_menu, icon_name="folder-open-inverse", order=104)
 
 ## list_display = (all items except images and documents) ##
@@ -224,6 +239,8 @@ register_snippet(InicioGroup)
 register_snippet(JicGroup)
 register_snippet(ResultadosGroup)
 register_snippet(ProyectosGroup)
+
+## register_snippet(RecursosGroup) is registered individually with the submenu above ##
 register_snippet(VideoViewSet)
 register_snippet(ResourceDocumentViewSet)
 register_snippet(GalleryViewSet)
