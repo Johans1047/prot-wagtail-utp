@@ -4,7 +4,7 @@
 {% block main_content %}
 
         <p style="margin-top: 1rem; color: var(--w-color-text-meta);">
-            Cargue archivos CSV o XLSX para importar datos de asesores/consultores y proyectos.
+            Cargue archivos CSV o XLSX para importar datos de asesores, proyectos y resultados.
             Se evitará automáticamente la duplicación de registros.
         </p>
 
@@ -75,7 +75,7 @@
         {% endif %}
         {% endif %}
 
-        <form method="post" enctype="multipart/form-data" class="w-mt-8 w-max-w-2xl">
+        <form method="post" enctype="multipart/form-data" class="w-mt-5 w-max-w-2xl">
             {% csrf_token %}
             
             <fieldset>
@@ -112,7 +112,7 @@
                 </div>
             </fieldset>
 
-            <div class="w-mt-8">
+            <div style="margin-top: -2rem;">
                 <button type="submit" class="button action-save button-longrunning" data-controller="w-progress" data-action="w-progress#activate" data-w-progress-active-value="Importando...">
                     <svg class="icon icon-spinner default" aria-hidden="true"><use href="#icon-spinner"></use></svg>
                     <em data-w-progress-target="label">Importar datos</em>
@@ -120,36 +120,54 @@
             </div>
         </form>
 
-        <div class="w-mt-12 w-p-6 w-bg-surface-page w-rounded-md w-border w-border-border-furniture">
-            <h3 class="w-h3 w-mt-0">Instrucciones para importar</h3>
+        <div style="margin-top: 2.5rem;" class="w-p-6 w-bg-surface-page w-rounded-md w-border w-border-border-furniture">
+            <div style="display: flex; align-items: center; justify-content: start; gap: 0.8rem; cursor: pointer;" onclick="toggleInstructions()">
+                <h3 class="w-h3 w-mt-0" style="margin-bottom: 0;">Instrucciones para importar</h3>
+                <svg id="toggle-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.3s ease; transform: rotate(0deg);">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </div>
             
-            <p class="w-help-text w-mb-4 w-mt-6">El archivo unificado debe contener estas columnas exactas:</p>
-            <table class="listing w-text-14">
-                <thead>
-                    <tr><th>Columna</th><th>Requerido</th><th>Descripción</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td><strong>titulo</strong></td><td>Sí</td><td>Título de la investigación</td></tr>
-                    <tr><td><strong>año</strong></td><td>Sí</td><td>Año del proyecto (ej. 2024)</td></tr>
-                    <tr><td><strong>universidad</strong></td><td>Sí</td><td>Universidad participante</td></tr>
-                    <tr><td><strong>siglas</strong></td><td>No</td><td>Siglas de la Universidad (ej. UTP)</td></tr>
-                    <tr><td><strong>resumen</strong></td><td>No</td><td>Descripción del proyecto</td></tr>
-                    <tr><td><strong>categoria</strong></td><td>No</td><td>Categoría del proyecto dentro de JIC</td></tr>
-                    <tr><td><strong>premio</strong></td><td>No</td><td>0=No ganador, 1=Primer lugar, 2=Segundo lugar, 3=Tercer lugar</td></tr>
-                    <tr><td><strong>asesor</strong></td><td>No</td><td>Nombre exacto del Asesor/Consultor</td></tr>
-                    <tr><td><strong>email</strong></td><td>No</td><td>Correo electrónico del asesor</td></tr>
-                    <tr><td><strong>institucion</strong></td><td>No</td><td>Institución a la que pertenece el asesor</td></tr>
-                    <tr><td><strong>activo</strong></td><td>No</td><td>true/false o sí/no (Estado del asesor)</td></tr>
-                </tbody>
-            </table>
+            <div id="instructions-content" style="display: none; margin-top: 1rem;">
+                <p class="w-help-text w-mb-4 w-mt-6">El archivo unificado debe contener estas columnas exactas:</p>
+                <table class="listing w-text-14">
+                    <thead>
+                        <tr><th>Columna</th><th>Requerido</th><th>Descripción</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><strong>titulo</strong></td><td>Sí</td><td>Título de la investigación</td></tr>
+                        <tr><td><strong>año</strong></td><td>Sí</td><td>Año del proyecto (ej. 2024)</td></tr>
+                        <tr><td><strong>universidad</strong></td><td>Sí</td><td>Universidad participante</td></tr>
+                        <tr><td><strong>siglas</strong></td><td>No</td><td>Siglas de la Universidad (ej. UTP)</td></tr>
+                        <tr><td><strong>resumen</strong></td><td>No</td><td>Descripción del proyecto</td></tr>
+                        <tr><td><strong>categoria</strong></td><td>No</td><td>Categoría del proyecto dentro de JIC</td></tr>
+                        <tr><td><strong>premio</strong></td><td>No</td><td>0=No ganador, 1=Primer lugar, 2=Segundo lugar, 3=Tercer lugar</td></tr>
+                        <tr><td><strong>asesor</strong></td><td>No</td><td>Nombre exacto del Asesor/Consultor</td></tr>
+                        <tr><td><strong>email</strong></td><td>No</td><td>Correo electrónico del asesor</td></tr>
+                        <tr><td><strong>institucion</strong></td><td>No</td><td>Institución a la que pertenece el asesor</td></tr>
+                        <tr><td><strong>activo</strong></td><td>No</td><td>true/false o sí/no (Estado del asesor)</td></tr>
+                    </tbody>
+                </table>
 
-            <h4 class="w-h4 w-mt-8">Notas de rendimiento:</h4>
-            <ul class="w-list-disc w-pl-5 w-text-14 w-text-text-meta w-space-y-1">
-                <li>Los nombres de columnas deben estar en <strong>minúsculas</strong> y sin espacios (para <code>año</code> puede usar 'ano' o 'año').</li>
-                <li>Con un solo archivo se cargarán y enlazarán los proyectos con sus respectivos asesores.</li>
-                <li>Habilitar la opción <strong>"Actualizar existentes"</strong> usará el nombre (Asesores) o título+año (Proyectos) para reemplazar datos antiguos.</li>
-                <li>Si no se habilita la deduplicación, omitirá automáticamente los registros que considere duplicados para proteger la base de datos de sobreescritura.</li>
-            </ul>
+                <h4 class="w-h4 w-mt-8">Notas de rendimiento:</h4>
+                <ul class="w-list-disc w-pl-5 w-text-14 w-text-text-meta w-space-y-1">
+                    <li>Los nombres de columnas deben estar en <strong>minúsculas</strong> y sin espacios (para <code>año</code> puede usar 'ano' o 'año').</li>
+                    <li>Con un solo archivo se cargarán y enlazarán los proyectos con sus respectivos asesores.</li>
+                    <li>Habilitar la opción <strong>"Actualizar existentes"</strong> usará el nombre (Asesores) o título+año (Proyectos) para reemplazar datos antiguos.</li>
+                    <li>Si no se habilita la deduplicación, omitirá automáticamente los registros que considere duplicados para proteger la base de datos de sobreescritura.</li>
+                </ul>
+            </div>
         </div>
+
+        <script>
+            function toggleInstructions() {
+                const content = document.getElementById('instructions-content');
+                const icon = document.getElementById('toggle-icon');
+                const isHidden = content.style.display === 'none';
+                
+                content.style.display = isHidden ? 'block' : 'none';
+                icon.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+            }
+        </script>
 
 {% endblock %}

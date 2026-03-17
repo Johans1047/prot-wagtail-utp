@@ -38,6 +38,8 @@ if DEBUG:
 # Application definition
 
 INSTALLED_APPS = [
+    'theme',
+    'web',
     "home",
     "search",
     "wagtail.contrib.forms",
@@ -61,8 +63,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     'compressor',
-    'theme',
-    'web',
 ]
 
 MIDDLEWARE = [
@@ -166,7 +166,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "es"
 
 TIME_ZONE = "UTC"
 
@@ -248,3 +248,8 @@ WAGTAILDOCS_EXTENSIONS = ['csv', 'docx', 'key', 'odt', 'pdf', 'pptx', 'rtf', 'tx
 # Allowed file extensions for videos
 # Supported video formats: MP4, WebM, Ogg
 WAGTAIL_VIDEO_EXTENSIONS = ['mp4', 'webm', 'ogg', 'mov', 'avi']
+
+# Disable Gravatar to to disable the use of remote avatars
+WAGTAIL_GRAVATAR_PROVIDER_URL = None
+
+WAGTAILADMIN_PERMITTED_LANGUAGES = [('en', 'English'), ('es', 'Spanish'),]

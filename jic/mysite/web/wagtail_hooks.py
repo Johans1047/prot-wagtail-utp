@@ -1,4 +1,6 @@
 from django.urls import reverse, path
+from django.utils.html import format_html
+from django.templatetags.static import static
 from django.db.models import Q
 from collections import OrderedDict
 from wagtail import hooks
@@ -28,6 +30,7 @@ from .models import (
     project,
 )
 from .views.import_data_view import import_view
+
 
 # ─── Home ─────────────────────────────────────────────────────────────
 
@@ -248,6 +251,19 @@ register_snippet(GalleryViewSet)
 
 # ─── Import functionality ────────────────────────────────────────────
 
+# Custom CSS to replace the Wagtail logo with the UTP logo in the admin interface
+@hooks.register("insert_global_admin_css")
+def global_admin_css():
+    return format_html(
+        '<style>'
+        '.sidebar-wagtail-branding__icon-wrapper svg {{ display: none !important; }}'
+        '.sidebar-wagtail-branding__icon-wrapper {{ background-image: url("{}"); background-size: 125%; background-repeat: no-repeat; background-position: center; background-color: hsl(254.3 50.4% 24.5%) !important; display: flex; align-items: center; justify-content: center; }}'
+        '</style>',
+        static("img/logo-de-la-utp.svg"),
+    )
+    
+    
+# Custom menu item for data import
 @hooks.register('register_admin_urls')
 def register_import_url():
     """Register the import data URL in the admin."""
@@ -255,7 +271,7 @@ def register_import_url():
         path('importar-datos/', import_view, name='importar_datos'),
     ]
 
-
+# Sidebar menu item for access to the custom data import
 @hooks.register('register_admin_menu_item')
 def register_import_menu():
     """Add import data menu item to the admin sidebar."""

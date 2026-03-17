@@ -505,16 +505,38 @@ def Recursos(request) -> render:
     
     try:
         # Try to get the ordered gallery snippet first
-        gallery = Gallery.objects.first()
+        # Added prefetch for performance and to ensure data availability
+        gallery = Gallery.objects.prefetch_related('gallery_images__image__tags').first()
         gallery_images = []
         
         if gallery and gallery.gallery_images.exists():
             for item in gallery.gallery_images.all():
                 if item.image:
+                    # 1. Category logic: Explicit field first (Year/Edition), fallback to Tags, then "General"
+                    category = "General"
+                    if hasattr(item, 'category') and item.category:
+                        category = item.category
+                    elif item.image.tags.exists():
+                        category = item.image.tags.first().name.title()
+
+                    # 2. Description logic: Explicit field first, fallback to Image metadata
+                    description = ""
+                    if hasattr(item, 'description') and item.description:
+                        description = item.description
+                    elif hasattr(item.image, 'description') and item.image.description:
+                         description = item.image.description
+                         
+                    # 3. Alt text logic: Explicit field first, fallback to Title
+                    alt_text = item.image.title
+                    if hasattr(item, 'alt_text') and item.alt_text:
+                        alt_text = item.alt_text
+
                     gallery_images.append({
                         "src": item.image.file.url,
-                        "alt": item.image.title,
-                        "category": item.caption if item.caption else "General",
+                        "alt": alt_text,
+                        "title": item.image.title,
+                        "description": description,
+                        "category": category,
                     })
         else:
             # Fallback to fetching latest images if no gallery snippet exists or it's empty
@@ -529,22 +551,25 @@ def Recursos(request) -> render:
                 gallery_images.append({
                     "src": img.file.url,
                     "alt": img.title,
+                    "title": img.title,
+                    "description": img.get_title() if hasattr(img, 'get_title') else "",
                     "category": category,
                 })
-    except (OperationalError, ProgrammingError, Exception):
+    except (OperationalError, ProgrammingError, Exception) as e:
         # Fallback if DB not ready or empty
+        print(f"Error loading gallery: {e}")
         gallery_images = []
     
     if not gallery_images:
         gallery_images = [
-            {"src": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=500&h=500&fit=crop", "alt": "Investigadores en laboratorio", "category": "Investigación"},
-            {"src": "https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=500&h=500&fit=crop", "alt": "Presentación de proyecto", "category": "Presentaciones"},
-            {"src": "https://images.unsplash.com/photo-1576086213369-97a306d36557?w=500&h=500&fit=crop", "alt": "Equipo científico", "category": "Investigación"},
-            {"src": "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=500&h=500&fit=crop", "alt": "Conferencia científica", "category": "Eventos"},
-            {"src": "https://images.unsplash.com/photo-1516534775068-bb57b6439066?w=500&h=500&fit=crop", "alt": "Investigadores colaborando", "category": "Investigación"},
-            {"src": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=500&h=500&fit=crop", "alt": "Presentación en auditorio", "category": "Presentaciones"},
-            {"src": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500&h=500&fit=crop", "alt": "Evento científico", "category": "Eventos"},
-            {"src": "https://images.unsplash.com/photo-1537128191892-8ac93e876401?w=500&h=500&fit=crop", "alt": "Trabajo en equipo", "category": "Investigación"},
+            {"src": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=500&h=500&fit=crop", "alt": "Investigadores en laboratorio", "title": "Investigadores en laboratorio", "description": "Equipo científico trabajando en investigaciones", "category": "Investigación"},
+            {"src": "https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=500&h=500&fit=crop", "alt": "Presentación de proyecto", "title": "Presentación de proyecto", "description": "Exposición de proyecto de investigación", "category": "Presentaciones"},
+            {"src": "https://images.unsplash.com/photo-1576086213369-97a306d36557?w=500&h=500&fit=crop", "alt": "Equipo científico", "title": "Equipo científico", "description": "Colaboración de investigadores", "category": "Investigación"},
+            {"src": "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=500&h=500&fit=crop", "alt": "Conferencia científica", "title": "Conferencia científica", "description": "Evento científico con múltiples participantes", "category": "Eventos"},
+            {"src": "https://images.unsplash.com/photo-1516534775068-bb57b6439066?w=500&h=500&fit=crop", "alt": "Investigadores colaborando", "title": "Investigadores colaborando", "description": "Trabajo en equipo en investigación", "category": "Investigación"},
+            {"src": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=500&h=500&fit=crop", "alt": "Presentación en auditorio", "title": "Presentación en auditorio", "description": "Presentación ante audiencia", "category": "Presentaciones"},
+            {"src": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500&h=500&fit=crop", "alt": "Evento científico", "title": "Evento científico", "description": "Actividad científica importante", "category": "Eventos"},
+            {"src": "https://images.unsplash.com/photo-1537128191892-8ac93e876401?w=500&h=500&fit=crop", "alt": "Trabajo en equipo", "title": "Trabajo en equipo", "description": "Equipo colaborativo de investigación", "category": "Investigación"},
         ]
     
     gallery_categories = sorted(set(img['category'] for img in gallery_images))
@@ -623,7 +648,7 @@ def Recursos(request) -> render:
         'boletines': boletines,
         'memorias': memorias,
         'gallery_images': gallery_images,
-        'gallery_categories': gallery_categories,
+        'categories': gallery_categories,
         'videos': videos,
         'page_obj': page_obj,
         'page_query': page_query, 

@@ -376,7 +376,7 @@
                 >
                     Todos
                 </button>
-                {% for category in gallery_categories %}
+                {% for category in categories %}
                 <button
                     type="button"
                     class="filter-btn px-4 py-2 rounded-lg border border-border hover:border-primary/50 bg-card text-foreground font-medium text-sm hover:bg-stone-100 transition-colors cursor-pointer"
@@ -391,16 +391,41 @@
             <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {% for img in gallery_images %}
                 <div
-                    class="gallery-item overflow-hidden rounded-lg border border-border bg-secondary cursor-pointer transition-all hover:shadow-lg hover:border-primary/50 group"
+                    class="group overflow-hidden rounded-lg border border-border bg-card transition-all hover:shadow-lg hover:border-primary/50 cursor-pointer flex flex-col"
                     data-category="{{ img.category }}"
                     data-src="{{ img.src }}"
                     data-alt="{{ img.alt }}"
                 >
-                    <img
-                        src="{{ img.src }}"
-                        alt="{{ img.alt }}"
-                        class="h-80 w-full object-cover transition-transform duration-300 ease-out group-hover:scale-110"
-                    />
+                    <div class="overflow-hidden flex-1">
+                        <img
+                            src="{{ img.src }}"
+                            alt="{{ img.alt }}"
+                            class="gallery-item h-80 w-full object-cover transition-transform duration-300 ease-out group-hover:scale-110 cursor-pointer"
+                            data-category="{{ img.category }}"
+                            data-src="{{ img.src }}"
+                            data-alt="{{ img.alt }}"
+                        />
+                    </div> 
+                    {% if img.title or img.description or img.category %}
+                    <div class="p-4 flex flex-col gap-2">
+                        {% if img.category and img.category != "General" %}
+                        <span class="inline-flex items-center rounded-md bg-secondary/10 px-2 py-1 text-xs font-medium text-secondary-foreground ring-1 ring-inset ring-gray-500/10 w-fit">
+                            {{ img.category }}
+                        </span>
+                        {% endif %}
+                        
+                        {% if img.title %}
+                        <h3 class="font-semibold text-foreground leading-snug group-hover:text-primary line-clamp-2">
+                            {{ img.title }}
+                        </h3>
+                        {% endif %}
+                        {% if img.description %}
+                        <p class="text-sm text-muted-foreground line-clamp-2">
+                            {{ img.description }}
+                        </p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
                 </div>
                 {% endfor %}
             </div>

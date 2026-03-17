@@ -14,12 +14,12 @@ class ImportForm(forms.Form):
     
     archivo = forms.FileField(
         label='Archivo XLSX o CSV',
-        help_text='Cargue un archivo CSV o Excel con los datos a importar'
+        help_text='Cargue un archivo CSV o Excel con los datos a importar.'
     )
     actualizar = forms.BooleanField(
         required=False,
         label='Actualizar existentes',
-        help_text='Si estÃ¡ marcado, actualizarÃ¡ registros existentes; si no, solo crearÃ¡ nuevos'
+        help_text='Si está marcado, actualizará registros existentes; si no, solo creará nuevos.'
     )
 
 @staff_member_required
@@ -60,4 +60,4 @@ def import_view(request):
             {'url': '', 'label': 'Importar Datos'}
         ],
     }
-    return render(request, 'utilidades/wagtailadmin/importar_datos.html', context)
+    return render(request, 'utilidades/wagtailadmin/import_data.html', context)

@@ -686,11 +686,16 @@ class GalleryImage(Orderable):
         related_name='+',
         verbose_name="Imagen"
     )
-    caption = models.CharField("Categoría / Leyenda", max_length=250, blank=True, help_text="Categoría o texto alternativo")
+    
+    category = models.CharField("Año / Edición", max_length=100, blank=True, help_text="Año de la edición (Ej: 2024)")
+    description = models.TextField("Descripción", blank=True, help_text="Descripción visible de la imagen")
+    alt_text = models.CharField("Leyenda / Accesibilidad", max_length=255, blank=True, help_text="Texto alternativo para lectores de pantalla")
     
     panels = [
         FieldPanel("image"),
-        FieldPanel("caption"),
+        FieldPanel("category"),
+        FieldPanel("description"),
+        FieldPanel("alt_text"),
     ]
     
     class Meta(Orderable.Meta):
