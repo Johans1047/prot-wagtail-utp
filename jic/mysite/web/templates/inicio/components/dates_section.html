@@ -49,6 +49,9 @@
                     <div
                         class="relative z-10 flex h-12 w-12 shrink-0 flex-col gap-1 items-center justify-center rounded-full border-2 border-primary bg-card text-center transition-colors group-hover:bg-primary"
                     >
+                        {% if item.date_text %}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary transition-colors group-hover:text-primary-foreground"><path d="M8 2v4"></path><path d="M16 2v4"></path><rect width="18" height="18" x="3" y="4" rx="2"></rect><path d="M3 10h18"></path></svg>
+                        {% else %}
                         <span
                             class="text-2xs mt-1 font-bold uppercase leading-none text-primary transition-colors group-hover:text-primary-foreground"
                             >{{ item.event_date|date:'M' }}</span
@@ -56,10 +59,16 @@
                             class="text-sm font-bold leading-tight text-foreground transition-colors group-hover:text-primary-foreground"
                             >{{ item.event_date|date:'d' }}</span
                         >
+                        {% endif %}
                     </div>
                     <div
                         class="flex-1 rounded-lg border border-border bg-card p-4 transition-colors group-hover:border-primary/30 group-hover:bg-primary/5"
                     >
+                        {% if item.date_text %}
+                        <div class="mb-1 text-sm font-medium text-primary">
+                            {{ item.date_text }}
+                        </div>
+                        {% endif %}
                         <h3 class="font-semibold text-foreground">
                             {{ item.title }}
                         </h3>
@@ -82,7 +91,7 @@
             </div>
         </div>
         <div
-            class="mt-8 flex items-center gap-2 rounded-lg bg-amber-300/15 px-4 py-3 text-sm"
+            class="mt-8 flex items-center gap-2 rounded-lg bg-amber-300/15 px-4 py-3 text-sm text-justify"
         >
             <svg
                 xmlns="http://www.w3.org/2000/svg"

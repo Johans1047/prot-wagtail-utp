@@ -1,5 +1,5 @@
 {% extends '_base.html' %}
-{% load static wagtailcore_tags %}
+{% load static wagtailcore_tags custom_filters %}
 
 {% block title %}Búsqueda{% endblock %}
 
@@ -85,14 +85,14 @@
                 {% if document_results %}
                 <section>
                     <div class="flex items-center gap-3 mb-8 pb-3 border-b border-border">
-                        <h2 class="text-2xl font-bold text-foreground">Documentos</h2>
-                        <span class="px-3 py-1 rounded-full text-sm font-medium bg-secondary/50 text-foreground">
+                        <h2 class="text-2xl font-bold text-foregroun font-serif">Documentos</h2>
+                        <span class="px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary">
                             {{ document_results|length }}
                         </span>
                     </div>
 
                     <div class="grid gap-4">
-                        {% for doc in document_results %}
+                        {% for doc in document_results|sort_by_year_desc %}
                         <div class="bg-card border border-border rounded-lg p-6 hover:shadow-md hover:border-primary/30 transition-all group">
                             <div class="flex items-start gap-4">
                                 <!-- Document Icon -->
@@ -105,7 +105,7 @@
                                 <!-- Document Info -->
                                 <div class="flex-1 min-w-0">
                                     <h4 class="text-lg font-semibold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                                        {{ doc.title }}
+                                        {% if doc.doc_type == 'boletines' %}Boletín{% elif doc.doc_type == 'memorias' %}Memoria{% else %}{{ doc.get_doc_type_display }}{% endif %} JIC {{ doc.title|extract_year }}
                                     </h4>
                                     
                                     {% if doc.description %}
@@ -187,7 +187,7 @@
                 </section>
                 {% endif %}
 
-                {% if not search_results and not project_results %}
+                {% if not search_results and not project_results and not document_results %}
                     <div class="text-center py-16 bg-card border-2 border-dashed border-border/50 rounded-lg">
                         <svg class="mx-auto h-12 w-12 text-muted-foreground opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>

@@ -2,6 +2,10 @@ from django.conf import settings
 from django.urls import include, path
 from django.contrib import admin
 
+from django.shortcuts import render
+
+# Añadir a urlpatterns
+
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail import urls as wagtail_urls
 from wagtail.documents import urls as wagtaildocs_urls
@@ -14,6 +18,9 @@ urlpatterns = [
     path("panel/documents/", include(wagtaildocs_urls)),
     path("busqueda/", search_views.search, name="Busqueda"),
     path('', include('web.urls')),
+    path('test-404/', lambda request: render(request, '404.html')),
+path('test-500/', lambda request: render(request, '500.html')),
+
 ]
 
 

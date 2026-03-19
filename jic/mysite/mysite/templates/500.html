@@ -1,13 +1,30 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-    <head>
-        <meta charset="utf-8" />
-        <title>Internal server error</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-    </head>
-    <body>
-        <h1>Internal server error</h1>
+{% extends "_base.html" %}
 
-        <h2>Sorry, there seems to be an error. Please try again soon.</h2>
-    </body>
-</html>
+{% block title %}Error del servidor (500){% endblock %}
+
+{% block content %}
+<section class="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 py-20 bg-stone-50">
+    <div class="mb-8 text-red-500/80">
+        <svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mx-auto">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+    </div>
+    
+    <h1 class="text-6xl font-black text-red-600 mb-2">500</h1>
+    <h2 class="text-3xl font-serif text-foreground mb-6">Error interno del servidor</h2>
+    <p class="text-muted-foreground max-w-lg mb-8 text-lg">
+        Lo sentimos, hubo un problema al procesar tu solicitud. Nuestro equipo ha sido notificado. Por favor intenta nuevamente más tarde.
+    </p>
+    
+    <div class="flex gap-4 flex-wrap justify-center">
+        <a href="{% url 'Inicio' %}" class="inline-flex items-center justify-center rounded-lg bg-primary px-6 py-3 text-base font-medium text-white shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+            Volver al inicio
+        </a>
+        <button onclick="location.reload()" class="inline-flex items-center justify-center rounded-lg border border-input bg-white px-6 py-3 text-base font-medium shadow-sm transition-colors hover:bg-stone-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 cursor-pointer">
+            Recargar página
+        </button>
+    </div>
+</section>
+{% endblock %}

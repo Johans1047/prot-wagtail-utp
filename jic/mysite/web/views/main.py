@@ -6,9 +6,10 @@ from django.db.utils import OperationalError, ProgrammingError
 from urllib.parse import urlencode
 from .data_types import *
 from .data_fallback import *
+from ..utils import get_recursos_gallery, get_recursos_videos, get_processed_projects
 from ..models import *
 from wagtail.images.models import Image
-from ..utils import get_processed_projects
+from wagtail.documents.models import Document
 
 
 def Inicio(request) -> render:
@@ -205,65 +206,50 @@ def Participar(request) -> render:
     if not important_dates:
         important_dates = important_dates_fallback()
 
-    resource_categories = [
+    role_definitions = [
         {
             "title": "Estudiantes",
             "description": "Informacion para participantes",
             "accent": "bg-primary/90 text-primary-foreground",
-            "resources": [
-                {
-                    "label": "Lineamientos de participacion 2025",
-                    "href": "https://iniciacioncientifica.utp.ac.pa/subida-de-documentos-para-docentes/",
-                },
-                {
-                    "label": "Plantilla para articulos",
-                    "href": "https://iniciacioncientifica.utp.ac.pa/instructivos-y-ejemplos-para-estudiantes/",
-                },
-                {"label": "Manual de usuario: Estudiante", "href": "#"},
-                {
-                    "label": "Recursos digitales",
-                    "href": "https://iniciacioncientifica.utp.ac.pa/subida-de-documentos-para-docentes/",
-                },
-            ]
+            "tags": ["estudiante", "estudiantes"],
         },
         {
             "title": "Asesores",
             "description": "Informacion para asesores",
             "accent": "bg-secondary-foreground/65 text-primary-foreground",
-            "resources": [
-                {"label": "Lineamientos para asesores", "href": "#"},
-                {
-                    "label": "Rubricas de evaluacion",
-                    "href": "https://iniciacioncientifica.utp.ac.pa/wp-content/uploads/2024/05/manual-proce-JIC.pdf",
-                },
-                {"label": "Manual de usuario: Asesor", "href": "#"},
-            ]
+            "tags": ["asesor", "asesores"],
         },
         {
             "title": "Evaluadores",
             "description": "Informacion para evaluadores",
             "accent": "bg-amber-400 text-secondary-foreground",
-            "resources": [
-                {
-                    "label": "Rubricas de evaluacion",
-                    "href": "https://iniciacioncientifica.utp.ac.pa/wp-content/uploads/2024/05/manual-proce-JIC.pdf",
-                },
-                {"label": "Procedimiento de evaluacion", "href": "#"},
-                {"label": "Documentos de induccion", "href": "#"},
-            ]
+            "tags": ["evaluador", "evaluadores"],
         },
         {
             "title": "Coordinadores",
             "description": "Informacion para coordinadores institucionales",
             "accent": "bg-secondary-foreground/65 text-primary-foreground",
-            "resources": [
-                {"label": "Guia de coordinadores", "href": "#"},
-                {"label": "Cronograma de actividades", "href": "#"},
-                {"label": "Plantillas administrativas", "href": "#"},
-                {"label": "Contacto de soporte", "href": "mailto:jornada.cientifica@utp.ac.pa"},
-            ]
+            "tags": ["coordinador", "coordinadores"],
         },
     ]
+
+    resource_categories = []
+    for role in role_definitions:
+        documents_qs = (
+            Document.objects.filter(tags__name__in=role["tags"])
+            .distinct()
+            .order_by("title")
+        )
+        resources = [{"label": doc.title, "href": doc.url} for doc in documents_qs]
+
+        resource_categories.append(
+            {
+                "title": role["title"],
+                "description": role["description"],
+                "accent": role["accent"],
+                "resources": resources,
+            }
+        )
     
     context = {
         'important_dates': important_dates,
@@ -439,204 +425,81 @@ def Resultados(request) -> render:
 def Recursos(request) -> render:
     tab = request.GET.get('tab', 'docs')
     
-    documents_by_edition = [
-        {
-            "year": 2025,
-            "docs": [
-                {"label": "Lineamientos JIC 2025", "href": "https://iniciacioncientifica.utp.ac.pa/lineamientos-2025/"},
-                {"label": "Informe de participacion institucional", "href": "#"},
-                {"label": "Folleto JIC 2025", "href": "#"},
-            ],
-        },
-        {
-            "year": 2024,
-            "docs": [
-                {"label": "Lineamientos JIC 2024", "href": "https://iniciacioncientifica.utp.ac.pa/lineamientos-2024/"},
-                {"label": "Programa final JIC 2024", "href": "#"},
-                {"label": "Preguntas frecuentes 2024", "href": "#"},
-                {"label": "Folleto JIC 2024", "href": "#"},
-            ],
-        },
-        {
-            "year": 2023,
-            "docs": [
-                {"label": "Lineamientos JIC 2023", "href": "#"},
-                {"label": "Programa final JIC 2023", "href": "#"},
-            ],
-        },
-    ]
+    # 1. Documents By Edition
+    # documents_by_edition_list = documents_by_edition_fallback() # Removed fallback
     
-    boletines = [
-        {
-            "title": "Boletin JIC 2024 - Momentos destacados",
-            "description": "Ganadores, pasantias otorgadas y mejores momentos de la JIC Nacional 2024.",
-            "href": "#",
-        },
-        {
-            "title": "Boletin JIC 2023 - Resumen anual",
-            "description": "Resumen de la edición 2023 con proyectos ganadores y estadisticas.",
-            "href": "#",
-        },
-        {
-            "title": "Boletin JIC 2022 - Innovacion juvenil",
-            "description": "Destacados y logros de la edición 2022.",
-            "href": "#",
-        },
-    ]
+    excluded_tags = ['manual', 'boletin', 'memoria', 'plantilla de articulo', 'plantilla_articulo', 'manuales', 'boletines', 'memorias', 'plantillas de articulos']
     
-    memorias = [
-        {
-            "title": "Memorias JIC 2024",
-            "description": "Publicaciones completas y documentacion de la edición 2024.",
-            "href": "#",
-        },
-        {
-            "title": "Memorias JIC 2023",
-            "description": "Compendio de articulos e investigaciones presentadas en 2023.",
-            "href": "#",
-        },
-        {
-            "title": "Memorias JIC 2022",
-            "description": "Documentacion integral de la edición 2022.",
-            "href": "#",
-        },
-    ]
+    all_docs = Document.objects.exclude(tags__name__in=excluded_tags)
     
+    # Also exclude by title for documents that might be missing tags
+    all_docs = all_docs.exclude(title__icontains='manual')
+    all_docs = all_docs.exclude(title__icontains='boletin')
+    all_docs = all_docs.exclude(title__icontains='memoria')
+    all_docs = all_docs.exclude(title__icontains='plantilla')
     
-    try:
-        # Try to get the ordered gallery snippet first
-        # Added prefetch for performance and to ensure data availability
-        gallery = Gallery.objects.prefetch_related('gallery_images__image__tags').first()
-        gallery_images = []
+    all_docs = all_docs.distinct()
+    
+    docs_by_year = {}
+    
+    for doc in all_docs:
+        # Find year tag
+        years_found = set()
+        for tag in doc.tags.names():
+            # Check for year (4 digits, starts with 20)
+            if tag.isdigit() and len(tag) == 4 and tag.startswith('20'):
+                try:
+                    years_found.add(int(tag))
+                except ValueError:
+                    continue
         
-        if gallery and gallery.gallery_images.exists():
-            for item in gallery.gallery_images.all():
-                if item.image:
-                    # 1. Category logic: Explicit field first (Year/Edition), fallback to Tags, then "General"
-                    category = "General"
-                    if hasattr(item, 'category') and item.category:
-                        category = item.category
-                    elif item.image.tags.exists():
-                        category = item.image.tags.first().name.title()
-
-                    # 2. Description logic: Explicit field first, fallback to Image metadata
-                    description = ""
-                    if hasattr(item, 'description') and item.description:
-                        description = item.description
-                    elif hasattr(item.image, 'description') and item.image.description:
-                         description = item.image.description
-                         
-                    # 3. Alt text logic: Explicit field first, fallback to Title
-                    alt_text = item.image.title
-                    if hasattr(item, 'alt_text') and item.alt_text:
-                        alt_text = item.alt_text
-
-                    gallery_images.append({
-                        "src": item.image.file.url,
-                        "alt": alt_text,
-                        "title": item.image.title,
-                        "description": description,
-                        "category": category,
-                    })
-        else:
-            # Fallback to fetching latest images if no gallery snippet exists or it's empty
-            db_images = Image.objects.all().order_by('-created_at').prefetch_related('tags')#[:24]
-            for img in db_images:
-                # Use the first tag as category, default to "General"
-                category = "General"
-                tags = img.tags.all()
-                if tags:
-                    category = tags[0].name.title()
-                    
-                gallery_images.append({
-                    "src": img.file.url,
-                    "alt": img.title,
-                    "title": img.title,
-                    "description": img.get_title() if hasattr(img, 'get_title') else "",
-                    "category": category,
+        if years_found:
+            for year in years_found:
+                if year not in docs_by_year:
+                    docs_by_year[year] = []
+                
+                docs_by_year[year].append({
+                    'label': doc.title,
+                    'href': doc.url
                 })
-    except (OperationalError, ProgrammingError, Exception) as e:
-        # Fallback if DB not ready or empty
-        print(f"Error loading gallery: {e}")
-        gallery_images = []
     
-    if not gallery_images:
-        gallery_images = [
-            {"src": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=500&h=500&fit=crop", "alt": "Investigadores en laboratorio", "title": "Investigadores en laboratorio", "description": "Equipo científico trabajando en investigaciones", "category": "Investigación"},
-            {"src": "https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=500&h=500&fit=crop", "alt": "Presentación de proyecto", "title": "Presentación de proyecto", "description": "Exposición de proyecto de investigación", "category": "Presentaciones"},
-            {"src": "https://images.unsplash.com/photo-1576086213369-97a306d36557?w=500&h=500&fit=crop", "alt": "Equipo científico", "title": "Equipo científico", "description": "Colaboración de investigadores", "category": "Investigación"},
-            {"src": "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=500&h=500&fit=crop", "alt": "Conferencia científica", "title": "Conferencia científica", "description": "Evento científico con múltiples participantes", "category": "Eventos"},
-            {"src": "https://images.unsplash.com/photo-1516534775068-bb57b6439066?w=500&h=500&fit=crop", "alt": "Investigadores colaborando", "title": "Investigadores colaborando", "description": "Trabajo en equipo en investigación", "category": "Investigación"},
-            {"src": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=500&h=500&fit=crop", "alt": "Presentación en auditorio", "title": "Presentación en auditorio", "description": "Presentación ante audiencia", "category": "Presentaciones"},
-            {"src": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500&h=500&fit=crop", "alt": "Evento científico", "title": "Evento científico", "description": "Actividad científica importante", "category": "Eventos"},
-            {"src": "https://images.unsplash.com/photo-1537128191892-8ac93e876401?w=500&h=500&fit=crop", "alt": "Trabajo en equipo", "title": "Trabajo en equipo", "description": "Equipo colaborativo de investigación", "category": "Investigación"},
-        ]
+    documents_by_edition_list = [{"year": year, "docs": docs} for year, docs in docs_by_year.items()]
+    documents_by_edition_list.sort(key=lambda x: x['year'], reverse=True)
     
-    gallery_categories = sorted(set(img['category'] for img in gallery_images))
-    
-    if tab == 'galeria':
-        paginator = Paginator(gallery_images, 24)
-        page_obj = paginator.get_page(request.GET.get('page', 1))
-        gallery_images = page_obj
-    
-    try:
-        db_videos = video.objects.filter(is_active=True).order_by("sort_order", "-created_at")
-        videos = []
-        for v in db_videos:
-            thumb_url = v.thumbnail.url if v.thumbnail else "/static/images/hero-jic.jpg"
-            video_url = v.video_file.url if v.video_file else "#"
-            videos.append({
-                "title": v.title,
-                "thumbnail": thumb_url,
-                "url": video_url,
-                "description": v.description,
-            })
-    except (OperationalError, ProgrammingError, Exception):
-        videos = []
-        
-    if not videos:
-        videos = [
-            {
-                "title": "Video promocional JIC Nacional",
-                "thumbnail": "/static/images/hero-jic.jpg",
-                "url": "https://www.youtube.com/watch?v=oispNb8t79o",
-                "description": "Conoce la JIC Nacional, el evento de investigacion mas importante para jovenes en Panama.",
-            },
-            {
-                "title": "¿Cómo preparar tu proyecto de investigación?",
-                "thumbnail": "/static/images/categories-science.jpg",
-                "url": "https://www.youtube.com/watch?v=7VAMa-C7wG0",
-                "description": "Conoce la JIC Nacional, el evento de investigacion mas importante para jovenes en Panama.",
-            },
-            {
-                "title": "Guía de Investigación Científica",
-                "thumbnail": "/static/images/hero-jic.jpg",
-                "url": "https://youtu.be/bP2KW-TbApc?si=nW7pLA7U0spGEPsH",
-                "description": "Tutorial completo sobre metodología y pasos para realizar investigación científica.",
-            },
-            {
-                "title": "Inducción a la JIC 2024",
-                "thumbnail": "/static/images/hero-jic.jpg",
-                "url": "https://youtu.be/zxKc3FreHTQ?si=CORhb6r9ZoPpMf9d",
-                "description": "Recursos sobre cómo presentar tu proyecto en la JIC.",
-            },
-            {
-                "title": "Prueba de Video Interno",
-                "thumbnail": "/static/images/hero-jic.jpg",
-                "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-                "description": "Este es un video de prueba (mp4) para verificar el reproductor interno en el modal.",
-            },
-        ]
+    paginator_docs = Paginator(documents_by_edition_list, 5) # 5 editions per page
+    documents_by_edition = paginator_docs.get_page(request.GET.get('page', 1))
 
-    page_obj = None # Default value
+    # 2. Bulletins and Memories
+    if tab == 'boletines':
+        boletines_list = Document.objects.filter(tags__name='boletin').order_by('-created_at')
+        paginator_b = Paginator(boletines_list, 6)
+        boletines = paginator_b.get_page(request.GET.get('page', 1))
+    else:
+        boletines = []
+
+    if tab == 'memorias':
+        memorias_list = Document.objects.filter(tags__name='memoria').order_by('-created_at')
+        paginator_m = Paginator(memorias_list, 6)
+        memorias = paginator_m.get_page(request.GET.get('page', 1))
+    else:
+        memorias = []
     
+    # 3. Gallery
+    current_img_cat = request.GET.get('img_cat', 'all')
+    gallery_images, gallery_categories, page_obj_gall = get_recursos_gallery(
+        request, tab, current_img_cat, gallery_images_fallback()
+    )
+    
+    # 4. Videos
+    videos, page_obj_vid = get_recursos_videos(
+        request, tab, videos_fallback()
+    )
+
+    page_obj = None
     if tab == 'videos':
-        paginator = Paginator(videos, 12)
-        page_obj = paginator.get_page(request.GET.get('page', 1))
-        videos = page_obj
+        page_obj = page_obj_vid
     elif tab == 'galeria':
-        # Already paginated above, grab the page_obj from gallery_images
-        page_obj = gallery_images
+        page_obj = page_obj_gall
 
     query_params = request.GET.copy()
     query_params.pop('page', None)
@@ -649,11 +512,13 @@ def Recursos(request) -> render:
         'memorias': memorias,
         'gallery_images': gallery_images,
         'categories': gallery_categories,
+        'current_img_cat': current_img_cat,
         'videos': videos,
         'page_obj': page_obj,
-        'page_query': page_query, 
+        'page_query': f'tab=galeria&img_cat={current_img_cat}' if tab == 'galeria' else '',
     }
     return render(request, 'recursos/_index.html', context)
+
 
 def Selecciones(request) -> render:
     try:

@@ -1,4 +1,5 @@
 <!-- Tabs Navigation -->
+{% load custom_filters wagtailimages_tags %}
 <section class="border-b border-border bg-card">
     <div class="mx-auto max-w-7xl px-4 lg:px-8">
         <form method="get" class="flex gap-0 overflow-x-auto -mb-px">
@@ -217,6 +218,8 @@
                 </div>
             </div>
             {% endfor %}
+            <!-- Paginación Documentos -->
+            {% include 'pagination.html' with page_obj=documents_by_edition page_query="tab=docs" %}
         </div>
         {% endif %}
 
@@ -226,13 +229,13 @@
             <div>
                 <h2 class="font-serif text-2xl text-foreground">Boletines</h2>
                 <p class="mt-1 text-muted-foreground">
-                    Momentos importantes, ganadores y pasantias de cada edición.
+                    Momentos importantes, ganadores y pasantías de cada edición.
                 </p>
             </div>
             <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {% for b in boletines %}
+                {% for b in boletines|sort_by_year_desc %}
                 <a
-                    href="{{ b.href }}"
+                    href="{{ b.url }}"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="group rounded-xl border border-border bg-card p-5 transition-all hover:border-primary/30 hover:shadow-md"
@@ -260,16 +263,16 @@
                     <h3
                         class="font-semibold text-foreground group-hover:text-primary"
                     >
-                        {{ b.title }}
+                        Boletín JIC {{ b.title|extract_year }}
                     </h3>
-                    <p
-                        class="mt-2 text-sm leading-relaxed text-muted-foreground"
-                    >
-                        {{ b.description }}
-                    </p>
                 </a>
+                {% empty %}
+                <p class="col-span-full text-muted-foreground text-center py-8">No hay boletines disponibles.</p>
                 {% endfor %}
             </div>
+
+            <!-- Paginación -->
+            {% include 'pagination.html' with page_obj=boletines page_query="tab=boletines" %}
         </div>
 
         <div class="rounded-lg border border-teal/30 bg-teal/5 p-4 text-sm mt-10">
@@ -295,14 +298,14 @@
             <div>
                 <h2 class="font-serif text-2xl text-foreground">Memorias</h2>
                 <p class="mt-1 text-muted-foreground">
-                    Toda la informacion relacionada a las publicaciones
+                    Toda la información relacionada a las publicaciones
                     realizadas cada año.
                 </p>
             </div>
             <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {% for m in memorias %}
+                {% for m in memorias|sort_by_year_desc %}
                 <a
-                    href="{{ m.href }}"
+                    href="{{ m.url }}"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="group rounded-xl border border-border bg-card p-5 transition-all hover:border-teal/30 hover:shadow-md"
@@ -328,16 +331,16 @@
                     <h3
                         class="font-semibold text-foreground group-hover:text-teal"
                     >
-                        {{ m.title }}
+                        Memoria JIC {{ m.title|extract_year }}
                     </h3>
-                    <p
-                        class="mt-2 text-sm leading-relaxed text-muted-foreground"
-                    >
-                        {{ m.description }}
-                    </p>
                 </a>
+                {% empty %}
+                <p class="col-span-full text-muted-foreground text-center py-8">No hay memorias disponibles.</p>
                 {% endfor %}
             </div>
+
+            <!-- Paginación -->
+            {% include 'pagination.html' with page_obj=memorias page_query="tab=memorias" %}
         </div>
 
         <div class="rounded-lg border border-teal/30 bg-teal/5 p-4 text-sm mt-10">
@@ -368,22 +371,20 @@
             </p>
 
             <!-- Filtros -->
-            <div class="flex flex-wrap gap-2">
-                <button
-                    type="button"
-                    class="filter-btn all px-4 py-2 rounded-lg border border-primary bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors cursor-pointer"
-                    data-category="all"
+            <div class="flex flex-nowrap overflow-x-auto gap-2 pb-2 -mx-4 px-4 w-[calc(100%+2rem)] md:mx-0 md:px-0 md:w-full scrollbar-thin scrollbar-thumb-stone-300 scrollbar-track-transparent">
+                <a
+                    href="?tab=galeria&img_cat=all"
+                    class="filter-link whitespace-nowrap shrink-0 px-4 py-2 rounded-lg border font-medium text-sm transition-colors cursor-pointer {% if current_img_cat == 'all' or not current_img_cat %}border-primary bg-primary text-primary-foreground hover:bg-primary/90{% else %}border-border bg-card text-foreground hover:border-primary/50 hover:bg-stone-100{% endif %}"
                 >
                     Todos
-                </button>
+                </a>
                 {% for category in categories %}
-                <button
-                    type="button"
-                    class="filter-btn px-4 py-2 rounded-lg border border-border hover:border-primary/50 bg-card text-foreground font-medium text-sm hover:bg-stone-100 transition-colors cursor-pointer"
-                    data-category="{{ category }}"
+                <a
+                    href="?tab=galeria&img_cat={{ category }}"
+                    class="filter-link whitespace-nowrap shrink-0 px-4 py-2 rounded-lg border font-medium text-sm transition-colors cursor-pointer {% if current_img_cat == category %}border-primary bg-primary text-primary-foreground hover:bg-primary/90{% else %}border-border bg-card text-foreground hover:border-primary/50 hover:bg-stone-100{% endif %}"
                 >
                     {{ category }}
-                </button>
+                </a>
                 {% endfor %}
             </div>
 
@@ -393,20 +394,24 @@
                 <div
                     class="group overflow-hidden rounded-lg border border-border bg-card transition-all hover:shadow-lg hover:border-primary/50 cursor-pointer flex flex-col"
                     data-category="{{ img.category }}"
-                    data-src="{{ img.src }}"
+                    data-src="{{ img.full_src|default:img.src }}"
                     data-alt="{{ img.alt }}"
                 >
                     <div class="overflow-hidden flex-1">
+                        <!-- Usamos la directiva de imagen de Wagtail para obtener una miniatura muy liviana desde el template. Esto traslada la carga pesada al HTML evitando que la vista reviente y cachea el resultado. -->
+                        {% image img.obj max-600x600 as tmp_img %}
                         <img
-                            src="{{ img.src }}"
+                            src="{{ tmp_img.url }}"
                             alt="{{ img.alt }}"
+                            loading="lazy"
+                            decoding="async"
                             class="gallery-item h-80 w-full object-cover transition-transform duration-300 ease-out group-hover:scale-110 cursor-pointer"
                             data-category="{{ img.category }}"
-                            data-src="{{ img.src }}"
+                            data-src="{{ img.full_src|default:img.src }}"
                             data-alt="{{ img.alt }}"
                         />
                     </div> 
-                    {% if img.title or img.description or img.category %}
+                    {% if img.description or img.category %}
                     <div class="p-4 flex flex-col gap-2">
                         {% if img.category and img.category != "General" %}
                         <span class="inline-flex items-center rounded-md bg-secondary/10 px-2 py-1 text-xs font-medium text-secondary-foreground ring-1 ring-inset ring-gray-500/10 w-fit">
@@ -414,13 +419,8 @@
                         </span>
                         {% endif %}
                         
-                        {% if img.title %}
-                        <h3 class="font-semibold text-foreground leading-snug group-hover:text-primary line-clamp-2">
-                            {{ img.title }}
-                        </h3>
-                        {% endif %}
                         {% if img.description %}
-                        <p class="text-sm text-muted-foreground line-clamp-2">
+                        <p class="text-sm text-foreground font-medium line-clamp-2">
                             {{ img.description }}
                         </p>
                         {% endif %}
@@ -429,6 +429,7 @@
                 </div>
                 {% endfor %}
             </div>
+            {% include 'pagination.html' with page_obj=page_obj page_query=page_query %}
         </div>
         {% endif %}
 
@@ -476,7 +477,7 @@
             <div>
                 <h2 class="font-serif text-2xl text-foreground">JIC Virtual</h2>
                 <p class="mt-1 text-muted-foreground">
-                    Videos, recursos y material audiovisual util para
+                    Vídeos, recursos y material audiovisual útil para
                     estudiantes.
                 </p>
             </div>
@@ -592,6 +593,8 @@
                 </div>
                 {% endfor %}
             </div>
+
+            {% include 'pagination.html' with page_obj=page_obj page_query="tab=videos" %}
         </div>
         {% endif %}
 
@@ -613,15 +616,8 @@
                         src=""
                         title="YouTube video player"
                         frameborder="0"
-                        allow="
-                            accelerometer;
-                            autoplay;
-                            clipboard-write;
-                            encrypted-media;
-                            gyroscope;
-                            picture-in-picture;
-                            web-share;
-                        "
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        referrerpolicy="strict-origin-when-cross-origin"
                         allowfullscreen
                         class="hidden"
                     ></iframe>
@@ -679,9 +675,7 @@
     }
 
     function resetFiltered() {
-        filteredImages = Array.from(allItems).filter(
-            (item) => item.style.display !== "none",
-        );
+        filteredImages = Array.from(allItems);
         currentIndex = 0;
     }
 
@@ -808,46 +802,4 @@
 
 
     // Filtros de galería
-    document.querySelectorAll(".filter-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-            document.querySelectorAll(".filter-btn").forEach((b) => {
-                b.classList.remove(
-                    "bg-primary",
-                    "text-primary-foreground",
-                    "hover:bg-primary/90",
-                    "border-primary",
-                );
-                b.classList.add(
-                    "bg-card",
-                    "text-foreground",
-                    "hover:bg-stone-100",
-                    "border-border",
-                );
-            });
-            btn.classList.add(
-                "bg-primary",
-                "text-primary-foreground",
-                "hover:bg-primary/90",
-                "border-primary",
-            );
-            btn.classList.remove(
-                "bg-card",
-                "text-foreground",
-                "hover:bg-stone-100",
-                "border-border",
-            );
-
-            const category = btn.dataset.category;
-            allItems.forEach((item) => {
-                if (
-                    category === "all" ||
-                    item.dataset.category === category
-                ) {
-                    item.style.display = "";
-                } else {
-                    item.style.display = "none";
-                }
-            });
-        });
-    });
 </script>

@@ -3,8 +3,10 @@ from django.template.response import TemplateResponse
 from django.db.models import Q
 
 from wagtail.models import Page
+from wagtail.documents.models import Document
 from web.models import resource_document
 from web.utils import get_processed_projects
+from web.utils import WagtailDocWrapper
 
 # To enable logging of search queries for use with the "Promoted search results" module
 # <https://docs.wagtail.org/en/stable/reference/contrib/searchpromotions.html>
@@ -25,7 +27,7 @@ def search(request):
     if search_query:
         search_results = Page.objects.live().search(search_query)
         
-        # Search in projects (local JSON data)
+        # Search in projects
         try:
             all_projects = get_processed_projects()
             query_lower = search_query.lower()
@@ -41,15 +43,20 @@ def search(request):
         # Search in documents (database)
         try:
             query_lower = search_query.lower()
-            document_results = resource_document.objects.filter(
-                Q(title__icontains=search_query) | 
+            document_results_list = list(resource_document.objects.filter(
+                Q(title__icontains=search_query) |
                 Q(description__icontains=search_query) |
                 Q(doc_type__icontains=search_query),
                 is_active=True
-            ).order_by('-year', 'sort_order')
+            ).order_by('-year', 'sort_order'))
+
+            wagtail_docs = Document.objects.filter(title__icontains=search_query)
+            for doc in wagtail_docs:
+                document_results_list.append(WagtailDocWrapper(doc))
+                
+            document_results = document_results_list
         except Exception:
             document_results = []
-
         # To log this query for use with the "Promoted search results" module:
 
         # query = Query.get(search_query)

@@ -346,3 +346,162 @@ def selecciones_fallback() -> list[dict]:
             "documents": [],
         },
     ]
+
+
+def documents_by_edition_fallback() -> dict[str, list[dict]]:
+    return {
+        "2024": [
+            {
+                "label": "Misión, Visión, Valores y Objetivos de la JIC 2024",
+                "type": "document",
+                "href": "/static/documents/mision_vision.pdf",
+                "description": "Conoce los principios que guían la Jornada de Iniciación Científica.",
+                "date": "15/05/2024",
+                "icon": "fa-file-pdf"
+            },
+            {
+                "label": "Calendario Oficial JIC 2024",
+                "type": "calendar",
+                "href": "/static/documents/calendario_jic.pdf",
+                "description": "Fechas importantes para inscripciones, entregas y eventos.",
+                "date": "20/05/2024",
+                "icon": "fa-calendar-alt"
+            }
+        ],
+        "2023": [
+            {
+                "label": "Bases de Participación 2023",
+                "type": "document",
+                "href": "/static/documents/bases_2023.pdf",
+                "description": "Reglas y requisitos para participar en la JIC 2023.",
+                "date": "10/01/2023",
+                "icon": "fa-file-pdf"
+            }
+        ],
+        "2022": [
+            {
+                "label": "Resultados Finales JIC 2022",
+                "type": "spreadsheet",
+                "href": "/static/documents/resultados_2022.xlsx",
+                "description": "Lista de ganadores y menciones honoríficas del 2022.",
+                "date": "15/11/2022",
+                "icon": "fa-file-excel"
+            }
+        ]
+    }
+
+
+def videos_fallback() -> list[dict]:
+    return [
+           {
+               "title": "Inauguración JIC 2023",
+               "thumbnail": "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
+               "url": "#",
+               "description": "Ceremonia de apertura de la JIC 2023 con autoridades universitarias."
+           },
+           {
+               "title": "Conferencia: El Futuro de la Investigación",
+               "thumbnail": "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
+               "url": "#",
+               "description": "Dra. María Pérez discute las tendencias en investigación tecnológica."
+           },
+           {
+               "title": "Premiación JIC 2022",
+               "thumbnail": "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
+               "url": "#",
+               "description": "Revive el emocionante momento de la entrega de premios de la edición 2022."
+           },
+           {
+               "title": "Taller: Cómo escribir un artículo científico",
+               "thumbnail": "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
+               "url": "#",
+               "description": "Guía paso a paso para estructurar y redactar un paper exitoso."
+           },
+           {
+               "title": "Presentación de Proyectos Destacados",
+               "thumbnail": "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
+               "url": "#",
+               "description": "Los 5 mejores proyectos de ingeniería presentan sus resultados."
+           },
+           {
+               "title": "Clausura JIC 2021",
+               "thumbnail": "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
+               "url": "#",
+               "description": "Mensaje de cierre y perspectivas para el futuro de la investigación estudiantil."
+           }
+       ]
+
+
+def gallery_images_fallback() -> list[dict]:
+    return [
+           {
+               "src": "https://picsum.photos/seed/jic1/800/600",
+               "alt": "Estudiantes presentando proyecto de robótica",
+               "title": "Presentación de Robótica",
+               "description": "Estudiantes de ingeniería electromecánica demostrando su brazo robótico educativo en la feria principal.",
+               "category": "2023"
+           },
+           {
+               "src": "https://picsum.photos/seed/jic2/800/600",
+               "alt": "Autoridades en la mesa principal",
+               "title": "Inauguración JIC",
+               "description": "El Rector y el comité organizador durante la ceremonia de apertura en el auditorio central.",
+               "category": "Ceremonias"
+           },
+           {
+               "src": "https://picsum.photos/seed/jic3/800/600",
+               "alt": "Público observando pósters científicos",
+               "title": "Exhibición de Pósters",
+               "description": "Asistentes revisando las metodologías y resultados de los más de 50 proyectos exhibidos.",
+               "category": "2023"
+           },
+           {
+               "src": "https://picsum.photos/seed/jic4/600/800",
+               "alt": "Ganadores recibiendo medallas",
+               "title": "Premiación 1er Lugar",
+               "description": "El equipo 'AquaTech' recibiendo el primer lugar en la categoría de Ciencias Ambientales.",
+               "category": "Ceremonias"
+           },
+           {
+               "src": "https://picsum.photos/seed/jic5/800/600",
+               "alt": "Estudiante explicando software a jurado",
+               "title": "Evaluación del Jurado",
+               "description": "Participantes defendiendo su aplicación de monitoreo de tráfico ante los evaluadores externos.",
+               "category": "2022"
+           },
+           {
+               "src": "https://picsum.photos/seed/jic6/800/600",
+               "alt": "Grupo de voluntarios JIC",
+               "title": "Voluntarios 2023",
+               "description": "El equipo de logística y apoyo que hizo posible la ejecución impecable del evento.",
+               "category": "2023"
+           },
+           {
+               "src": "https://picsum.photos/seed/jic7/800/600",
+               "alt": "Prototipo de vehículo solar",
+               "title": "Innovación en Transporte",
+               "description": "Pruebas en exteriores del prototipo de transporte impulsado por energía solar.",
+               "category": "Proyectos"
+           },
+           {
+               "src": "https://picsum.photos/seed/jic8/600/800",
+               "alt": "Conferencista internacional",
+               "title": "Charla Magistral",
+               "description": "El Dr. Smith compartiendo sus experiencias sobre transferencia tecnológica academia-industria.",
+               "category": "Conferencias"
+           },
+           {
+               "src": "https://picsum.photos/seed/jic9/800/600",
+               "alt": "Equipo trabajando en laboratorio",
+               "title": "Preparativos",
+               "description": "Sesiones de ajuste fino de proyectos en los laboratorios de química semanas antes del evento.",
+               "category": "2022"
+           },
+           {
+               "src": "https://picsum.photos/seed/jic10/800/600",
+               "alt": "Foto grupal de ganadores",
+               "title": "Clausura y Celebración",
+               "description": "Todos los premiados de la edición 2023 celebrando al final de la jornada de tres días.",
+               "category": "Ceremonias"
+           }
+       ]

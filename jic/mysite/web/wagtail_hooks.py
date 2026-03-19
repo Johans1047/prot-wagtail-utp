@@ -54,7 +54,7 @@ class FrequentlyAskQuestionViewSet(SnippetViewSet):
 
 class EventIntroViewSet(SnippetViewSet):
     model = event_intro
-    menu_label = "Intro del evento"
+    menu_label = "Introducción del evento"
     icon = "doc-full"
     list_display = ("title", "is_active")
 
@@ -66,6 +66,7 @@ class TitleSectionViewSet(SnippetViewSet):
     list_display = ("title", "carousel_interval", "is_active", "sort_order")
     list_filter = ("is_active",)
     search_fields = ("title", "description")
+    permission_policy = SingletonPermissionPolicy(title_section)
 
 
 class InicioGroup(SnippetViewSetGroup):

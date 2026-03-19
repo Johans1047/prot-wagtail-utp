@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.core.validators import FileExtensionValidator
 from django.db.models import Case, When
 from django.utils import timezone
 from modelcluster.fields import ParentalKey
@@ -12,14 +13,24 @@ from .utils import get_video_file_path, get_video_thumbnail_path, get_document_p
 class important_date(PreviewableMixin, models.Model):
     """Editable timeline item for the home page."""
 
-    title = models.CharField("Título", max_length=150)
-    event_date = models.DateField("Fecha del evento")
+    title = models.CharField("Título", max_length=150, default="Selección Nacional")
+    date_text = models.CharField(
+        "Texto de la fecha", 
+        max_length=200, 
+        blank=True,
+        help_text="Ej: 'Del 04 de mayo al 31 de agosto' o 'Hasta el 15 de septiembre'."
+    )
+    event_date = models.DateField(
+        "Fecha para ordenar", 
+        help_text="Fecha base usada internamente para ordenar cronológicamente."
+    )
     description = models.TextField("Descripción")
     is_active = models.BooleanField("Activo", default=True, help_text="Activar o desactivar esta fecha")
     sort_order = models.PositiveIntegerField("Orden", default=0)
 
     panels = [
         FieldPanel("title"),
+        FieldPanel("date_text"),
         FieldPanel("event_date"),
         FieldPanel("description"),
         FieldPanel("is_active"),
@@ -222,12 +233,13 @@ class event_intro(PreviewableMixin, models.Model):
         max_length=200,
         help_text="Ej: Congreso IESTEC"
     )
-    logo_image = models.ImageField(
+    logo_image = models.FileField(
         "Logo del evento",
         upload_to="event_logos/",
         null=True,
         blank=True,
-        help_text="Logo a mostrar junto a la descripción"
+        validators=[FileExtensionValidator(['png', 'jpg', 'jpeg', 'svg', 'webp'])],
+        help_text="Logo a mostrar junto a la descripción (Se aceptan PNG, JPG, SVG)"
     )
     logo_fallback_text = models.CharField(
         "Texto de respaldo para logo",
@@ -514,7 +526,14 @@ class video(PreviewableMixin, models.Model):
     video_file = models.FileField(
         "Archivo de video",
         upload_to=get_video_file_path,
-        help_text="Formatos soportados: MP4, WebM, Ogg (máx 500MB)"
+        null=True,
+        blank=True,
+        help_text="Formatos soportados: MP4, WebM, Ogg (máx 500MB). Deja en blanco si usas YouTube."
+    )
+    youtube_url = models.URLField(
+        "Enlace de YouTube",
+        blank=True,
+        help_text="Ej: https://www.youtube.com/watch?v=oispNb8t79o"
     )
     thumbnail = models.ImageField(
         "Miniatura",
@@ -548,6 +567,7 @@ class video(PreviewableMixin, models.Model):
         FieldPanel("title"),
         FieldPanel("description"),
         FieldPanel("video_file"),
+        FieldPanel("youtube_url"),
         FieldPanel("thumbnail"),
         FieldPanel("duration_seconds"),
         FieldPanel("category"),

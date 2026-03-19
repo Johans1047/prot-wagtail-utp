@@ -2,7 +2,31 @@ import json
 from django.urls import reverse
 from django.utils import timezone
 from wagtail.admin.menu import MenuItem
+from django.core.paginator import Paginator
+from django.db.utils import OperationalError, ProgrammingError
+from wagtail.images.models import Image
 
+
+class WagtailDocWrapper:
+    def __init__(self, doc):
+        self.title = doc.title
+        self.description = ""
+        self.year = ""
+        self.url = doc.url
+        self.document_file = type('obj', (object,), {'url': doc.url})
+        self.is_wagtail_doc = True
+        
+        tags = [t.lower() for t in doc.tags.names()]
+        if 'boletin' in tags or 'boletines' in tags:
+            self.doc_type = 'boletines'
+        elif 'memoria' in tags or 'memorias' in tags:
+            self.doc_type = 'memorias'
+        else:
+            self.doc_type = 'otros'
+    
+    def get_doc_type_display(self):
+        return "Documento PDF"
+                
 
 class LazyMenuItem(MenuItem):
     def __init__(self, label, url_name, **kwargs):
@@ -21,7 +45,7 @@ class LazyMenuItem(MenuItem):
         pass
     
 
-def get_raw_projects_data():
+def get_raw_projects_data() -> dict:
     return json.loads(
         """
         {
@@ -173,7 +197,7 @@ def get_raw_projects_data():
     )
 
 
-def get_processed_projects():
+def get_processed_projects() -> list[dict]:
     projects_payload = get_raw_projects_data()
     return [
         {
@@ -191,7 +215,7 @@ def get_processed_projects():
     ]
 
 
-def get_gallery_image_path(instance, filename):
+def get_gallery_image_path(instance, filename) -> str:
     """
     Generate path for gallery images: galeria/{year}/{filename}
     Example: galeria/2025/photo_abc123.jpg
@@ -200,7 +224,7 @@ def get_gallery_image_path(instance, filename):
     return f"galeria/{year}/{filename}"
 
 
-def get_video_file_path(instance, filename):
+def get_video_file_path(instance, filename) -> str:
     """
     Generate path for video files: videos/{year}/{filename}
     Example: videos/2025/tutorial_abc123.mp4
@@ -209,7 +233,7 @@ def get_video_file_path(instance, filename):
     return f"videos/{year}/{filename}"
 
 
-def get_video_thumbnail_path(instance, filename):
+def get_video_thumbnail_path(instance, filename) -> str:
     """
     Generate path for video thumbnails: video_thumbnails/{year}/{filename}
     Example: video_thumbnails/2025/thumb_abc123.jpg
@@ -218,7 +242,7 @@ def get_video_thumbnail_path(instance, filename):
     return f"video_thumbnails/{year}/{filename}"
 
 
-def get_document_path(instance, filename):
+def get_document_path(instance, filename) -> str:
     """
     Generate path for documents: documentos/{doc_type}/{year}/{filename}
     Example: documentos/lineamientos/2025/lineamientos_jic.pdf
@@ -226,3 +250,113 @@ def get_document_path(instance, filename):
     year = timezone.now().year
     doc_type = getattr(instance, 'doc_type', 'otros').lower()
     return f"documentos/{doc_type}/{year}/{filename}"
+
+
+def get_recursos_gallery(request, tab, current_img_cat, fallback_images) -> tuple[list[dict], list[str], Paginator.page]: #Paginator.page | None
+    from .models import Gallery
+    gallery_images = []
+    gallery_categories = ['General']
+    page_obj_gall = None
+    
+    try:
+        gallery = Gallery.objects.prefetch_related('gallery_images__image__tags').first()
+        
+        if gallery and gallery.gallery_images.exists():
+            gallery_images_qs = gallery.gallery_images.select_related('image').order_by('-image__created_at')
+            gallery_categories = list(set(gallery_images_qs.exclude(category__isnull=True).exclude(category='').values_list('category', flat=True)))
+            gallery_categories = sorted(gallery_categories, reverse=True)
+            if not gallery_categories:
+                gallery_categories = ['General']
+            
+            if current_img_cat != 'all':
+                gallery_images_qs = gallery_images_qs.filter(category=current_img_cat)
+            
+            if tab == 'galeria':
+                paginator = Paginator(gallery_images_qs, 24)
+                page_obj_gall = paginator.get_page(request.GET.get('page', 1))
+                page_items = page_obj_gall.object_list
+            else:
+                page_items = gallery_images_qs[:24]
+
+            for item in page_items:
+                category = item.category if item.category else 'General'
+                description = item.description if hasattr(item, 'description') and item.description else ''
+                if not description and hasattr(item.image, 'description') and item.image.description:
+                     description = item.image.description
+                     
+                alt_text = item.alt_text if hasattr(item, 'alt_text') and item.alt_text else item.image.title
+
+                gallery_images.append({
+                    'obj': item.image,
+                    'src': item.image.file.url,
+                    'full_src': item.image.file.url,
+                    'alt': alt_text,
+                    'title': item.image.title,
+                    'description': description,
+                    'category': category,
+                })
+        else:
+            db_images = list(Image.objects.all().order_by('-created_at')[:24])
+            if tab == 'galeria':
+                paginator = Paginator(Image.objects.all().order_by('-created_at'), 24)
+                page_obj_gall = paginator.get_page(request.GET.get('page', 1))
+                db_images = list(page_obj_gall.object_list)
+            
+            for img in db_images:
+                gallery_images.append({
+                    'obj': img,
+                    'src': img.file.url,
+                    'full_src': img.file.url,
+                    'alt': img.title,
+                    'title': img.title,
+                    'description': img.get_title() if hasattr(img, 'get_title') else '',
+                    'category': 'General',
+                })
+
+    except (OperationalError, ProgrammingError, Exception) as e:
+        print(f'Error loading gallery: {e}')
+        
+    if not gallery_images:
+        gallery_images = fallback_images
+        gallery_categories = sorted(list(set(img['category'] for img in gallery_images)), reverse=True)
+        if current_img_cat != 'all':
+            gallery_images = [img for img in gallery_images if img['category'] == current_img_cat]
+            
+        if tab == 'galeria':
+            paginator = Paginator(gallery_images, 24)
+            page_obj_gall = paginator.get_page(request.GET.get('page', 1))
+            gallery_images = page_obj_gall.object_list
+
+    return gallery_images, gallery_categories, page_obj_gall
+
+def get_recursos_videos(request, tab, fallback_videos) -> tuple[list[dict], Paginator.page]: #Paginator.page | None
+    from .models import video
+    from django.core.paginator import Paginator
+    from django.db.utils import OperationalError, ProgrammingError
+    videos = []
+    page_obj_vid = None
+    
+    try:
+        db_videos = video.objects.filter(is_active=True).order_by('sort_order', '-created_at')
+        for v in db_videos:
+            thumb_url = v.thumbnail.url if v.thumbnail else '/static/images/hero-jic.jpg'
+            video_url = v.youtube_url if v.youtube_url else (v.video_file.url if v.video_file else '#')
+            videos.append({
+                'title': v.title,
+                'thumbnail': thumb_url,
+                'url': video_url,
+                'description': v.description,
+            })
+    except (OperationalError, ProgrammingError, Exception):
+        pass
+        
+    if not videos:
+        videos = fallback_videos
+
+    if tab == 'videos':
+        paginator = Paginator(videos, 12)
+        page_obj_vid = paginator.get_page(request.GET.get('page', 1))
+        videos = page_obj_vid.object_list
+        
+    return videos, page_obj_vid
+

@@ -1,3 +1,4 @@
+{% load custom_filters %}
 {% if page_obj and page_obj.paginator.num_pages > 1 %}
 <div class="{{ color }} flex flex-col items-center py-6 gap-2">
     <span class="text-sm text-body">
@@ -29,9 +30,13 @@
                 >
                 {% endif %}
             </li>
-            {% for num in page_obj.paginator.page_range %}
+            {% for num in page_obj|elided_page_range %}
             <li>
-                {% if num == page_obj.number %}
+                {% if num == page_obj.paginator.ELLIPSIS %}
+                <span
+                    class="flex items-center justify-center text-body bg-neutral-secondary-medium border border-default-medium shadow-xs font-medium leading-5 text-sm w-9 h-9"
+                >&hellip;</span>
+                {% elif num == page_obj.number %}
                 <span
                     aria-current="page"
                     class="flex items-center justify-center text-fg-brand bg-neutral-tertiary-medium box-border border border-default-medium hover:text-fg-brand font-medium text-sm w-9 h-9 focus:outline-none"
