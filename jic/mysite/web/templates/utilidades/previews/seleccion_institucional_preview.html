@@ -11,7 +11,7 @@
             </div>
             <span class="rounded-full px-3 py-1 text-xs font-medium
                 {% if seleccion.status == 'completada' %}bg-green-100 text-green-800
-                {% elif seleccion.status == 'en_proceso' %}bg-amber-100 text-amber-800
+                {% elif seleccion.status == 'en_proceso' %}bg-yellow-100 text-yellow-800
                 {% else %}bg-slate-100 text-slate-600{% endif %}">
                 {% if seleccion.status == 'completada' %}Completada
                 {% elif seleccion.status == 'en_proceso' %}En proceso
@@ -58,11 +58,13 @@
         {% endif %}
 
         {% if not snippet.is_active %}
-        <div class="border-t border-border bg-amber-50 p-4 text-center">
-            <p class="text-xs font-medium text-amber-700">⚠ Este registro está desactivado (is_active = False) y no aparecerá en la página.</p>
+        <div class="border-t border-border bg-yellow-50 p-4 text-center">
+            <p class="text-xs font-medium text-yellow-700">⚠ Este registro está desactivado (is_active = False) y no aparecerá en la página.</p>
         </div>
         {% endif %}
 
     </article>
 </div>
 {% endblock %}
+
+

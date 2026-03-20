@@ -41,7 +41,22 @@ class ImportService:
     
     SUPPORTED_FORMATS = {'.csv', '.xlsx', '.xls'}
     CONSULTANT_REQUIRED_FIELDS = {'nombre'}
-    PROJECT_REQUIRED_FIELDS = {'titulo', 'año', 'universidad'}
+    PROJECT_REQUIRED_FIELDS = {'titulo', 'universidad'}
+
+    @staticmethod
+    def _parse_winner_value(raw_value) -> int:
+        if pd.isna(raw_value):
+            return 0
+
+        normalized = str(raw_value).strip().lower()
+        if normalized in {'1', 'primer lugar', 'primer', 'primero', '1er lugar'}:
+            return 1
+        if normalized in {'2', 'segundo lugar', 'segundo', '2do lugar'}:
+            return 2
+        if normalized in {'3', 'tercer lugar', 'tercero', '3er lugar'}:
+            return 3
+
+        return 0
     
     @staticmethod
     def read_file(archivo):
@@ -89,7 +104,7 @@ class ImportService:
                 # Try to detect by columns
                 if 'nombre' in df.columns and 'email' in df.columns:
                     tipo = 'consultores'
-                elif 'titulo' in df.columns and 'año' in df.columns:
+                elif 'titulo' in df.columns and ('año' in df.columns or 'ano' in df.columns):
                     tipo = 'proyectos'
                 else:
                     raise ValueError('No se pudo detectar el tipo de importación. Especifique en el nombre del archivo.')
@@ -160,7 +175,11 @@ class ImportService:
     def _importar_proyectos(df, result, actualizar):
         """Import projects from DataFrame."""
         # Check required fields
-        campos_requeridos = ['titulo', 'año', 'universidad']
+        year_field = 'año' if 'año' in df.columns else 'ano' if 'ano' in df.columns else None
+        if not year_field:
+            raise ValueError('Falta la columna "año" o "ano" en el archivo de proyectos')
+
+        campos_requeridos = ['titulo', 'universidad']
         faltantes = [c for c in campos_requeridos if c not in df.columns]
         if faltantes:
             raise ValueError(f'Faltan columnas requeridas: {", ".join(faltantes)}')
@@ -168,7 +187,7 @@ class ImportService:
         for idx, fila in df.iterrows():
             try:
                 titulo = str(fila.get('titulo', '')).strip()
-                año = fila.get('año')
+                año = fila.get(year_field)
                 
                 if not titulo or titulo.lower() == 'nan':
                     result.add_error(idx + 2, 'Proyecto', 'Título vacío')
@@ -180,8 +199,18 @@ class ImportService:
                 
                 año = int(float(año))  # Handle both int and float inputs
                 universidad = str(fila.get('universidad', '')).strip()
+                universidad_siglas = str(fila.get('siglas', '')).strip()
                 categoria = str(fila.get('categoria', '')).strip()
-                resumen = str(fila.get('resumen', '')).strip()
+                resumen = str(fila.get('resumen', fila.get('abstract', ''))).strip()
+                activo = fila.get('activo', 1)
+
+                if isinstance(activo, str):
+                    activo = activo.lower() in ('true', 'sí', 'si', 'yes', '1', 'verdadero')
+                else:
+                    activo = bool(activo)
+
+                if not activo:
+                    continue
                 
                 # Handle advisor lookup
                 asesor_nombre = fila.get('asesor')
@@ -198,10 +227,8 @@ class ImportService:
                         )
                         continue
                 
-                # Parse winner
-                winner = int(fila.get('premio', 0))
-                if winner not in [0, 1, 2, 3]:
-                    winner = 0
+                # Parse winner from numeric or textual values.
+                winner = ImportService._parse_winner_value(fila.get('premio', 0))
                 
                 if actualizar:
                     # Update or create based on title + year
@@ -212,6 +239,7 @@ class ImportService:
                             'abstract': resumen if resumen and resumen.lower() != 'nan' else '',
                             'advisor': advisor,
                             'university': universidad if universidad and universidad.lower() != 'nan' else '',
+                            'university_short_name': universidad_siglas if universidad_siglas and universidad_siglas.lower() != 'nan' else '',
                             'category': categoria if categoria and categoria.lower() != 'nan' else '',
                             'winner': winner,
                         }
@@ -229,6 +257,7 @@ class ImportService:
                             abstract=resumen if resumen and resumen.lower() != 'nan' else '',
                             advisor=advisor,
                             university=universidad if universidad and universidad.lower() != 'nan' else '',
+                            university_short_name=universidad_siglas if universidad_siglas and universidad_siglas.lower() != 'nan' else '',
                             category=categoria if categoria and categoria.lower() != 'nan' else '',
                             winner=winner,
                         )

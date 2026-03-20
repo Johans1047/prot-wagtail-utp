@@ -1,4 +1,4 @@
-<section class="py-16 lg:py-24 bg-stone-50">
+<section class="py-16 lg:py-24 bg-stone-neutral-50">
     <div class="mx-auto max-w-7xl px-4 lg:px-8">
         <div class="mb-12 text-center">
             <h2 class="font-serif text-2xl text-foreground md:text-3xl">
@@ -11,7 +11,8 @@
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <a
                 class="group flex gap-4 rounded-xl border border-border bg-card p-5 transition-all hover:border-primary/30 hover:shadow-md"
-                href="{% url 'Participar' %}"
+                href="{% if lineamiento_destacado %}{{ lineamiento_destacado.url }}{% else %}{% url 'Recursos' %}{% endif %}"
+                target="_blank" rel="noopener noreferrer"
                 ><div
                     class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"
                 >
@@ -39,7 +40,7 @@
                     <h3
                         class="font-semibold text-foreground group-hover:text-primary"
                     >
-                        Lineamientos 2025
+                        Lineamientos {% now "Y" %}
                     </h3>
                     <p
                         class="mt-1 text-sm leading-relaxed text-muted-foreground"
@@ -90,7 +91,7 @@
                 class="group flex gap-4 rounded-xl border border-border bg-card p-5 transition-all hover:border-primary/30 hover:shadow-md"
                 href="{% url 'Participar' %}"
                 ><div
-                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-amber-300/25"
+                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-yellow-300/25"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -126,7 +127,7 @@
                 class="group flex gap-4 rounded-xl border border-border bg-card p-5 transition-all hover:border-primary/30 hover:shadow-md"
                 href="{% url 'Proyectos' %}"
                 ><div
-                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-amber-300/25"
+                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-yellow-300/25"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -164,7 +165,7 @@
                 </div></a
             ><a
                 class="group flex gap-4 rounded-xl border border-border bg-card p-5 transition-all hover:border-primary/30 hover:shadow-md"
-                href="{% url 'Recursos' %}"
+                href="{% url 'Recursos' %}?tab=boletines"
                 ><div
                     class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"
                 >
@@ -239,3 +240,5 @@
         </div>
     </div>
 </section>
+
+

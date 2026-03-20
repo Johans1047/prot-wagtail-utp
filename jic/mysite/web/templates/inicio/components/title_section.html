@@ -17,7 +17,7 @@
     <!-- Contenido encima del slider -->
     <div class="relative mx-auto max-w-7xl px-4 py-32 lg:px-8 lg:py-32 z-20">
         <div class="max-w-2xl">
-            <div class="mb-6 inline-flex items-center gap-2 rounded-full bg-amber-300/35 text-amber-300 px-4 py-1.5 text-sm font-medium">
+            <div class="mb-6 inline-flex items-center gap-2 rounded-full bg-yellow-300/35 text-yellow-300 px-4 py-1.5 text-sm font-medium">
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="24" height="24" viewBox="0 0 24 24"
@@ -43,7 +43,7 @@
             <div class="mt-8 flex flex-col gap-3 sm:flex-row">
                 {% for button in title_section.action_buttons.all %}
                     {% if button.button_type == "primary" %}
-                        <a href="{% if button.url == 'Participar' or button.url == 'Jic' %}{% url button.url %}{% else %}{{ button.url }}{% endif %}" class="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-300/90 px-6 py-3 text-sm font-semibold text-amber-950 transition-colors hover:bg-amber-400/90">
+                        <a href="{% if button.url == 'Participar' or button.url == 'Jic' %}{% url button.url %}{% else %}{{ button.url }}{% endif %}" class="inline-flex items-center justify-center gap-2 rounded-lg bg-yellow-300/90 px-6 py-3 text-sm font-semibold text-yellow-950 transition-colors hover:bg-yellow-400/90">
                             {{ button.label }}
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
                         </a>
@@ -71,3 +71,4 @@
         </span>
     </button>
 </section>
+

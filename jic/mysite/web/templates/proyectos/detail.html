@@ -3,7 +3,7 @@
 {% block meta_description %}{{ project.abstract|truncatechars:150 }}{% endblock %}
 
 {% block content %}
-<div class="bg-stone-50 py-12">
+<div class="bg-stone-neutral-50 py-12">
     <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         
         <a href="{% url 'Proyectos' %}" class="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
@@ -18,8 +18,8 @@
                 <div class="mb-6 flex flex-wrap items-center gap-3">
                     <span class="rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">{{ project.category }}</span>
                     <span class="text-sm text-muted-foreground">{{ project.year }}</span>
-                    {% if project.winner %}
-                        <span class="rounded-full bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-800">Ganador</span>
+                    {% if project.winner_label %}
+                        <span class="rounded-full bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-800">{{ project.winner_label }}</span>
                     {% endif %}
                 </div>
                 
@@ -28,7 +28,7 @@
                 <div class="grid gap-6 md:grid-cols-2 mb-8">
                     <div>
                         <h3 class="mb-1 text-sm font-semibold text-muted-foreground">Universidad</h3>
-                        <p class="font-medium text-foreground">{{ project.university }}</p>
+                        <p class="font-medium text-foreground">{{ project.university_display|default:project.university }}</p>
                     </div>
                      <div>
                         <h3 class="mb-1 text-sm font-semibold text-muted-foreground">Asesor</h3>
@@ -45,10 +45,14 @@
 
                 <div class="border-t border-border pt-6">
                     <h3 class="mb-2 text-sm font-semibold text-foreground">Contacto</h3>
+                    {% if project.contact %}
                     <a href="mailto:{{ project.contact }}" class="inline-flex gap-1 items-center text-primary hover:underline">
                         <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                         {{ project.contact }}
                     </a>
+                    {% else %}
+                    <p class="text-sm text-muted-foreground">No disponible</p>
+                    {% endif %}
                 </div>
             </div>
         </div>

@@ -1,5 +1,5 @@
 {% for intro in introductions %}
-    <section class="py-16 lg:py-20 bg-stone-50">
+    <section class="py-16 lg:py-20 bg-stone-neutral-50">
         <div class="mx-auto max-w-7xl px-4 lg:px-8">
             <div class="grid items-center gap-10 lg:grid-cols-5">
                 <div class="lg:col-span-3">
@@ -29,14 +29,14 @@
                                     "
                                 />
                                 <div
-                                    class="hidden h-full w-full items-center justify-center rounded-lg border-2 border-dashed border-border bg-stone-50"
+                                    class="hidden h-full w-full items-center justify-center rounded-lg border-2 border-dashed border-border bg-stone-neutral-50"
                                 >
                                     <span class="text-sm font-bold text-muted-foreground/50">
                                         {{ intro.logo_fallback_text }}
                                     </span>
                                 </div>
                             {% else %}
-                                <div class="h-full w-full flex items-center justify-center rounded-lg border-2 border-dashed border-border bg-stone-50">
+                                <div class="h-full w-full flex items-center justify-center rounded-lg border-2 border-dashed border-border bg-stone-neutral-50">
                                     <span class="text-sm font-bold text-muted-foreground/50">
                                         {{ intro.logo_fallback_text }}
                                     </span>

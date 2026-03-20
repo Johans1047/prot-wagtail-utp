@@ -1,6 +1,6 @@
 <section class="border-b border-border bg-card">
     <div class="mx-auto max-w-7xl px-4 lg:px-8">
-        <form method="get">
+        <form method="get" aria-label="Filtros de proyectos">
             {# Hidden input preserves the active tab when the filters form is submitted #}
             <input type="hidden" name="tab" value="{{ tab }}">
 
@@ -64,6 +64,7 @@
             <div class="flex flex-col gap-3 py-4 lg:flex-row lg:items-center">
                 <!-- Search input: full width on mobile, flex on lg+ -->
                 <div class="relative w-full lg:flex-1">
+                    <label for="projects-search" class="sr-only">Buscar proyectos</label>
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
@@ -79,11 +80,13 @@
                         <circle cx="11" cy="11" r="8"></circle>
                     </svg>
                     <input
+                        id="projects-search"
                         type="text"
                         name="search"
+                        aria-label="Buscar por título o universidad"
                         placeholder="Buscar por título o universidad..."
                         value="{{ search }}"
-                        class="w-full rounded-lg border border-input bg-stone-50 py-2 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        class="w-full rounded-lg border border-input bg-stone-neutral-50 py-2 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     />
                 </div>
 
@@ -105,9 +108,12 @@
                         ></path>
                     </svg>
 
+                    <label for="projects-year" class="sr-only">Filtrar por año</label>
                     <select
+                        id="projects-year"
                         name="year"
-                        class="cursor-pointer w-full sm:w-auto appearance-none rounded-lg border border-input bg-stone-50 px-3 py-2 pr-10 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        aria-label="Filtrar por año"
+                        class="cursor-pointer w-full sm:w-auto appearance-none rounded-lg border border-input bg-stone-neutral-50 px-3 py-2 pr-10 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     >
                         <option value="all" {% if year_filter == 'all' %}selected{% endif %}>Todos los años</option>
                         {% for y in years %}
@@ -115,18 +121,24 @@
                         {% endfor %}
                     </select>
 
+                    <label for="projects-category" class="sr-only">Filtrar por categoría</label>
                     <select
+                        id="projects-category"
                         name="category"
-                        class="cursor-pointer w-full sm:w-auto appearance-none rounded-lg border border-input bg-stone-50 px-3 py-2 pr-10 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        aria-label="Filtrar por categoría"
+                        class="cursor-pointer w-full sm:w-auto appearance-none rounded-lg border border-input bg-stone-neutral-50 px-3 py-2 pr-10 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     >
                         {% for c in categories_options %}
                             <option value="{{ c.value }}" {% if category_filter == c.value %}selected{% endif %}>{{ c.label }}</option>
                         {% endfor %}
                     </select>
 
+                    <label for="projects-university" class="sr-only">Filtrar por universidad</label>
                     <select
+                        id="projects-university"
                         name="university"
-                        class="cursor-pointer w-full sm:w-auto appearance-none rounded-lg border border-input bg-stone-50 px-3 py-2 pr-10 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        aria-label="Filtrar por universidad"
+                        class="cursor-pointer w-full sm:w-auto appearance-none rounded-lg border border-input bg-stone-neutral-50 px-3 py-2 pr-10 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     >
                         {% for u in universities_options %}
                             <option value="{{ u.value }}" {% if university_filter == u.value %}selected{% endif %}>{{ u.label }}</option>

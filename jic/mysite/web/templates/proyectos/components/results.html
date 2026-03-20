@@ -1,4 +1,4 @@
-<section class="py-8 lg:py-12 bg-stone-50">
+<section class="py-8 lg:py-12 bg-stone-neutral-50">
     <div class="mx-auto max-w-7xl px-4 lg:px-8">
         <div class="mb-4 flex items-center justify-between gap-4">
             <p class="text-sm text-muted-foreground">
@@ -30,12 +30,34 @@
                             data-category="{{ project.category|escape }}"
                             data-advisor="{{ project.advisor|escape }}"
                             data-contact="{{ project.contact|escape }}"
+                            data-prize="{{ project.winner_label|default:''|escape }}"
                             data-abstract="{{ project.abstract|escape }}"
                             onclick="openProjectModal(this)"
                         >
-                            <td class="px-4 py-3 text-foreground">{{ project.year }}</td>
-                            <td class="max-w-xs px-4 py-3 font-medium text-foreground group-hover:text-primary">{{ project.title }}</td>
-                            <td class="hidden px-4 py-3 text-muted-foreground md:table-cell">{{ project.university }}</td>
+                            <td class="px-4 py-3 text-foreground">
+                                <div class="flex items-center gap-2 whitespace-nowrap">
+                                    <span class="inline-flex h-4 w-4 items-center justify-center">
+                                        {% if project.winner == 1 %}
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="text-yellow-500">
+                                            <path d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978"></path><path d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978"></path><path d="M18 9h1.5a1 1 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"></path><path d="M6 9H4.5a1 1 0 0 1 0-5H6"></path>
+                                        </svg>
+                                        {% elif project.winner == 2 %}
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="text-slate-500">
+                                            <path d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978"></path><path d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978"></path><path d="M18 9h1.5a1 1 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"></path><path d="M6 9H4.5a1 1 0 0 1 0-5H6"></path>
+                                        </svg>
+                                        {% elif project.winner == 3 %}
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="text-yellow-700">
+                                            <path d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978"></path><path d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978"></path><path d="M18 9h1.5a1 1 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"></path><path d="M6 9H4.5a1 1 0 0 1 0-5H6"></path>
+                                        </svg>
+                                        {% endif %}
+                                    </span>
+                                    <span class="inline-block w-10 text-left">{{ project.year }}</span>
+                                </div>
+                            </td>
+                            <td class="max-w-xs px-4 py-3 font-medium text-foreground group-hover:text-primary">
+                                {{ project.title }}
+                            </td>
+                            <td class="hidden px-4 py-3 text-muted-foreground md:table-cell">{{ project.university_display|default:project.university }}</td>
                             <td class="hidden px-4 py-3 lg:table-cell"><span class="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">{{ project.category }}</span></td>
                             <td class="hidden px-4 py-3 text-muted-foreground sm:table-cell">{{ project.advisor|default:'-' }}</td>
                             <td class="px-4 py-3 text-center">
@@ -75,6 +97,7 @@
             <div>
                 <span id="modal-category" class="inline-block rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary"></span>
                 <span id="modal-year" class="ml-2 self-center text-xs text-muted-foreground"></span>
+                <span id="modal-prize" class="ml-2 hidden rounded-full bg-yellow-100 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide text-yellow-800"></span>
             </div>
         </div>
         <h2 id="modal-title" class="text-xl font-bold text-foreground"></h2>
@@ -86,7 +109,7 @@
         <div class="mt-6">
             <h3 class="mb-2 text-sm font-semibold text-foreground">Resumen</h3>
             <p id="modal-abstract" class="text-sm leading-relaxed text-muted-foreground"></p>
-            <a id="modal-view-more" href="" class="mt-2 inline-flex items-center text-sm font-medium hidden text-primary-foreground bg-primary hover:bg-primary/90 transition-colors gap-1 px-4 py-2 rounded-lg shadow-sm">
+            <a id="modal-view-more" href="" class="mt-2 hidden items-center gap-1 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90">
                 Ver más
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
@@ -103,6 +126,14 @@
         var d = row.dataset;
         document.getElementById('modal-category').textContent = d.category || '';
         document.getElementById('modal-year').textContent = d.year || '';
+        var modalPrize = document.getElementById('modal-prize');
+        if (d.prize) {
+            modalPrize.textContent = d.prize;
+            modalPrize.classList.remove('hidden');
+        } else {
+            modalPrize.textContent = '';
+            modalPrize.classList.add('hidden');
+        }
         document.getElementById('modal-title').textContent = d.title || '';
         document.getElementById('modal-university').textContent = d.university || '';
         document.getElementById('modal-advisor').textContent = d.advisor || '-';
@@ -125,7 +156,9 @@
         if (d.url) {
             viewMoreEl.href = d.url;
             viewMoreEl.classList.remove('hidden');
+            viewMoreEl.classList.add('inline-flex');
         } else {
+            viewMoreEl.classList.remove('inline-flex');
             viewMoreEl.classList.add('hidden');
         }
 
@@ -143,3 +176,5 @@
     });
 }());
 </script>
+
+

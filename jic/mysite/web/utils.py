@@ -1,10 +1,27 @@
 import json
+import logging
+import time
+from urllib.error import URLError
+from urllib.request import Request, urlopen
+
+from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
 from wagtail.admin.menu import MenuItem
 from django.core.paginator import Paginator
 from django.db.utils import OperationalError, ProgrammingError
 from wagtail.images.models import Image
+
+
+logger = logging.getLogger(__name__)
+
+
+# In-process cache to avoid repeated slow API timeouts on every request.
+_PROJECTS_CACHE: dict[str, object] = {
+    "data": None,
+    "expires_at": 0.0,
+    "last_error_at": 0.0,
+}
 
 
 class WagtailDocWrapper:
@@ -45,151 +62,95 @@ class LazyMenuItem(MenuItem):
         pass
     
 
-def get_raw_projects_data() -> dict:
+def _get_mock_projects_data() -> dict:
     return json.loads(
         """
         {
-          "total": 13,
-          "proyectos": [
+                    "total": 6,
+                    "ganadores_historicos": [
             {
-              "id": 606,
-              "ano": 2024,
-              "titulo": "Percepción, implicación y consecuencias del acoso escolar en instituciones educativas particulares y oficiales, en una muestra de docentes y estudiantes de distintas provincias de Panamá",
-              "abstract": "El acoso escolar es una problemática cotidiana en el entorno educativo a nivel mundial. El objetivo de esta investigación fue analizar la percepción, implicación y consecuencias del acoso escolar en instituciones educativas, particulares y oficiales, en una muestra de docentes y estudiantes de distintas provincias de Panamá.",
-              "asesor": "Abdel Alexander Solís Rodríguez",
-              "contacto": "abdelsolis@gmail.com",
-              "universidad": "Universidad Católica Santa María la Antigua",
-              "categoria": "Ciencias Sociales y Humanísticas"
+                            "id": 1,
+                            "titulo": "Sistema de monitoreo ambiental con IoT para la detección temprana de contaminantes",
+                            "ano": "2024",
+                            "universidad": "Universidad Tecnológica de Panamá",
+                            "siglas": "UTP",
+                            "resumen": "Desarrollo de una red de sensores IoT para monitoreo de calidad del aire y alertas tempranas en zonas urbanas.",
+                            "categoria": "Ingeniería",
+                            "premio": "Primer Lugar",
+                            "asesor": "Juan Pérez",
+                            "email": "juan.perez@utp.ac.pa",
+                            "institucion": "Universidad Tecnológica de Panamá",
+                            "activo": 1
             },
             {
-              "id": 647,
-              "ano": 2024,
-              "titulo": "Densidad poblacional del mono tití panameño (Oedipomidas geoffroyi) en dos sitios del distrito de Chame, Panamá",
-              "abstract": "El mono tití panameño (Oedipomidas geoffroyi) es considerado tolerante a perturbaciones antropogénica. Sin embargo, la última evaluación del estado de conservación lo consideran Casi Amenazado.",
-              "asesor": "Pedro G Méndez Carvajal",
-              "contacto": "giprimatologia.up@gmail.com",
-              "universidad": "Universidad de Panamá",
-              "categoria": "Ciencias Naturales y Exactas"
+                            "id": 2,
+                            "titulo": "Análisis de biomarcadores en pacientes con diabetes tipo 2 en población panameña",
+                            "ano": "2024",
+                            "universidad": "Universidad de Panamá",
+                            "siglas": "UP",
+                            "resumen": "Evaluación clínica de biomarcadores asociados a progresión de diabetes tipo 2 en cohortes universitarias.",
+                            "categoria": "Ciencias de la Salud",
+                            "premio": "Primer Lugar",
+                            "asesor": "María García",
+                            "email": "maria.garcia@up.ac.pa",
+                            "institucion": "Universidad de Panamá",
+                            "activo": 1
             },
             {
-              "id": 633,
-              "ano": 2024,
-              "titulo": "Uso de los sentidos por Alouatta coibensis en la evaluación/aceptación de frutos de Spondias mombin en Isla Coiba, Panamá",
-              "abstract": "Los frutos de jobo (Spondias mombin) han sido reportados frecuentemente en la dieta del mono aullador (Alouatta sp.), usando sus sentidos para evaluar de manera efectiva la palatabilidad a estos frutos.",
-              "asesor": "Karol M. Gutiérrez Pineda",
-              "contacto": "gutierrezpinedakm@gmail.com",
-              "universidad": "Universidad de Panamá",
-              "categoria": "Ciencias Naturales y Exactas"
+                            "id": 3,
+                            "titulo": "Modelado matemático de ecosistemas costeros del Golfo de Panamá",
+                            "ano": "2024",
+                            "universidad": "Universidad Tecnológica de Panamá",
+                            "siglas": "UTP",
+                            "resumen": "Se propone un modelo de dinámica de poblaciones para analizar resiliencia ecológica en ecosistemas costeros.",
+                            "categoria": "Ciencias Naturales y Exactas",
+                            "premio": "Segundo Lugar",
+                            "asesor": "Ana López",
+                            "email": "ana.lopez@utp.ac.pa",
+                            "institucion": "Universidad Tecnológica de Panamá",
+                            "activo": 1
             },
             {
-              "id": 629,
-              "ano": 2024,
-              "titulo": "Identificación molecular de filogrupos y patotipos de cepas de Escherichia coli resistentes a los aminoglucósidos aisladas de aguas residuales y naturales en la Ciudad de Panamá.",
-              "abstract": "El crecimiento poblacional, la urbanización, el cambio climático y la creciente demanda de agua han llevado a la degradación de muchas fuentes hídricas.",
-              "asesor": "Jordi Querol",
-              "contacto": "jordi.querol@up.ac.pa",
-              "universidad": "Universidad de Panamá",
-              "categoria": "Ciencias de la Salud"
+                            "id": 4,
+                            "titulo": "Impacto socioeconómico de la migración en comunidades rurales de Darién",
+                            "ano": "2024",
+                            "universidad": "Universidad Latina de Panamá",
+                            "siglas": "ULAT",
+                            "resumen": "Estudio mixto sobre movilidad humana, empleo y acceso a servicios en comunidades de alta vulnerabilidad.",
+                            "categoria": "Ciencias Sociales y Humanísticas",
+                            "premio": "Segundo Lugar",
+                            "asesor": "Roberto Castillo",
+                            "email": "roberto.castillo@ulatina.edu.pa",
+                            "institucion": "Universidad Latina de Panamá",
+                            "activo": 1
             },
             {
-              "id": 610,
-              "ano": 2024,
-              "titulo": "Restauración del parque recreacional de Buena Vista",
-              "abstract": "El Parque Recreacional de Buena Vista en Tocumen, Panamá, ha experimentado un deterioro significativo en su infraestructura, afectando la calidad de vida de la comunidad.",
-              "asesor": "Maricela Ivonne Rodríguez C",
-              "contacto": "mrodriguez@unicyt.net",
-              "universidad": "Universidad Internacional de Ciencia y Tecnología",
-              "categoria": "Ciencias Sociales y Humanísticas"
+                            "id": 5,
+                            "titulo": "Desarrollo de materiales biodegradables a partir de residuos agrícolas",
+                            "ano": "2023",
+                            "universidad": "Universidad Católica Santa María la Antigua",
+                            "siglas": "USMA",
+                            "resumen": "Investigación de compuestos biodegradables para empaque sostenible usando subproductos agroindustriales.",
+                            "categoria": "Ingeniería",
+                            "premio": "Tercer Lugar",
+                            "asesor": "Fernando Morales",
+                            "email": "fmorales@usma.ac.pa",
+                            "institucion": "Universidad Católica Santa María la Antigua",
+                            "activo": 1
             },
             {
-              "id": 617,
-              "ano": 2024,
-              "titulo": "Aplicación y Efectividad de las Leyes de Protección de Afluentes Primarios en Los Algarrobos, Veraguas.",
-              "abstract": "Panamá es un país rico en biodiversidad y recursos naturales, uno de éstos son los recursos hídricos.",
-              "asesor": "Zoila Chilan",
-              "contacto": "zchilan16@gmail.com",
-              "universidad": "Universidad Metropolitana de Educación, Ciencia y Tecnología",
-              "categoria": "Ciencias Sociales y Humanísticas"
-            },
-            {
-              "id": 420,
-              "ano": 2024,
-              "titulo": "Valoración de la capacidad antioxidante del puam (Muntingia calabura) y su potencial como alimento funcional",
-              "abstract": "El árbol Muntingia calabura (puam) es de gran abundancia y accesibilidad en la República de Panamá.",
-              "asesor": "Jhonny Correa",
-              "contacto": "jhonny.correa@utp.ac.pa",
-              "universidad": "Universidad Tecnológica de Panamá",
-              "categoria": "Ciencias Naturales y Exactas"
-            },
-            {
-              "id": 247,
-              "ano": 2024,
-              "titulo": "Impacto de campos electromagnéticos en el crecimiento de plantas: Un estudio experimental",
-              "abstract": "Cuando la semilla se encuentra en un proceso germinativo, existen muchas condiciones fundamentales.",
-              "asesor": "Hector Vergara",
-              "contacto": "hector.vergara@utp.ac.pa",
-              "universidad": "Universidad Tecnológica de Panamá",
-              "categoria": "Ciencias Naturales y Exactas"
-            },
-            {
-              "id": 388,
-              "ano": 2024,
-              "titulo": "Prototipo de una aplicación móvil para el reconocimiento, diagnóstico y sugerencias de tratamiento para melanomas",
-              "abstract": "El cáncer de piel es causado por células cancerosas en tejidos de la piel.",
-              "asesor": "Mariluz Centella",
-              "contacto": "mariluz.centella@utp.ac.pa",
-              "universidad": "Universidad Tecnológica de Panamá",
-              "categoria": "Ingeniería"
-            },
-            {
-              "id": 476,
-              "ano": 2024,
-              "titulo": "Desarrollo de estrategias para potenciar el crecimiento de emprendimientos estudiantiles de la Universidad Tecnológica de Panamá",
-              "abstract": "Este artículo aborda el impacto de factores como la asignatura Formación de Emprendedores y el uso de los servicios de la DGTC.",
-              "asesor": "Enith González",
-              "contacto": "enith.gonzalez@utp.ac.pa",
-              "universidad": "Universidad Tecnológica de Panamá",
-              "categoria": "Ciencias Sociales y Humanísticas"
-            },
-            {
-              "id": 626,
-              "ano": 2024,
-              "titulo": "Biodiversidad Vegetal del Parque Nacional Camino de Cruces",
-              "abstract": "Este proyecto se enfoca en obtener información biológica descriptiva sobre las especies vegetales presentes en el área protegida Parque Nacional Camino de Cruces.",
-              "asesor": "Carlos Patricio Guerra Torres",
-              "contacto": "guerrcarlos@gmail.com",
-              "universidad": "Universidad de Panamá",
-              "categoria": "Ciencias Naturales y Exactas"
-            },
-            {
-              "id": 302,
-              "ano": 2024,
-              "titulo": "Propuesta de un índice técnico de caminabilidad (ICM) para microentornos educativos: diagnóstico de los alrededores del Campus Víctor Levi Sasso",
-              "abstract": "Este estudio propone un Índice Técnico de Caminabilidad (ICM) para evaluar microentornos educativos, tomando como caso de estudio el Campus Víctor Levi Sasso.",
-              "asesor": "Analissa Icaza",
-              "contacto": "analissa.icaza@utp.ac.pa",
-              "universidad": "Universidad Tecnológica de Panamá",
-              "categoria": "Ciencias Sociales y Humanísticas"
-            },
-            {
-              "id": 332,
-              "ano": 2024,
-              "titulo": "Modelo metodológico para la evaluación de agua y saneamiento con soluciones a corto plazo para comunidades emergentes: Caso de Calle 50 y La Isla en la Cuenca del Río Mocambo",
-              "abstract": "El agua es un recurso esencial y un derecho humano; este estudio evalúa soluciones a corto plazo para comunidades emergentes.",
-              "asesor": "Viccelda María Domínguez de Franco",
-              "contacto": "viccelda.dominguez@utp.ac.pa",
-              "universidad": "Universidad Tecnológica de Panamá",
-              "categoria": "Ingeniería"
-            },
-            {
-              "id": 411,
-              "ano": 2024,
-              "titulo": "Desarrollo de un adaptador electrónico basado en LoRaWAN para la medición remota de agua en dispositivos tradicionales",
-              "abstract": "Con el objetivo de lograr un mundo más interconectado, se diseñó un prototipo para medir consumo de agua y transmitirlo por LoRaWAN.",
-              "asesor": "Héctor Poveda",
-              "contacto": "hector.poveda@utp.ac.pa",
-              "universidad": "Universidad Tecnológica de Panamá",
-              "categoria": "Ingeniería"
+                            "id": 6,
+                            "titulo": "Evaluación de plantas medicinales nativas con propiedades antiinflamatorias",
+                            "ano": "2023",
+                            "universidad": "Universidad Autónoma de Chiriquí",
+                            "siglas": "UNACHI",
+                            "resumen": "Caracterización fitoquímica y pruebas preliminares de actividad antiinflamatoria in vitro.",
+                            "categoria": "Ciencias de la Salud",
+                            "premio": "Tercer Lugar",
+                            "asesor": "Diana Herrera",
+                            "email": "dherrera@unachi.ac.pa",
+                            "institucion": "Universidad Autónoma de Chiriquí",
+                            "activo": 1
             }
           ]
         }
@@ -197,22 +158,112 @@ def get_raw_projects_data() -> dict:
     )
 
 
+def get_raw_projects_data() -> dict:
+    api_url = getattr(settings, "JIC_PROJECTS_API_URL", "").strip()
+    timeout = int(getattr(settings, "JIC_PROJECTS_API_TIMEOUT", 8))
+    cache_ttl = int(getattr(settings, "JIC_PROJECTS_CACHE_TTL", 300))
+    retry_after_error = int(getattr(settings, "JIC_PROJECTS_RETRY_AFTER_ERROR", 60))
+    now = time.monotonic()
+
+    if not api_url:
+        return _get_mock_projects_data()
+
+    cached_data = _PROJECTS_CACHE.get("data")
+    expires_at = float(_PROJECTS_CACHE.get("expires_at", 0.0) or 0.0)
+    last_error_at = float(_PROJECTS_CACHE.get("last_error_at", 0.0) or 0.0)
+
+    if cached_data is not None and now < expires_at:
+        return cached_data
+
+    # Circuit breaker: after a recent failure, serve cached data immediately.
+    if cached_data is not None and (now - last_error_at) < retry_after_error:
+        return cached_data
+
+    request = Request(api_url, headers={"Accept": "application/json"})
+
+    try:
+        with urlopen(request, timeout=timeout) as response:
+            payload = response.read().decode("utf-8")
+            data = json.loads(payload)
+            if isinstance(data, dict):
+                _PROJECTS_CACHE["data"] = data
+                _PROJECTS_CACHE["expires_at"] = now + max(cache_ttl, 30)
+                _PROJECTS_CACHE["last_error_at"] = 0.0
+                return data
+
+            logger.warning("Projects API returned a non-dict payload. Falling back to mock data.")
+    except (URLError, TimeoutError, OSError, json.JSONDecodeError) as exc:
+        _PROJECTS_CACHE["last_error_at"] = now
+        logger.warning("Could not fetch projects from API %s: %s", api_url, exc)
+
+    if cached_data is not None:
+        return cached_data
+
+    fallback_data = _get_mock_projects_data()
+    _PROJECTS_CACHE["data"] = fallback_data
+    _PROJECTS_CACHE["expires_at"] = now + max(cache_ttl, 30)
+    return fallback_data
+
+
+def _parse_year(value) -> int:
+    try:
+        return int(str(value).strip())
+    except (TypeError, ValueError):
+        return 0
+
+
+def _parse_winner(value) -> tuple[int, str]:
+    if value is None:
+        return 0, ""
+
+    # New API sends textual prizes ("Primer Lugar"), old payload used numeric winner.
+    normalized = str(value).strip().lower()
+
+    if normalized in {"1", "primer lugar", "primer", "primero", "1er lugar"}:
+        return 1, "Primer Lugar"
+    if normalized in {"2", "segundo lugar", "segundo", "2do lugar"}:
+        return 2, "Segundo Lugar"
+    if normalized in {"3", "tercer lugar", "tercero", "3er lugar"}:
+        return 3, "Tercer Lugar"
+
+    return 0, ""
+
+
 def get_processed_projects() -> list[dict]:
     projects_payload = get_raw_projects_data()
-    return [
-        {
-            "id": project["id"],
-            "title": project["titulo"],
-            "university": project["universidad"],
-            "category": project["categoria"],
-            "year": project["ano"],
-            "contact": project["contacto"],
-            "advisor": project["asesor"],
-            "winner": project.get("winner", False),
-            "abstract": project["abstract"],
-        }
-        for project in projects_payload["proyectos"]
-    ]
+    raw_projects = projects_payload.get("ganadores_historicos") or projects_payload.get("proyectos") or []
+
+    normalized_projects = []
+    for project in raw_projects:
+        is_active = int(project.get("activo", 1)) == 1 if str(project.get("activo", "")).strip() != "" else True
+        if not is_active:
+            continue
+
+        winner_level, winner_label = _parse_winner(project.get("premio", project.get("winner", 0)))
+        university_short_name = (project.get("siglas") or project.get("university_short_name") or "").strip()
+        university = (project.get("universidad") or project.get("university") or "").strip()
+        university_display = f"{university} ({university_short_name})" if university_short_name else university
+
+        normalized_projects.append(
+            {
+                "id": int(project.get("id", 0)),
+                "title": (project.get("titulo") or project.get("title") or "").strip(),
+                "university": university,
+                "university_short_name": university_short_name,
+                "university_display": university_display,
+                "category": (project.get("categoria") or project.get("category") or "").strip(),
+                "year": _parse_year(project.get("ano", project.get("año", project.get("year")))),
+                "contact": (project.get("email") or project.get("contacto") or "").strip(),
+                "advisor": (project.get("asesor") or project.get("advisor") or "").strip(),
+                "winner": winner_level,
+                "winner_label": winner_label,
+                "abstract": (project.get("resumen") or project.get("abstract") or "").strip(),
+                "institution": (project.get("institucion") or "").strip(),
+            }
+        )
+
+    normalized_projects.sort(key=lambda p: (p["year"], p["title"]), reverse=True)
+    return normalized_projects
 
 
 def get_gallery_image_path(instance, filename) -> str:

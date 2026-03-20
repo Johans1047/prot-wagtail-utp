@@ -1,8 +1,10 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import Http404
 from django.contrib import messages
 from django.core.paginator import Paginator
+from django.db.models import Q
 from django.db.utils import OperationalError, ProgrammingError
+from datetime import date
 from urllib.parse import urlencode
 from .data_types import *
 from .data_fallback import *
@@ -55,53 +57,71 @@ def Inicio(request) -> render:
 
     if not faqs:
         faqs = faqs_fallback()
+
+    lineamientos_docs = []
+    try:
+        lineamientos_docs = list(
+            Document.objects.filter(
+                Q(tags__name__icontains="lineamiento")
+                | Q(title__icontains="lineamiento")
+            )
+            .distinct()
+            .order_by("-created_at")
+        )
+    except (OperationalError, ProgrammingError):
+        lineamientos_docs = []
     
-    winners_by_place = [
-        {
-            "place": 1,
-            "place_label": "Primer Lugar",
-            "winners": [
-                {"title": "Sistema de monitoreo ambiental con IoT para la detección temprana de contaminantes", "university": "Universidad Tecnológica de Panamá", "category": "Ingeniería", "authors": "J. Pérez, M. Rodríguez"},
-                {"title": "Análisis de biomarcadores en pacientes con diabetes tipo 2 en población panameña", "university": "Universidad de Panamá", "category": "Ciencias de la Salud", "authors": "M. García, L. Sánchez"},
-                {"title": "Modelado matemático de ecosistemas costeros del Golfo de Panamá", "university": "Universidad Tecnológica de Panamá", "category": "Ciencias Naturales y Exactas", "authors": "A. López, C. Martínez"},
-                {"title": "Impacto socioeconómico de la migración en comunidades rurales de Darién", "university": "Universidad de Panamá", "category": "Ciencias Sociales y Humanísticas", "authors": "R. Castillo, E. Vega"},
-            ],
-        },
-        {
-            "place": 2,
-            "place_label": "Segundo Lugar",
-            "winners": [
-                {"title": "Desarrollo de materiales biodegradables a partir de residuos agrícolas", "university": "USMA", "category": "Ingeniería", "authors": "F. Morales, K. Chen"},
-                {"title": "Evaluación de plantas medicinales nativas con propiedades antiinflamatorias", "university": "UNACHI", "category": "Ciencias de la Salud", "authors": "D. Herrera, P. Gutiérrez"},
-                {"title": "Estudio de microplásticos en ríos de la cuenca del Canal de Panamá", "university": "Universidad Tecnológica de Panamá", "category": "Ciencias Naturales y Exactas", "authors": "S. Moreno, J. Batista"},
-                {"title": "Preservación digital del patrimonio cultural Guna", "university": "Universidad Latina", "category": "Ciencias Sociales y Humanísticas", "authors": "M. Obaldia, L. Torres"},
-            ],
-        },
-        {
-            "place": 3,
-            "place_label": "Tercer Lugar",
-            "winners": [
-                {"title": "Optimización de redes eléctricas mediante algoritmos de inteligencia artificial", "university": "Universidad Tecnológica de Panamá", "category": "Ingeniería", "authors": "H. Quintero, N. Salas"},
-                {"title": "Factores de riesgo cardiovascular en jóvenes universitarios panameños", "university": "Universidad de Panamá", "category": "Ciencias de la Salud", "authors": "V. Arauz, B. Montenegro"},
-                {"title": "Inventario de biodiversidad en manglares de Bocas del Toro", "university": "UNACHI", "category": "Ciencias Naturales y Exactas", "authors": "G. Santamaría, I. Pitti"},
-                {"title": "Análisis lingüístico de lenguas criollas en la costa caribeña panameña", "university": "Universidad de Panamá", "category": "Ciencias Sociales y Humanísticas", "authors": "T. Williams, A. Brown"},
-            ],
-        },
-    ]
+    all_projects = get_processed_projects()
+    winner_projects = [p for p in all_projects if p.get("winner", 0) > 0]
+
+    today = date.today()
+    # Before November, show previous year's winners; from November onward, prefer current year.
+    target_winners_year = today.year - 1 if today.month < 11 else today.year
+    latest_winners = [p for p in winner_projects if p.get("year", 0) == target_winners_year]
+
+    if latest_winners:
+        latest_winners_year = target_winners_year
+    else:
+        latest_winners_year = max((p.get("year", 0) for p in winner_projects), default=0)
+        latest_winners = [p for p in winner_projects if p.get("year", 0) == latest_winners_year]
+
+    winners_by_place = []
+    for place, label in [(1, "Primer Lugar"), (2, "Segundo Lugar"), (3, "Tercer Lugar")]:
+        winners_in_place = [
+            {
+                "title": p["title"],
+                "university": p.get("university_display") or p.get("university") or "-",
+                "category": p.get("category") or "Sin categoría",
+                "authors": p.get("advisor") or "Asesor no registrado",
+            }
+            for p in latest_winners
+            if p.get("winner") == place
+        ]
+
+        winners_by_place.append(
+            {
+                "place": place,
+                "place_label": label,
+                "winners": winners_in_place,
+            }
+        )
     
     winners_filters = urlencode({
-        'tab': ['all', 'winners'],
+        'tab': 'winners',
         'year': 'all',
         'category': 'all',
         'university': 'all'
-    }, doseq=True)
+    })
 
     context = {
         'title_section': ts,
         'introductions': _event_intro,
         'important_dates': important_dates,
         'faqs': faqs,
+        'lineamientos_docs': lineamientos_docs,
+        'lineamiento_destacado': lineamientos_docs[0] if lineamientos_docs else None,
         'winners_by_place': winners_by_place,
+        'latest_winners_year': latest_winners_year,
         'winners_filters': winners_filters,
     }
     
@@ -269,13 +289,17 @@ def Proyectos(request) -> render:
     filtered = all_projects
 
     if tab == 'winners':
-        filtered = [p for p in filtered if p['winner']]
+        filtered = [p for p in filtered if p.get('winner', 0) > 0]
 
     if search:
         search_lower = search.lower()
         filtered = [
             p for p in filtered
-            if search_lower in p['title'].lower() or search_lower in p['university'].lower()
+            if search_lower in p['title'].lower()
+            or search_lower in p['university'].lower()
+            or search_lower in (p.get('university_short_name') or '').lower()
+            or search_lower in (p.get('advisor') or '').lower()
+            or search_lower in (p.get('category') or '').lower()
         ]
 
     if year_filter != 'all':
@@ -291,18 +315,18 @@ def Proyectos(request) -> render:
     if university_filter != 'all':
         filtered = [p for p in filtered if p['university'] == university_filter]
 
-    years = sorted(set(p['year'] for p in all_projects), reverse=True)
+    years = sorted(set(p['year'] for p in all_projects if p.get('year')), reverse=True)
 
     categories_options = [
         {"value": "all", "label": "Todas las categorías"},
     ]
-    for category in sorted(set(p['category'] for p in all_projects)):
+    for category in sorted(set(p['category'] for p in all_projects if p.get('category'))):
         categories_options.append({"value": category, "label": category})
 
     universities_options = [
         {"value": "all", "label": "Todas las universidades"},
     ]
-    for uni in sorted(set(p['university'] for p in all_projects)):
+    for uni in sorted(set(p['university'] for p in all_projects if p.get('university'))):
         universities_options.append({"value": uni, "label": uni})
 
     paginator = Paginator(filtered, 10)
@@ -336,6 +360,34 @@ def Proyectos(request) -> render:
         'important_dates': schedule_dates,
     }
     return render(request, 'proyectos/_index.html', context)
+
+
+def Noticias(request) -> render:
+    noticias_qs = BlogPage.objects.live().public().order_by("-publication_date", "-first_published_at")
+    paginator = Paginator(noticias_qs, 9)
+    page_obj = paginator.get_page(request.GET.get("page", 1))
+
+    context = {
+        "page_obj": page_obj,
+        "noticias": page_obj.object_list,
+    }
+    return render(request, "utilidades/noticias/index.html", context)
+
+
+def NoticiaDetalle(request, slug: str) -> render:
+    noticia = get_object_or_404(BlogPage.objects.live().public(), slug=slug)
+    relacionadas = (
+        BlogPage.objects.live()
+        .public()
+        .exclude(id=noticia.id)
+        .order_by("-publication_date", "-first_published_at")[:3]
+    )
+
+    context = {
+        "page": noticia,
+        "relacionadas": relacionadas,
+    }
+    return render(request, "utilidades/noticias/detail.html", context)
 
 def ProyectoDetalle(request, project_id: int) -> render:
     projects = get_processed_projects()

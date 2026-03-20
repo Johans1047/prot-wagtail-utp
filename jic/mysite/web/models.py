@@ -5,10 +5,85 @@ from django.db.models import Case, When
 from django.utils import timezone
 from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
-from wagtail.models import PreviewableMixin, Orderable
+from wagtail import blocks
 from wagtail.admin.panels import FieldPanel, InlinePanel
+from wagtail.embeds.blocks import EmbedBlock
+from wagtail.fields import StreamField
+from wagtail.images.blocks import ImageChooserBlock
+from wagtail.models import PreviewableMixin, Orderable, Page
 from .forms import _FaqAdminForm
 from .utils import get_video_file_path, get_video_thumbnail_path, get_document_path
+
+
+class BlogIndexPage(Page):
+    """Root page for the news/blog section managed with Wagtail."""
+
+    intro = models.TextField("Introducción", blank=True)
+
+    template = "utilidades/noticias/index.html"
+    max_count = 1
+    parent_page_types = ["wagtailcore.Page", "home.HomePage"]
+    subpage_types = ["web.BlogPage"]
+
+    content_panels = Page.content_panels + [
+        FieldPanel("intro"),
+    ]
+
+
+class BlogPage(Page):
+    """Article page with StreamField content, suitable for editor-reviewed submissions."""
+
+    publication_date = models.DateField("Fecha", default=timezone.now)
+    excerpt = models.TextField("Resumen", blank=True, max_length=320)
+    author_name = models.CharField("Autor", max_length=120, blank=True)
+    is_external_submission = models.BooleanField(
+        "Envío externo",
+        default=False,
+        help_text="Marcar cuando la nota fue enviada por un colaborador externo.",
+    )
+    cover_image = models.ForeignKey(
+        "wagtailimages.Image",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        verbose_name="Imagen destacada",
+    )
+    body = StreamField(
+        [
+            ("heading", blocks.CharBlock(form_classname="title", icon="title", label="Encabezado")),
+            (
+                "paragraph",
+                blocks.RichTextBlock(
+                    features=["h2", "h3", "bold", "italic", "link", "ol", "ul", "document-link"],
+                    label="Párrafo",
+                ),
+            ),
+            ("image", ImageChooserBlock(label="Imagen")),
+            ("quote", blocks.BlockQuoteBlock(label="Cita")),
+            ("embed", EmbedBlock(label="Contenido embebido")),
+        ],
+        use_json_field=True,
+        blank=True,
+        verbose_name="Contenido",
+    )
+
+    template = "utilidades/noticias/detail.html"
+    parent_page_types = ["web.BlogIndexPage"]
+    subpage_types = []
+
+    content_panels = Page.content_panels + [
+        FieldPanel("publication_date"),
+        FieldPanel("excerpt"),
+        FieldPanel("author_name"),
+        FieldPanel("is_external_submission"),
+        FieldPanel("cover_image"),
+        FieldPanel("body"),
+    ]
+
+    class Meta:
+        verbose_name = "Noticia"
+        verbose_name_plural = "Noticias"
 
 class important_date(PreviewableMixin, models.Model):
     """Editable timeline item for the home page."""

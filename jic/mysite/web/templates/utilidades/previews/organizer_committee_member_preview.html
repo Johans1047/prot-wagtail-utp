@@ -16,9 +16,11 @@
             <p class="text-sm font-medium text-primary mb-3">{{ snippet.role }}</p>
             <p class="text-sm text-muted-foreground mb-2">{{ snippet.institution }}</p>
             {% if not snippet.is_active %}
-            <div class="mt-4 p-2 bg-amber-100 text-amber-800 text-xs font-semibold rounded">Inactivo</div>
+            <div class="mt-4 p-2 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded">Inactivo</div>
             {% endif %}
         </div>
     </div>
 </div>
 {% endblock %}
+
+

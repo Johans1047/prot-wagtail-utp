@@ -6,7 +6,7 @@
 {% block meta_description %}Busca en nuestros proyectos de investigación y contenido{% endblock %}
 
 {% block content %}
-<section class="py-12 lg:py-16 bg-stone-50 min-h-screen">
+<section class="py-12 lg:py-16 bg-stone-neutral-50 min-h-screen">
     <div class="max-w-7xl mx-auto px-4 lg:px-8">
         
         <!-- Search Header -->
@@ -16,11 +16,14 @@
         </div>
 
         <!-- Search Form -->
-        <form action="{% url 'Busqueda' %}" method="get" class="max-w-2xl mx-auto mb-12">
+        <form action="{% url 'Busqueda' %}" method="get" class="max-w-2xl mx-auto mb-12" aria-label="Formulario de búsqueda">
             <div class="relative flex gap-2">
+                <label for="site-search-query" class="sr-only">Buscar en el sitio</label>
                 <input 
+                    id="site-search-query"
                     type="text" 
                     name="query" 
+                    aria-label="Buscar proyectos, noticias, documentos y contenido"
                     {% if search_query %}value="{{ search_query }}"{% endif %}
                     class="w-full px-4 py-3 border border-border rounded-lg bg-card text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent focus:outline-none shadow-sm"
                     placeholder="Buscar proyectos, resultados, categorías..."
@@ -38,12 +41,12 @@
             <div class="space-y-10">
                 
                 <!-- Project Results -->
-                {% if project_results %}
+                {% if project_results.paginator.count > 0 %}
                 <section>
                     <div class="flex items-center gap-3 mb-8 pb-3 border-b border-border mt-10">
                         <h2 class="text-xl font-bold text-foreground font-serif">Proyectos de Investigación</h2>
                         <span class="px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary">
-                            {{ project_results|length }}
+                            {{ project_results.paginator.count }}
                         </span>
                     </div>
 
@@ -51,7 +54,7 @@
                         {% for project in project_results %}
                         <article class="bg-card border border-border rounded-lg p-6 hover:shadow-md transition-shadow hover:border-primary/30 flex flex-col h-full">
                             <div class="mb-4">
-                                <span class="inline-block px-2.5 py-1 text-xs font-medium bg-secondary/50 text-foreground rounded-md mb-3">
+                                <span class="inline-block px-2.5 py-1 text-xs font-medium bg-primary/10 text-primary rounded-md mb-3">
                                     {{ project.category }}
                                 </span>
                                 <h3 class="text-lg font-bold text-foreground mb-1 line-clamp-2">
@@ -62,7 +65,7 @@
                                 <p class="text-xs text-muted-foreground">{{ project.university }} • {{ project.year }}</p>
                             </div>
                             
-                            <p class="text-sm text-muted-foreground mb-4 flex-grow line-clamp-3">
+                            <p class="text-sm text-muted-foreground mb-4 grow line-clamp-3">
                                 {{ project.abstract|truncatewords:20 }}
                             </p>
                             
@@ -78,16 +81,76 @@
                         </article>
                         {% endfor %}
                     </div>
+
+                    {% if project_results.has_previous or project_results.has_next %}
+                    <div class="mt-8 flex justify-center gap-2">
+                        {% if project_results.has_previous %}
+                        <a href="{% url 'Busqueda' %}?query={{ search_query|urlencode }}&amp;projects_page={{ project_results.previous_page_number }}" class="px-4 py-2.5 text-sm font-medium text-foreground bg-card border border-border rounded-lg hover:bg-secondary/30 transition-colors">
+                            ← Anterior
+                        </a>
+                        {% endif %}
+
+                        {% if project_results.has_next %}
+                        <a href="{% url 'Busqueda' %}?query={{ search_query|urlencode }}&amp;projects_page={{ project_results.next_page_number }}" class="px-4 py-2.5 text-sm font-medium text-foreground bg-card border border-border rounded-lg hover:bg-secondary/30 transition-colors">
+                            Siguiente →
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </section>
+                {% endif %}
+
+                <!-- News Results -->
+                {% if news_results.paginator.count > 0 %}
+                <section>
+                    <div class="flex items-center gap-3 mb-8 pb-3 border-b border-border">
+                        <h2 class="text-2xl font-bold text-foreground font-serif">Noticias</h2>
+                        <span class="px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary">
+                            {{ news_results.paginator.count }}
+                        </span>
+                    </div>
+
+                    <div class="grid gap-4 md:grid-cols-2">
+                        {% for noticia in news_results %}
+                        <article class="bg-card border border-border rounded-lg p-5 hover:shadow-md hover:border-primary/30 transition-all">
+                            <p class="text-xs text-muted-foreground mb-2">{{ noticia.publication_date|date:"d M Y" }}</p>
+                            <h3 class="text-lg font-semibold text-foreground mb-2">
+                                <a href="{% url 'NoticiaDetalle' noticia.slug %}" class="hover:text-primary transition-colors">
+                                    {{ noticia.title }}
+                                </a>
+                            </h3>
+                            {% if noticia.excerpt %}
+                            <p class="text-sm text-muted-foreground line-clamp-3">{{ noticia.excerpt }}</p>
+                            {% endif %}
+                        </article>
+                        {% endfor %}
+                    </div>
+
+                    {% if news_results.has_previous or news_results.has_next %}
+                    <div class="mt-8 flex justify-center gap-2">
+                        {% if news_results.has_previous %}
+                        <a href="{% url 'Busqueda' %}?query={{ search_query|urlencode }}&amp;news_page={{ news_results.previous_page_number }}" class="px-4 py-2.5 text-sm font-medium text-foreground bg-card border border-border rounded-lg hover:bg-secondary/30 transition-colors">
+                            ← Anterior
+                        </a>
+                        {% endif %}
+
+                        {% if news_results.has_next %}
+                        <a href="{% url 'Busqueda' %}?query={{ search_query|urlencode }}&amp;news_page={{ news_results.next_page_number }}" class="px-4 py-2.5 text-sm font-medium text-foreground bg-card border border-border rounded-lg hover:bg-secondary/30 transition-colors">
+                            Siguiente →
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
                 </section>
                 {% endif %}
 
                 <!-- Documents Results -->
-                {% if document_results %}
+                {% if document_results.paginator.count > 0 %}
                 <section>
                     <div class="flex items-center gap-3 mb-8 pb-3 border-b border-border">
                         <h2 class="text-2xl font-bold text-foregroun font-serif">Documentos</h2>
                         <span class="px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary">
-                            {{ document_results|length }}
+                            {{ document_results.paginator.count }}
                         </span>
                     </div>
 
@@ -96,7 +159,7 @@
                         <div class="bg-card border border-border rounded-lg p-6 hover:shadow-md hover:border-primary/30 transition-all group">
                             <div class="flex items-start gap-4">
                                 <!-- Document Icon -->
-                                <div class="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                                <div class="shrink-0 w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
                                     <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
                                     </svg>
@@ -127,7 +190,7 @@
                                 </div>
                                 
                                 <!-- Download Link -->
-                                <div class="flex-shrink-0">
+                                <div class="shrink-0">
                                     <a href="{{ doc.document_file.url }}" download class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors" title="Descargar documento">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
@@ -138,6 +201,22 @@
                         </div>
                         {% endfor %}
                     </div>
+
+                    {% if document_results.has_previous or document_results.has_next %}
+                    <div class="mt-8 flex justify-center gap-2">
+                        {% if document_results.has_previous %}
+                        <a href="{% url 'Busqueda' %}?query={{ search_query|urlencode }}&amp;documents_page={{ document_results.previous_page_number }}" class="px-4 py-2.5 text-sm font-medium text-foreground bg-card border border-border rounded-lg hover:bg-secondary/30 transition-colors">
+                            ← Anterior
+                        </a>
+                        {% endif %}
+
+                        {% if document_results.has_next %}
+                        <a href="{% url 'Busqueda' %}?query={{ search_query|urlencode }}&amp;documents_page={{ document_results.next_page_number }}" class="px-4 py-2.5 text-sm font-medium text-foreground bg-card border border-border rounded-lg hover:bg-secondary/30 transition-colors">
+                            Siguiente →
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
                 </section>
                 {% endif %}
 
@@ -145,8 +224,8 @@
                 {% if search_results %}
                 <section>
                     <div class="flex items-center gap-3 mb-8 pb-3 border-b border-border">
-                        <h2 class="text-2xl font-bold text-foreground">Páginas y Contenido</h2>
-                        <span class="px-3 py-1 rounded-full text-sm font-medium bg-secondary/50 text-foreground">
+                        <h2 class="text-2xl font-serif font-bold text-foreground">Contenido</h2>
+                        <span class="px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary">
                             {{ search_results.paginator.count }}
                         </span>
                     </div>
@@ -172,13 +251,13 @@
                     {% if search_results.has_previous or search_results.has_next %}
                     <div class="mt-8 flex justify-center gap-2">
                         {% if search_results.has_previous %}
-                        <a href="{% url 'Busqueda' %}?query={{ search_query|urlencode }}&amp;page={{ search_results.previous_page_number }}" class="px-4 py-2.5 text-sm font-medium text-foreground bg-card border border-border rounded-lg hover:bg-secondary/30 transition-colors">
+                        <a href="{% url 'Busqueda' %}?query={{ search_query|urlencode }}&amp;content_page={{ search_results.previous_page_number }}" class="px-4 py-2.5 text-sm font-medium text-foreground bg-card border border-border rounded-lg hover:bg-secondary/30 transition-colors">
                             ← Anterior
                         </a>
                         {% endif %}
                         
                         {% if search_results.has_next %}
-                        <a href="{% url 'Busqueda' %}?query={{ search_query|urlencode }}&amp;page={{ search_results.next_page_number }}" class="px-4 py-2.5 text-sm font-medium text-foreground bg-card border border-border rounded-lg hover:bg-secondary/30 transition-colors">
+                        <a href="{% url 'Busqueda' %}?query={{ search_query|urlencode }}&amp;content_page={{ search_results.next_page_number }}" class="px-4 py-2.5 text-sm font-medium text-foreground bg-card border border-border rounded-lg hover:bg-secondary/30 transition-colors">
                             Siguiente →
                         </a>
                         {% endif %}
@@ -187,7 +266,7 @@
                 </section>
                 {% endif %}
 
-                {% if not search_results and not project_results and not document_results %}
+                {% if search_results.paginator.count == 0 and project_results.paginator.count == 0 and document_results.paginator.count == 0 and news_results.paginator.count == 0 %}
                     <div class="text-center py-16 bg-card border-2 border-dashed border-border/50 rounded-lg">
                         <svg class="mx-auto h-12 w-12 text-muted-foreground opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -212,15 +291,5 @@
         {% endif %}
     </div>
 </section>
-
-<!-- Floating Search Button -->
-<div class="fixed bottom-8 right-8 z-40">
-    <a href="{% url 'Busqueda' %}" 
-       class="group flex items-center justify-center w-14 h-14 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
-       title="Buscar proyectos e investigaciones">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 group-hover:scale-110 transition-transform" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-        </svg>
-    </a>
-</div>
 {% endblock %}
+

@@ -5,6 +5,7 @@
 @source "../../../web/templates";
 @source "../../../home/templates";
 @source "../../../templates";
+@source inline("bg-primary bg-primary/90 text-primary-foreground text-primary-foreground/70 bg-cobalt-700/90 bg-muted-foreground/70 bg-yellow-400 bg-amber-400 text-secondary-foreground text-secondary-foreground/70 bg-secondary-foreground/65 bg-card bg-stone-neutral-50");
 
 @import "flowbite/src/themes/default";
 @plugin "flowbite/plugin";
@@ -43,44 +44,44 @@
 	--color-muted-teal-900: oklch(22.18% 0.014 154.05);
 	--color-muted-teal-950: oklch(18.57% 0.009 153.06);
 
-	/* Dry Sage */
-	--color-dry-sage-50: oklch(97.05% 0.009 113.16);
-	--color-dry-sage-100: oklch(93.95% 0.017 106.73);
-	--color-dry-sage-200: oklch(87.84% 0.035 107.10);
-	--color-dry-sage-300: oklch(81.65% 0.053 107.51);
-	--color-dry-sage-400: oklch(75.59% 0.073 108.91);
-	--color-dry-sage-500: oklch(69.27% 0.089 109.26);
-	--color-dry-sage-600: oklch(58.93% 0.075 109.41);
-	--color-dry-sage-700: oklch(47.90% 0.057 108.38);
-	--color-dry-sage-800: oklch(36.42% 0.041 108.28);
-	--color-dry-sage-900: oklch(23.93% 0.023 108.03);
-	--color-dry-sage-950: oklch(19.70% 0.017 107.87);
+	/* Amber Accent */
+	--color-amber-accent-50: #fff8e1;
+	--color-amber-accent-100: #ffefb3;
+	--color-amber-accent-200: #ffe580;
+	--color-amber-accent-300: #ffdb4d;
+	--color-amber-accent-400: #ffd11a;
+	--color-amber-accent-500: #ffba00;
+	--color-amber-accent-600: #e6a800;
+	--color-amber-accent-700: #b38200;
+	--color-amber-accent-800: #805d00;
+	--color-amber-accent-900: #4d3800;
+	--color-amber-accent-950: #332500;
 
-	/* Soft Peach */
-	--color-soft-peach-50: oklch(97.59% 0.023 82.12);
-	--color-soft-peach-100: oklch(95.34% 0.046 85.19);
-	--color-soft-peach-200: oklch(91% 0.092 84.47);
-	--color-soft-peach-300: oklch(86.70% 0.130 82.62);
-	--color-soft-peach-400: oklch(83.03% 0.157 79.54);
-	--color-soft-peach-500: oklch(79.64% 0.169 73.73);
-	--color-soft-peach-600: oklch(67.49% 0.143 73.98);
-	--color-soft-peach-700: oklch(54.65% 0.115 74.90);
-	--color-soft-peach-800: oklch(41.34% 0.086 77.13);
-	--color-soft-peach-900: oklch(26.47% 0.053 81.74);
-	--color-soft-peach-950: oklch(21.70% 0.044 85.88);
+	/* Stone Neutral */
+	--color-stone-neutral-50: oklch(98.5% 0.001 106.423);
+	--color-stone-neutral-100: oklch(97% 0.001 106.424);
+	--color-stone-neutral-200: oklch(92.3% 0.003 48.717);
+	--color-stone-neutral-300: oklch(86.9% 0.005 56.366);
+	--color-stone-neutral-400: oklch(70.9% 0.01 56.259);
+	--color-stone-neutral-500: oklch(55.3% 0.013 58.071);
+	--color-stone-neutral-600: oklch(44.4% 0.011 73.639);
+	--color-stone-neutral-700: oklch(37.4% 0.01 67.558);
+	--color-stone-neutral-800: oklch(26.8% 0.007 34.298);
+	--color-stone-neutral-900: oklch(21.6% 0.006 56.043);
+	--color-stone-neutral-950: oklch(14.7% 0.004 49.25);
 
-	/* Bubblegum Pink */
-	--color-bubblegum-pink-50: oklch(94.62% 0.024 11.29);
-	--color-bubblegum-pink-100: oklch(89.43% 0.051 12.13);
-	--color-bubblegum-pink-200: oklch(79.52% 0.105 14.53);
-	--color-bubblegum-pink-300: oklch(70.71% 0.163 17.18);
-	--color-bubblegum-pink-400: oklch(63.99% 0.213 21.37);
-	--color-bubblegum-pink-500: oklch(60.11% 0.239 26.46);
-	--color-bubblegum-pink-600: oklch(51.03% 0.202 26.14);
-	--color-bubblegum-pink-700: oklch(41.37% 0.162 25.65);
-	--color-bubblegum-pink-800: oklch(31.14% 0.119 24.65);
-	--color-bubblegum-pink-900: oklch(20.12% 0.073 20.92);
-	--color-bubblegum-pink-950: oklch(16.29% 0.057 18.04);
+	/* Yellow Gold */
+	--color-yellow-gold-50: oklch(98.7% 0.022 95.277);
+	--color-yellow-gold-100: oklch(96.2% 0.059 95.617);
+	--color-yellow-gold-200: oklch(92.4% 0.12 95.746);
+	--color-yellow-gold-300: oklch(87.9% 0.169 91.605);
+	--color-yellow-gold-400: oklch(82.8% 0.189 84.429);
+	--color-yellow-gold-500: oklch(76.9% 0.188 70.08);
+	--color-yellow-gold-600: oklch(66.6% 0.179 58.318);
+	--color-yellow-gold-700: oklch(55.5% 0.163 48.998);
+	--color-yellow-gold-800: oklch(47.3% 0.137 46.201);
+	--color-yellow-gold-900: oklch(41.4% 0.112 45.904);
+	--color-yellow-gold-950: oklch(27.9% 0.077 45.635);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -106,24 +107,9 @@
 	--muted: var(--color-muted-teal-100);
 	--muted-foreground: var(--color-muted-teal-700);
 
-	--accent: var(--color-dry-sage-100);
-	--accent-foreground: var(--color-dry-sage-900);
-
-	--destructive: var(--color-bubblegum-pink-500);
-	--destructive-foreground: white;
-
 	--border: var(--color-true-cobalt-200);
 	--input: var(--color-true-cobalt-200);
 	--ring: var(--color-true-cobalt-500);
-
-	--sidebar: var(--color-true-cobalt-100);
-	--sidebar-foreground: var(--color-true-cobalt-900);
-	--sidebar-primary: var(--color-true-cobalt-600);
-	--sidebar-primary-foreground: white;
-	--sidebar-accent: var(--color-muted-teal-200);
-	--sidebar-accent-foreground: var(--color-muted-teal-800);
-	--sidebar-border: var(--color-true-cobalt-200);
-	--sidebar-ring: var(--color-true-cobalt-500);
 
 	--radius: 0.625rem;
 }
@@ -151,24 +137,9 @@
 	--muted: var(--color-muted-teal-900);
 	--muted-foreground: var(--color-muted-teal-400);
 
-	--accent: var(--color-dry-sage-700);
-	--accent-foreground: var(--color-dry-sage-100);
-
-	--destructive: var(--color-bubblegum-pink-600);
-	--destructive-foreground: white;
-
 	--border: var(--color-true-cobalt-700);
 	--input: var(--color-true-cobalt-700);
 	--ring: var(--color-true-cobalt-400);
-
-	--sidebar: var(--color-true-cobalt-950);
-	--sidebar-foreground: var(--color-true-cobalt-100);
-	--sidebar-primary: var(--color-true-cobalt-400);
-	--sidebar-primary-foreground: var(--color-true-cobalt-950);
-	--sidebar-accent: var(--color-muted-teal-800);
-	--sidebar-accent-foreground: var(--color-muted-teal-100);
-	--sidebar-border: var(--color-true-cobalt-700);
-	--sidebar-ring: var(--color-true-cobalt-400);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -192,10 +163,6 @@
 	--color-secondary-foreground: var(--secondary-foreground);
 	--color-muted: var(--muted);
 	--color-muted-foreground: var(--muted-foreground);
-	--color-accent: var(--accent);
-	--color-accent-foreground: var(--accent-foreground);
-	--color-destructive: var(--destructive);
-	--color-destructive-foreground: var(--destructive-foreground);
 	--color-border: var(--border);
 	--color-input: var(--input);
 	--color-ring: var(--ring);
@@ -226,44 +193,55 @@
 	--color-teal-900: var(--color-muted-teal-900);
 	--color-teal-950: var(--color-muted-teal-950);
 
-	/* ── Dry Sage ── */
-	--color-sage-50: var(--color-dry-sage-50);
-	--color-sage-100: var(--color-dry-sage-100);
-	--color-sage-200: var(--color-dry-sage-200);
-	--color-sage-300: var(--color-dry-sage-300);
-	--color-sage-400: var(--color-dry-sage-400);
-	--color-sage-500: var(--color-dry-sage-500);
-	--color-sage-600: var(--color-dry-sage-600);
-	--color-sage-700: var(--color-dry-sage-700);
-	--color-sage-800: var(--color-dry-sage-800);
-	--color-sage-900: var(--color-dry-sage-900);
-	--color-sage-950: var(--color-dry-sage-950);
+	/* ── Amber Accent ── */
+	--color-amber-50: var(--color-amber-accent-50);
+	--color-amber-100: var(--color-amber-accent-100);
+	--color-amber-200: var(--color-amber-accent-200);
+	--color-amber-300: var(--color-amber-accent-300);
+	--color-amber-400: var(--color-amber-accent-400);
+	--color-amber-500: var(--color-amber-accent-500);
+	--color-amber-600: var(--color-amber-accent-600);
+	--color-amber-700: var(--color-amber-accent-700);
+	--color-amber-800: var(--color-amber-accent-800);
+	--color-amber-900: var(--color-amber-accent-900);
+	--color-amber-950: var(--color-amber-accent-950);
 
-	/* ── Soft Peach ── */
-	--color-peach-50: var(--color-soft-peach-50);
-	--color-peach-100: var(--color-soft-peach-100);
-	--color-peach-200: var(--color-soft-peach-200);
-	--color-peach-300: var(--color-soft-peach-300);
-	--color-peach-400: var(--color-soft-peach-400);
-	--color-peach-500: var(--color-soft-peach-500);
-	--color-peach-600: var(--color-soft-peach-600);
-	--color-peach-700: var(--color-soft-peach-700);
-	--color-peach-800: var(--color-soft-peach-800);
-	--color-peach-900: var(--color-soft-peach-900);
-	--color-peach-950: var(--color-soft-peach-950);
+	/* ── Stone Neutral ── */
+	--color-stone-50: var(--color-stone-neutral-50);
+	--color-stone-100: var(--color-stone-neutral-100);
+	--color-stone-200: var(--color-stone-neutral-200);
+	--color-stone-300: var(--color-stone-neutral-300);
+	--color-stone-400: var(--color-stone-neutral-400);
+	--color-stone-500: var(--color-stone-neutral-500);
+	--color-stone-600: var(--color-stone-neutral-600);
+	--color-stone-700: var(--color-stone-neutral-700);
+	--color-stone-800: var(--color-stone-neutral-800);
+	--color-stone-900: var(--color-stone-neutral-900);
+	--color-stone-950: var(--color-stone-neutral-950);
+	--color-stone-neutral-50: var(--color-stone-neutral-50);
+	--color-stone-neutral-100: var(--color-stone-neutral-100);
+	--color-stone-neutral-200: var(--color-stone-neutral-200);
+	--color-stone-neutral-300: var(--color-stone-neutral-300);
+	--color-stone-neutral-400: var(--color-stone-neutral-400);
+	--color-stone-neutral-500: var(--color-stone-neutral-500);
+	--color-stone-neutral-600: var(--color-stone-neutral-600);
+	--color-stone-neutral-700: var(--color-stone-neutral-700);
+	--color-stone-neutral-800: var(--color-stone-neutral-800);
+	--color-stone-neutral-900: var(--color-stone-neutral-900);
+	--color-stone-neutral-950: var(--color-stone-neutral-950);
 
-	/* ── Bubblegum Pink ── */
-	--color-pink-50: var(--color-bubblegum-pink-50);
-	--color-pink-100: var(--color-bubblegum-pink-100);
-	--color-pink-200: var(--color-bubblegum-pink-200);
-	--color-pink-300: var(--color-bubblegum-pink-300);
-	--color-pink-400: var(--color-bubblegum-pink-400);
-	--color-pink-500: var(--color-bubblegum-pink-500);
-	--color-pink-600: var(--color-bubblegum-pink-600);
-	--color-pink-700: var(--color-bubblegum-pink-700);
-	--color-pink-800: var(--color-bubblegum-pink-800);
-	--color-pink-900: var(--color-bubblegum-pink-900);
-	--color-pink-950: var(--color-bubblegum-pink-950);
+	/* ── Yellow Gold ── */
+	--color-yellow-50: var(--color-yellow-gold-50);
+	--color-yellow-100: var(--color-yellow-gold-100);
+	--color-yellow-200: var(--color-yellow-gold-200);
+	--color-yellow-300: var(--color-yellow-gold-300);
+	--color-yellow-400: var(--color-yellow-gold-400);
+	--color-yellow-500: var(--color-yellow-gold-500);
+	--color-yellow-600: var(--color-yellow-gold-600);
+	--color-yellow-700: var(--color-yellow-gold-700);
+	--color-yellow-800: var(--color-yellow-gold-800);
+	--color-yellow-900: var(--color-yellow-gold-900);
+	--color-yellow-950: var(--color-yellow-gold-950);
 
 	--radius-sm: calc(var(--radius) - 4px);
 	--radius-md: calc(var(--radius) - 2px);

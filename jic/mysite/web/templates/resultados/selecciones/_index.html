@@ -16,7 +16,7 @@
     </div>
 
     <!-- Info banner -->
-    <section class="bg-stone-50 py-8">
+    <section class="bg-stone-neutral-50 py-8">
         <div class="mx-auto max-w-7xl px-4 lg:px-8">
             <div class="flex items-start gap-3 rounded-lg border border-teal/30 bg-teal/5 p-4 text-sm mt-10">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 text-primary mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -30,7 +30,7 @@
     </section>
 
     <!-- University cards -->
-    <section class="bg-stone-50 py-16 lg:py-20">
+    <section class="bg-stone-neutral-50 py-16 lg:py-20">
         <div class="mx-auto max-w-7xl px-4 lg:px-8">
             <div class="flex flex-col gap-8">
                 {% for uni in selecciones %}
@@ -44,7 +44,7 @@
                         </div>
                         <span class="rounded-full px-3 py-1 text-xs font-medium
                             {% if uni.status == 'completada' %}bg-green-100 text-green-800
-                            {% elif uni.status == 'en_proceso' %}bg-amber-100 text-amber-800
+                            {% elif uni.status == 'en_proceso' %}bg-yellow-100 text-yellow-800
                             {% else %}bg-slate-100 text-slate-600{% endif %}">
                             {% if uni.status == 'completada' %}Completada
                             {% elif uni.status == 'en_proceso' %}En proceso
@@ -100,8 +100,8 @@
                         </p>
                     </div>
                     {% elif uni.status == 'en_proceso' %}
-                    <div class="border-t border-border bg-amber-50 p-6 text-center">
-                        <p class="text-sm text-amber-800">
+                    <div class="border-t border-border bg-yellow-50 p-6 text-center">
+                        <p class="text-sm text-yellow-800">
                             {{ uni.shortName }} está actualmente en proceso de evaluación. Los resultados serán publicados próximamente.
                         </p>
                     </div>
@@ -192,7 +192,7 @@ const seleccionesInstitucionales = [
 
 const statusLabels = {
   completada: { label: "Completada", color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" },
-  en_proceso: { label: "En proceso", color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
+  en_proceso: { label: "En proceso", color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400" },
   pendiente: { label: "Pendiente", color: "bg-slate-100 text-slate-600 dark:bg-slate-800/50 dark:text-slate-400" },
 }
 
@@ -315,8 +315,8 @@ export default function SeleccionesInstitucionalesPage() {
 
                     {/* In progress message */}
                     {uni.status === "en_proceso" && (
-                      <div className="border-t border-border bg-amber-50 p-6 text-center dark:bg-amber-900/10">
-                        <p className="text-sm text-amber-800 dark:text-amber-200">
+                      <div className="border-t border-border bg-yellow-50 p-6 text-center dark:bg-yellow-900/10">
+                        <p className="text-sm text-yellow-800 dark:text-yellow-200">
                           {uni.shortName} esta actualmente en proceso de evaluacion. Los resultados seran publicados proximamente.
                         </p>
                       </div>
@@ -345,3 +345,5 @@ export default function SeleccionesInstitucionalesPage() {
     </>
   )
 }
+
+

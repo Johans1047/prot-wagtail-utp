@@ -1,7 +1,7 @@
 {% extends "utilidades/previews/_preview_base.html" %}
 
 {% block content %}
-<div class="p-5 bg-stone-50 rounded-lg">
+<div class="p-5 bg-stone-neutral-50 rounded-lg">
     <h2>{{ snippet.title }}</h2>
     
     {% if snippet.category %}
@@ -32,3 +32,4 @@
     <p><strong>Creado:</strong> {{ snippet.created_at|date:"d/m/Y H:i" }}</p>
 </div>
 {% endblock %}
+

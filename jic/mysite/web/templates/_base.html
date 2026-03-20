@@ -1,12 +1,30 @@
+{% load static wagtailcore_tags wagtailuserbar %}
+
 <!doctype html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Mi Sitio{% endblock %}</title>
+    <title>
+        {% block title %}
+            {% if page.seo_title %}{{ page.seo_title }}{% elif page.title %}{{ page.title }}{% else %}Mi Sitio{% endif %}
+        {% endblock %}
+        {% block title_suffix %}
+            {% wagtail_site as current_site %}
+            {% if current_site and current_site.site_name %} - {{ current_site.site_name }}{% endif %}
+        {% endblock %}
+    </title>
+    {% if page.search_description %}
+    <meta name="description" content="{{ page.search_description }}">
+    {% else %}
     <meta name="description" content="{% block meta_description %}Descripción por defecto{% endblock %}">
-    {% load static %}
+    {% endif %}
+
+    {% if request.in_preview_panel %}
+    <base target="_blank">
+    {% endif %}
+
     <link rel="icon" type="image/svg+xml" href="{% static 'img/Recurso 2JIC LOGO.svg' %}">
     <link rel="stylesheet" href="{% static 'src/output.css' %}?{% now "U" %}" type="text/css" />
     <link rel="stylesheet" href="{% static 'css/alert.css' %}" type="text/css" />
@@ -15,13 +33,13 @@
 
 <body class="flex flex-col min-h-screen">
     {% include 'alert.html' with messages=messages %}
-    {% include 'search_button.html' %}
 
     {% include 'header.html' %}
-    <main class="pt-18 overflow-x-hidden">
+    <main id="contenido-principal" class="pt-18 overflow-x-hidden">
         {% block content %}{% endblock %}
     </main>
     {% include 'footer.html' %}
+    {% include 'search_button.html' %}
 
     {% if debug %} <script src="http://127.0.0.1:35729/livereload.js"></script> {% endif %}
     <script src="{% static 'js/flowbite.min.js' %}"></script>

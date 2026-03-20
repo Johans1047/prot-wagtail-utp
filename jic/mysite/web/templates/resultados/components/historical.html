@@ -5,7 +5,7 @@
         </h2>
         <div class="flex flex-col gap-6">
             {% for result in historical_results %}
-                <div class="rounded-xl border border-stone-300 p-6 bg-stone-50">
+                <div class="rounded-xl border border-stone-neutral-300 p-6 bg-stone-neutral-50">
                     <div
                         class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between temp"
                     >
@@ -52,7 +52,7 @@
                                 href="{{ doc.href }}"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                class="inline-flex items-center gap-2 rounded-lg border border-stone-300 bg-card px-4 py-2 text-sm text-foreground transition-colors hover:border-stone-400 hover:bg-stone-200"
+                                class="inline-flex items-center gap-2 rounded-lg border border-stone-neutral-300 bg-card px-4 py-2 text-sm text-foreground transition-colors hover:border-stone-neutral-400 hover:bg-stone-neutral-200"
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -72,7 +72,7 @@
                                 >
                                 {{ doc.label }}
                                 <span
-                                    class="rounded-sm bg-stone-200 px-1.5 py-0.5 text-2xs font-bold text-muted-foreground"
+                                    class="rounded-sm bg-stone-neutral-200 px-1.5 py-0.5 text-2xs font-bold text-muted-foreground"
                                     >{{ doc.type }}</span
                                 >
                             </a>

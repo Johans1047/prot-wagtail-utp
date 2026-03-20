@@ -1,0 +1,20 @@
+{% extends "wagtailadmin/login.html" %}
+{% load static %}
+
+{% block branding_logo %}
+<div style="display: flex; align-items: center; justify-content: center; gap: 1rem;">
+    <div style="width: 65px; height: 80px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+        <img
+            src="{% static 'img/utp-logo-admin.svg' %}"
+            alt="UTP logo"
+            style="height: 100%; width: auto; max-width: none; object-fit: contain; transform: translateX(-4%) scale(1.9); transform-origin: center;"
+        />
+    </div>
+    <span>Universidad Tecnológica de Panamá</span>
+</div>
+    
+{% endblock %}
+
+{% block branding_login %}
+    Inicia Sesión en el Panel de Administración de la JIC
+{% endblock %}

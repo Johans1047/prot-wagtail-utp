@@ -1,14 +1,10 @@
 from django.urls import reverse, path
 from django.utils.html import format_html
 from django.templatetags.static import static
-from django.db.models import Q
-from collections import OrderedDict
 from wagtail import hooks
 from wagtail.admin.menu import MenuItem, SubmenuMenuItem, Menu
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet, SnippetViewSetGroup
-from wagtail.images.models import Image
-from wagtail.documents.models import Document
 from .policies import SingletonPermissionPolicy
 from .utils import LazyMenuItem
 from .models import (
@@ -258,9 +254,11 @@ def global_admin_css():
     return format_html(
         '<style>'
         '.sidebar-wagtail-branding__icon-wrapper svg {{ display: none !important; }}'
-        '.sidebar-wagtail-branding__icon-wrapper {{ background-image: url("{}"); background-size: 125%; background-repeat: no-repeat; background-position: center; background-color: hsl(254.3 50.4% 24.5%) !important; display: flex; align-items: center; justify-content: center; }}'
+        '.sidebar-wagtail-branding__icon-wrapper {{ background-image: url("{}"); background-size: 500%; background-repeat: no-repeat; background-position: center; background-color: hsl(254.3 50.4% 24.5%) !important; display: flex; align-items: center; justify-content: center; }}'
+        '.w-theme-dark .sidebar-wagtail-branding__icon-wrapper {{ background-color: hsl(0 0% 11.4%) !important; }}'
+        '@media (prefers-color-scheme: dark) {{ .w-theme-system .sidebar-wagtail-branding__icon-wrapper {{ background-color: hsl(0 0% 11.4%) !important; }} }}'
         '</style>',
-        static("img/logo-de-la-utp.svg"),
+        static("img/utp-logo-admin.svg"),
     )
     
     

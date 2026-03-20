@@ -1,10 +1,11 @@
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.template.response import TemplateResponse
+from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 
 from wagtail.models import Page
 from wagtail.documents.models import Document
-from web.models import resource_document
+from web.models import BlogPage, resource_document
 from web.utils import get_processed_projects
 from web.utils import WagtailDocWrapper
 
@@ -18,14 +19,32 @@ from web.utils import WagtailDocWrapper
 
 def search(request):
     search_query = request.GET.get("query", None)
-    page = request.GET.get("page", 1)
+    content_page_number = request.GET.get("content_page", 1)
+    projects_page_number = request.GET.get("projects_page", 1)
+    documents_page_number = request.GET.get("documents_page", 1)
+    news_page_number = request.GET.get("news_page", 1)
+
+    def paginate_items(items, page_number, per_page):
+        paginator = Paginator(items, per_page)
+        try:
+            return paginator.page(page_number)
+        except PageNotAnInteger:
+            return paginator.page(1)
+        except EmptyPage:
+            return paginator.page(paginator.num_pages)
 
     # Search
     project_results = []
     document_results = []
+    news_results = []
     
     if search_query:
-        search_results = Page.objects.live().search(search_query)
+        raw_search_results = Page.objects.live().search(search_query)
+        blog_content_type_id = ContentType.objects.get_for_model(BlogPage).id
+        search_results = [
+            result for result in raw_search_results
+            if getattr(result, "content_type_id", None) != blog_content_type_id
+        ]
         
         # Search in projects
         try:
@@ -57,22 +76,33 @@ def search(request):
             document_results = document_results_list
         except Exception:
             document_results = []
+
+        # Search in news/blog pages
+        try:
+            news_results = list(
+                BlogPage.objects.live()
+                .public()
+                .filter(
+                    Q(title__icontains=search_query)
+                    | Q(excerpt__icontains=search_query)
+                    | Q(body__icontains=search_query)
+                )
+                .order_by("-publication_date", "-first_published_at")[:30]
+            )
+        except Exception:
+            news_results = []
         # To log this query for use with the "Promoted search results" module:
 
         # query = Query.get(search_query)
         # query.add_hit()
 
     else:
-        search_results = Page.objects.none()
+        search_results = []
 
-    # Pagination
-    paginator = Paginator(search_results, 10)
-    try:
-        search_results = paginator.page(page)
-    except PageNotAnInteger:
-        search_results = paginator.page(1)
-    except EmptyPage:
-        search_results = paginator.page(paginator.num_pages)
+    search_results = paginate_items(search_results, content_page_number, 10)
+    project_results = paginate_items(project_results, projects_page_number, 9)
+    document_results = paginate_items(document_results, documents_page_number, 10)
+    news_results = paginate_items(news_results, news_page_number, 6)
 
     return TemplateResponse(
         request,
@@ -82,5 +112,6 @@ def search(request):
             "search_results": search_results,
             "project_results": project_results,
             "document_results": document_results,
+            "news_results": news_results,
         },
     )

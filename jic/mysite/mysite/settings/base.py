@@ -38,8 +38,8 @@ if DEBUG:
 # Application definition
 
 INSTALLED_APPS = [
-    'theme',
-    'web',
+    "theme",
+    "web",
     "home",
     "search",
     "wagtail.contrib.forms",
@@ -238,6 +238,12 @@ WAGTAILSEARCH_BACKENDS = {
 # Base URL to use when referring to full URLs within the Wagtail admin backend -
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
 WAGTAILADMIN_BASE_URL = "http://example.com"
+
+# External projects API
+JIC_PROJECTS_API_URL = os.getenv("JIC_PROJECTS_API_URL", "http://192.168.140.114:8000/api/proyectos-jic")
+JIC_PROJECTS_API_TIMEOUT = int(os.getenv("JIC_PROJECTS_API_TIMEOUT", "3"))
+JIC_PROJECTS_CACHE_TTL = int(os.getenv("JIC_PROJECTS_CACHE_TTL", "300"))
+JIC_PROJECTS_RETRY_AFTER_ERROR = int(os.getenv("JIC_PROJECTS_RETRY_AFTER_ERROR", "60"))
 
 # Allowed file extensions for documents in the document library.
 # This can be omitted to allow all files, but note that this may present a security risk

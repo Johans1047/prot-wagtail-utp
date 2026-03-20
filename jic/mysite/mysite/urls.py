@@ -12,14 +12,17 @@ from wagtail.documents import urls as wagtaildocs_urls
 
 from search import views as search_views
 
+
 urlpatterns = [
     path("django-admin/", admin.site.urls),
     path("panel/admin/", include(wagtailadmin_urls)),
+    path("panel/admin/<path:subpath>", lambda request, subpath: render(request, "wagtailadmin/404.html", status=404)),
     path("panel/documents/", include(wagtaildocs_urls)),
+    path("panel/documents/<path:subpath>", lambda request, subpath: render(request, "wagtailadmin/404.html", status=404)),
     path("busqueda/", search_views.search, name="Busqueda"),
     path('', include('web.urls')),
     path('test-404/', lambda request: render(request, '404.html')),
-path('test-500/', lambda request: render(request, '500.html')),
+    path('test-500/', lambda request: render(request, '500.html')),
 
 ]
 

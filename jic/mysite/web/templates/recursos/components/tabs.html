@@ -2,7 +2,7 @@
 {% load custom_filters wagtailimages_tags %}
 <section class="border-b border-border bg-card">
     <div class="mx-auto max-w-7xl px-4 lg:px-8">
-        <form method="get" class="flex gap-0 overflow-x-auto -mb-px">
+        <form method="get" class="flex gap-0 overflow-x-auto -mb-px" aria-label="Selector de pestañas de recursos">
             <button
                 type="submit"
                 name="tab"
@@ -153,7 +153,7 @@
 </section>
 
 <!-- Tab Content -->
-<section class="py-12 lg:py-20 bg-stone-50">
+<section class="py-12 lg:py-20 bg-stone-neutral-50">
     <div class="mx-auto max-w-7xl px-4 lg:px-8">
         <!-- Documents by Edition -->
         {% if tab == 'docs' or not tab %}
@@ -172,7 +172,7 @@
                         href="{{ doc.href }}"
                         target="_blank"
                         rel="noopener noreferrer"
-                        class="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm transition-colors hover:border-stone-400 hover:bg-stone-100"
+                        class="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm transition-colors hover:border-stone-neutral-400 hover:bg-stone-neutral-100"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -374,14 +374,14 @@
             <div class="flex flex-nowrap overflow-x-auto gap-2 pb-2 -mx-4 px-4 w-[calc(100%+2rem)] md:mx-0 md:px-0 md:w-full scrollbar-thin scrollbar-thumb-stone-300 scrollbar-track-transparent">
                 <a
                     href="?tab=galeria&img_cat=all"
-                    class="filter-link whitespace-nowrap shrink-0 px-4 py-2 rounded-lg border font-medium text-sm transition-colors cursor-pointer {% if current_img_cat == 'all' or not current_img_cat %}border-primary bg-primary text-primary-foreground hover:bg-primary/90{% else %}border-border bg-card text-foreground hover:border-primary/50 hover:bg-stone-100{% endif %}"
+                    class="filter-link whitespace-nowrap shrink-0 px-4 py-2 rounded-lg border font-medium text-sm transition-colors cursor-pointer {% if current_img_cat == 'all' or not current_img_cat %}border-primary bg-primary text-primary-foreground hover:bg-primary/90{% else %}border-border bg-card text-foreground hover:border-primary/50 hover:bg-stone-neutral-100{% endif %}"
                 >
                     Todos
                 </a>
                 {% for category in categories %}
                 <a
                     href="?tab=galeria&img_cat={{ category }}"
-                    class="filter-link whitespace-nowrap shrink-0 px-4 py-2 rounded-lg border font-medium text-sm transition-colors cursor-pointer {% if current_img_cat == category %}border-primary bg-primary text-primary-foreground hover:bg-primary/90{% else %}border-border bg-card text-foreground hover:border-primary/50 hover:bg-stone-100{% endif %}"
+                    class="filter-link whitespace-nowrap shrink-0 px-4 py-2 rounded-lg border font-medium text-sm transition-colors cursor-pointer {% if current_img_cat == category %}border-primary bg-primary text-primary-foreground hover:bg-primary/90{% else %}border-border bg-card text-foreground hover:border-primary/50 hover:bg-stone-neutral-100{% endif %}"
                 >
                     {{ category }}
                 </a>
@@ -436,7 +436,7 @@
         <!-- Lightbox Modal -->
         <div
             id="lightbox"
-            class="hidden fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm transition-opacity duration-400"
+            class="hidden fixed inset-0 z-9999 items-center justify-center p-4 bg-black/70 backdrop-blur-sm transition-opacity duration-400"
             role="dialog"
             aria-modal="true"
         >
@@ -449,7 +449,7 @@
                 />
                 <button
                     id="lightbox-close"
-                    class="absolute -top-4 -right-4 bg-white text-black rounded-full w-10 h-10 flex items-center justify-center shadow-lg hover:bg-stone-100 text-2xl font-bold leading-none cursor-pointer"
+                    class="absolute -top-4 -right-4 bg-white text-black rounded-full w-10 h-10 flex items-center justify-center shadow-lg hover:bg-stone-neutral-100 text-2xl font-bold leading-none cursor-pointer"
                     aria-label="Cerrar"
                 >
                     ×
@@ -601,7 +601,7 @@
         <!-- Video Lightbox Modal -->
         <div
             id="video-lightbox"
-            class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+            class="hidden fixed inset-0 z-50 items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
             role="dialog"
             aria-modal="true"
         >
@@ -637,7 +637,7 @@
                 </div>
                 <button
                     id="video-lightbox-close"
-                    class="absolute -top-4 -right-4 bg-white text-black rounded-full w-10 h-10 flex items-center justify-center shadow-lg hover:bg-stone-100 text-2xl font-bold leading-none cursor-pointer"
+                    class="absolute -top-4 -right-4 bg-white text-black rounded-full w-10 h-10 flex items-center justify-center shadow-lg hover:bg-stone-neutral-100 text-2xl font-bold leading-none cursor-pointer"
                     aria-label="Cerrar"
                 >
                     ×
@@ -686,6 +686,7 @@
             currentIndex = filteredImages.indexOf(item);
             updateLightboxImage();
             lightbox.classList.remove("hidden");
+            lightbox.classList.add("flex");
         });
     });
 
@@ -693,6 +694,7 @@
     document
         .getElementById("lightbox-close")
         .addEventListener("click", () => {
+            lightbox.classList.remove("flex");
             lightbox.classList.add("hidden");
         });
 
@@ -715,6 +717,7 @@
     // Cerrar al hacer click fuera
     lightbox.addEventListener("click", (e) => {
         if (e.target === lightbox) {
+            lightbox.classList.remove("flex");
             lightbox.classList.add("hidden");
         }
     });
@@ -771,12 +774,14 @@
         }
 
         videoLightbox.classList.remove("hidden");
+        videoLightbox.classList.add("flex");
     });
 
     // Cerrar video lightbox
     document
         .getElementById("video-lightbox-close")
         .addEventListener("click", () => {
+            videoLightbox.classList.remove("flex");
             videoLightbox.classList.add("hidden");
             videoIframe.src = "";
             videoPlayer.pause();
@@ -789,6 +794,7 @@
 
     videoLightbox.addEventListener("click", (e) => {
         if (e.target === videoLightbox) {
+            videoLightbox.classList.remove("flex");
             videoLightbox.classList.add("hidden");
             videoIframe.src = "";
             videoPlayer.pause();
@@ -803,3 +809,4 @@
 
     // Filtros de galería
 </script>
+
