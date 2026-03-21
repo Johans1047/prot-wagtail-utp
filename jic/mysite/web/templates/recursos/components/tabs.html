@@ -164,7 +164,7 @@
             {% for edition in documents_by_edition %}
             <div>
                 <h3 class="mb-3 text-lg font-bold text-foreground">
-                    JIC {{ edition.year }}
+                    {% if edition.year %}JIC {{ edition.year }}{% else %}Sin año{% endif %}
                 </h3>
                 <div class="flex flex-col gap-2">
                     {% for doc in edition.docs %}

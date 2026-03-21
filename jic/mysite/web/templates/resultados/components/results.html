@@ -3,7 +3,7 @@
         <h2
             class="mb-6 font-serif text-2xl text-foreground md:text-3xl lg:text-4xl"
         >
-            Edición actual: JIC {% now "Y" %}
+            Edición actual: JIC {{ current_year }}
         </h2>
 
         <div class="flex flex-col gap-12">
@@ -78,6 +78,45 @@
                 </div>
             </article>
 
+            {% if current_result and current_result.documents %}
+            <article class="rounded-xl border border-border bg-stone-neutral-50 p-6">
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h3 class="font-semibold text-foreground">Documentos JIC {{ current_year }}</h3>
+                        <p class="text-sm text-muted-foreground">Documentación disponible de la edición actual.</p>
+                    </div>
+                    <span class="inline-flex w-fit items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                        {{ current_result.status|default:"en_proceso"|title }}
+                    </span>
+                </div>
+                <div class="mt-4 flex flex-wrap gap-2">
+                    {% for doc in current_result.documents %}
+                    <a
+                        href="{{ doc.href }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="inline-flex items-center gap-2 rounded-lg border border-stone-neutral-300 bg-card px-4 py-2 text-sm text-foreground transition-colors hover:border-stone-neutral-400 hover:bg-stone-neutral-200"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="lucide lucide-download h-3.5 w-3.5 text-muted-foreground"
+                            aria-hidden="true"
+                        ><path d="M12 15V3"></path><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5"></path></svg>
+                        {{ doc.label }}
+                        <span class="rounded-sm bg-stone-neutral-200 px-1.5 py-0.5 text-2xs font-bold text-muted-foreground">{{ doc.type|default:"PDF" }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </article>
+            {% else %}
             <!-- Resultados pendientes -->
             <aside
                 class="rounded-xl border-2 border-dashed border-border bg-card p-8 text-center"
@@ -104,7 +143,7 @@
                 <p
                     class="text-base font-semibold text-foreground md:text-lg lg:text-xl"
                 >
-                    Los resultados de la JIC Nacional {% now "Y" %} serán
+                    Los resultados de la JIC Nacional {{ current_year }} serán
                     publicados al finalizar el evento.
                 </p>
                 <p class="mt-2 text-xs text-muted-foreground md:text-sm">
@@ -112,6 +151,7 @@
                     resultados oficiales.
                 </p>
             </aside>
+            {% endif %}
         </div>
     </div>
 </section>

@@ -21,13 +21,21 @@
         <p class="mb-8 max-w-2xl text-sm text-muted-foreground">
             El comit&eacute; organizador est&aacute; compuesto por representantes de las principales instituciones cient&iacute;ficas y acad&eacute;micas del pa&iacute;s, responsables de la planificaci&oacute;n y ejecuci&oacute;n de la JIC Nacional.
         </p>
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {% for member in comite_organizador %}
             <div class="rounded-xl border border-border bg-card p-6 text-center">
-                <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="mx-auto mb-6 overflow-hidden rounded-full bg-primary/10 flex items-center justify-center" style="width: 10rem; height: 10rem;">
+                    {% if member.photo %}
+                    <img
+                        src="{{ member.photo.url|default:member.photo }}"
+                        alt="Foto de {{ member.name }}"
+                        class="h-full w-full object-cover"
+                    >
+                    {% else %}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
+                    {% endif %}
                 </div>
                 <h3 class="font-semibold text-foreground">{{ member.name }}</h3>
                 <p class="mt-1 text-sm text-primary">{{ member.role }}</p>

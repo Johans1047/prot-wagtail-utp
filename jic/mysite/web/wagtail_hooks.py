@@ -34,8 +34,8 @@ class ImportantDateViewSet(SnippetViewSet):
     model = important_date
     menu_label = "Fechas importantes"
     icon = "date"
-    list_display = ("title", "event_date", "sort_order", "is_active")
-    list_filter = ("is_active",)
+    list_display = ("title", "event_date", "is_primary", "sort_order", "is_active")
+    list_filter = ("is_primary", "is_active")
     search_fields = ("title", "description")
 
 
@@ -145,9 +145,9 @@ class SeleccionNacionalViewSet(SnippetViewSet):
     model = selection_national
     menu_label = "Selecciones nacionales"
     icon = "list-ul"
-    list_display = ("year", "status", "host_university", "is_active", "sort_order")
+    list_display = ("year", "status", "host_place", "is_active", "sort_order")
     list_filter = ("status", "is_active")
-    search_fields = ("year", "host_university")
+    search_fields = ("year", "host_place")
 
 class ResultadosGroup(SnippetViewSetGroup):
     menu_label = "Resultados"

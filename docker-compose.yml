@@ -265,7 +265,7 @@ services:
       - DB_PORT=${DB_PORT}
       - DB_SSLMODE=${DB_SSLMODE}
       - DB_CHANNEL_BINDING=${DB_CHANNEL_BINDING}
-      - JIC_PROJECTS_API_URL=${JIC_PROJECTS_API_URL:-http://192.168.140.114:8000/api/proyectos-jic}
+      - JIC_PROJECTS_API_URL=${JIC_PROJECTS_API_URL:-http://10.171.233.89:8000/api/proyectos-jic}
       - JIC_PROJECTS_API_TIMEOUT=${JIC_PROJECTS_API_TIMEOUT:-3}
       # - DB_OPTIONS=-c search_path=public
       - MINIO_ENDPOINT=${MINIO_ENDPOINT}

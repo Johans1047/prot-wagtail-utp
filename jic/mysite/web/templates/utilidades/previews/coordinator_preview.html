@@ -9,7 +9,7 @@
         <div class="rounded-lg border border-border bg-card p-6">
             {% if snippet.photo %}
             <div class="mb-4">
-                <img src="{{ snippet.photo.url }}" alt="{{ snippet.name }}" class="w-full h-40 object-cover rounded-lg">
+                <img src="{{ snippet.photo.file.url }}" alt="{{ snippet.name }}" class="w-full h-40 object-cover rounded-lg">
             </div>
             {% endif %}
             <div class="mb-2 flex items-center justify-between">

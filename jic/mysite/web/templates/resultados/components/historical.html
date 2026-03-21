@@ -13,10 +13,12 @@
                             <h3 class="text-xl font-bold text-foreground">
                                 JIC Nacional {{ result.year }}
                             </h3>
+                            {% if result.year > 2025 %}
                             <p class="mt-1 text-sm text-muted-foreground">
                                 {{ result.totalProjects }} proyectos &middot; {{ result.universities }}
                                 universidades
                             </p>
+                            {% endif %}
                         </div>
                         <span
                             class="inline-flex w-fit items-center gap-1.5 rounded-full bg-teal/10 px-3 py-1 text-xs font-semibold text-teal"

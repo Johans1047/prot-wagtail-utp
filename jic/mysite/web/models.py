@@ -3,10 +3,12 @@ from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.db.models import Case, When
 from django.utils import timezone
+from urllib.parse import urlparse, parse_qs
 from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
 from wagtail import blocks
 from wagtail.admin.panels import FieldPanel, InlinePanel
+from wagtail.documents.models import Document as WagtailDocument
 from wagtail.embeds.blocks import EmbedBlock
 from wagtail.fields import StreamField
 from wagtail.images.blocks import ImageChooserBlock
@@ -100,6 +102,11 @@ class important_date(PreviewableMixin, models.Model):
         help_text="Fecha base usada internamente para ordenar cronológicamente."
     )
     description = models.TextField("Descripción")
+    is_primary = models.BooleanField(
+        "Fecha principal",
+        default=True,
+        help_text="Si está activa, se mostrará también en la página de inicio."
+    )
     is_active = models.BooleanField("Activo", default=True, help_text="Activar o desactivar esta fecha")
     sort_order = models.PositiveIntegerField("Orden", default=0)
 
@@ -108,6 +115,7 @@ class important_date(PreviewableMixin, models.Model):
         FieldPanel("date_text"),
         FieldPanel("event_date"),
         FieldPanel("description"),
+        FieldPanel("is_primary"),
         FieldPanel("is_active"),
         FieldPanel("sort_order"),
     ]
@@ -658,6 +666,38 @@ class video(PreviewableMixin, models.Model):
     def __str__(self) -> str:
         return self.title
 
+    def get_preview_thumbnail_url(self) -> str | None:
+        if self.thumbnail and getattr(self.thumbnail, "url", None):
+            return self.thumbnail.url
+
+        if not self.youtube_url:
+            return None
+
+        try:
+            parsed = urlparse(self.youtube_url)
+            host = (parsed.netloc or "").lower()
+
+            if "youtu.be" in host:
+                video_id = parsed.path.strip("/")
+            else:
+                video_id = parse_qs(parsed.query).get("v", [""])[0]
+                if not video_id and "/shorts/" in parsed.path:
+                    video_id = parsed.path.split("/shorts/")[-1].split("/")[0]
+
+            if video_id:
+                return f"https://img.youtube.com/vi/{video_id}/maxresdefault.jpg"
+        except Exception:
+            return None
+
+        return None
+
+    @property
+    def preview_unavailable_reason(self) -> str:
+        return (
+            "En el panel de administración no siempre se permite incrustar reproductores externos "
+            "(como YouTube) por políticas de seguridad/CSP."
+        )
+
     def get_preview_template(self, request, mode_name):
         return "utilidades/previews/video_preview.html"
 
@@ -735,6 +775,14 @@ class resource_document(PreviewableMixin, models.Model):
 
     def get_preview_context(self, request, mode_name):
         return {"snippet": self}
+
+
+class Document(WagtailDocument):
+    """Custom Wagtail document model with activation toggle."""
+
+    is_active = models.BooleanField("Activo", default=True)
+
+    admin_form_fields = WagtailDocument.admin_form_fields + ("is_active",)
 
 
 class Gallery(ClusterableModel):
@@ -992,9 +1040,8 @@ class selection_national(PreviewableMixin, ClusterableModel):
     """National selection results per year."""
 
     STATUS_CHOICES = [
-        ("completada", "Completada"),
-        ("en_proceso", "En proceso"),
-        ("pendiente", "Pendiente"),
+        ("finalizada", "Finalizada"),
+        ("en proceso", "En proceso"),
     ]
 
     year = models.PositiveIntegerField("Año JIC", unique=True)
@@ -1002,15 +1049,15 @@ class selection_national(PreviewableMixin, ClusterableModel):
         "Estado",
         max_length=20,
         choices=STATUS_CHOICES,
-        default="pendiente",
+        default="en proceso",
     )
     total_projects = models.PositiveIntegerField("Total de Proyectos (Histórico)", default=0, help_text="Para datos históricos, si no se usan los resultados por categoría.")
-    host_university = models.CharField(
-        "Universidad Sede", 
+    host_place = models.CharField(
+        "Sede", 
         max_length=300, 
         blank=True, 
         null=True,
-        help_text="Universidad anfitriona del evento nacional (Opcional)"
+        help_text="Lugar donde se lleva a cabo el evento nacional (Opcional)"
     )
     universities_count = models.PositiveIntegerField("Universidades Participantes", default=5)
     is_active = models.BooleanField(
@@ -1024,7 +1071,7 @@ class selection_national(PreviewableMixin, ClusterableModel):
         FieldPanel("year"),
         FieldPanel("status"),
         FieldPanel("total_projects"),
-        FieldPanel("host_university"),
+        FieldPanel("host_place"),
         FieldPanel("universities_count"),
         FieldPanel("is_active"),
         FieldPanel("sort_order"),
@@ -1040,14 +1087,28 @@ class selection_national(PreviewableMixin, ClusterableModel):
     def __str__(self) -> str:
         return f"JIC Nacional {self.year} ({self.get_status_display()})"
 
+    @property
+    def host_university(self):
+        # Backward compatibility for templates/views still using the old key.
+        return self.host_place
+
     def to_dict(self):
-        """Normalize to a dict structure."""
+        """Normalize to a dict structure. Solo documentos reales (con href y tipo relevante)."""
+        # Puedes ajustar los tipos permitidos aquí:
+        tipos_permitidos = ["PDF", "Actas de Resultados", "acta", "actas"]
+        def es_documento_real(doc):
+            # Solo documentos con href no vacío y tipo relevante
+            return bool(doc.href) and (
+                doc.document_type.strip().lower() in [t.lower() for t in tipos_permitidos]
+                or any(t.lower() in doc.document_type.strip().lower() for t in tipos_permitidos)
+            )
+
         return {
             "year": self.year,
             "status": self.status,
             "totalProjects": self.total_projects,
             "universities": self.universities_count,
-            "host_university": self.host_university,
+            "host_university": self.host_place,
             "results": [
                 {
                     "category": r.category, 
@@ -1058,7 +1119,7 @@ class selection_national(PreviewableMixin, ClusterableModel):
             ],
             "documents": [
                 {"label": d.label, "type": d.document_type, "href": d.href}
-                for d in self.documents.all().order_by("sort_order")
+                for d in self.documents.all().order_by("sort_order") if es_documento_real(d)
             ],
         }
 

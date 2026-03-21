@@ -18,6 +18,7 @@ class ImportantDate:
     title: str
     event_date: str
     description: str
+    is_primary: bool = True
 
 
 @dataclass

@@ -4,14 +4,78 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.db.utils import OperationalError, ProgrammingError
-from datetime import date
+from django.utils import timezone
+from datetime import date, datetime
+import re
 from urllib.parse import urlencode
 from .data_types import *
 from .data_fallback import *
 from ..utils import get_recursos_gallery, get_recursos_videos, get_processed_projects
 from ..models import *
 from wagtail.images.models import Image
-from wagtail.documents.models import Document
+from wagtail.documents import get_document_model
+
+Document = get_document_model()
+
+
+def _to_datetime(value):
+    if value is None:
+        return None
+
+    if isinstance(value, datetime):
+        if timezone.is_naive(value):
+            return timezone.make_aware(value, timezone.get_current_timezone())
+        return timezone.localtime(value)
+
+    if isinstance(value, date):
+        naive_dt = datetime.combine(value, datetime.min.time())
+        return timezone.make_aware(naive_dt, timezone.get_current_timezone())
+
+    try:
+        year_int = int(value)
+        if 1900 <= year_int <= 3000:
+            return timezone.make_aware(datetime(year_int, 1, 1), timezone.get_current_timezone())
+    except (TypeError, ValueError):
+        pass
+
+    return None
+
+
+def _get_field_value(item, field_name):
+    if isinstance(item, dict):
+        return item.get(field_name)
+    return getattr(item, field_name, None)
+
+
+def _iter_items(dataset):
+    if dataset is None:
+        return []
+    if hasattr(dataset, "object_list"):
+        return list(dataset.object_list)
+    if isinstance(dataset, dict):
+        return [dataset]
+    if isinstance(dataset, (str, bytes)):
+        return []
+    try:
+        return list(dataset)
+    except TypeError:
+        return [dataset]
+
+
+def _get_last_data_update(*datasets, include_year=True):
+    latest = None
+    candidate_fields = ["updated_at", "created_at", "event_date", "publication_date"]
+    if include_year:
+        candidate_fields.append("year")
+
+    for dataset in datasets:
+        for item in _iter_items(dataset):
+            for field in candidate_fields:
+                candidate = _to_datetime(_get_field_value(item, field))
+                if candidate is not None and (latest is None or candidate > latest):
+                    latest = candidate
+
+    return latest
 
 
 def Inicio(request) -> render:
@@ -35,7 +99,7 @@ def Inicio(request) -> render:
         
     try:
         important_dates = list(
-            important_date.objects.filter(is_active=True).order_by("sort_order", "event_date")
+            important_date.objects.filter(is_active=True, is_primary=True).order_by("sort_order", "event_date")
         )
     except (OperationalError, ProgrammingError):
         # Keeps the home page functional before running migrations.
@@ -65,6 +129,7 @@ def Inicio(request) -> render:
                 Q(tags__name__icontains="lineamiento")
                 | Q(title__icontains="lineamiento")
             )
+            .filter(is_active=True)
             .distinct()
             .order_by("-created_at")
         )
@@ -190,7 +255,17 @@ def Jic(request) -> render:
         'sponsors': sponsors,
         'coordinadores_nacionales': coordinadores_nacionales,
         'comite_organizador': comite_organizador,
+        'last_data_update': _get_last_data_update(
+            background_items,
+            jic_categories,
+            awards,
+            coordinadores_nacionales,
+            comite_organizador,
+            include_year=False,
+        ),
     }
+    if not context['last_data_update'] or context['last_data_update'] > timezone.now():
+        context['last_data_update'] = timezone.now()
     return render(request, 'jic/_index.html', context)
 
 def JicCoordinadores(request) -> render:
@@ -210,9 +285,14 @@ def JicCoordinadores(request) -> render:
     if not comite_organizador:
         comite_organizador = organizer_committee_members_fallback()
 
+    last_data_update = _get_last_data_update(coordinadores_nacionales, comite_organizador, include_year=False)
+    if not last_data_update or last_data_update > timezone.now():
+        last_data_update = timezone.now()
+
     context = {
         'coordinadores_nacionales': coordinadores_nacionales,
         'comite_organizador': comite_organizador,
+        'last_data_update': last_data_update,
     }
     return render(request, 'jic/coordinadores/_index.html', context)
 
@@ -254,13 +334,19 @@ def Participar(request) -> render:
     ]
 
     resource_categories = []
+    loaded_documents = []
     for role in role_definitions:
-        documents_qs = (
-            Document.objects.filter(tags__name__in=role["tags"])
-            .distinct()
-            .order_by("title")
-        )
-        resources = [{"label": doc.title, "href": doc.url} for doc in documents_qs]
+        try:
+            documents_qs = (
+                Document.objects.filter(tags__name__in=role["tags"])
+                .filter(is_active=True)
+                .distinct()
+                .order_by("title")
+            )
+            loaded_documents.extend(list(documents_qs))
+            resources = [{"label": doc.title, "href": doc.url} for doc in documents_qs]
+        except (OperationalError, ProgrammingError):
+            resources = []
 
         resource_categories.append(
             {
@@ -271,9 +357,14 @@ def Participar(request) -> render:
             }
         )
     
+    last_data_update = _get_last_data_update(important_dates, loaded_documents) or timezone.now()
+    if last_data_update > timezone.now():
+        last_data_update = timezone.now()
+
     context = {
         'important_dates': important_dates,
         'resource_categories': resource_categories,
+        'last_data_update': last_data_update,
     }
     return render(request, 'participar/_index..html', context)
 
@@ -358,6 +449,7 @@ def Proyectos(request) -> render:
         'universities_options': universities_options,
         'page_query': page_query,
         'important_dates': schedule_dates,
+        'last_data_update': _get_last_data_update(filtered, schedule_dates),
     }
     return render(request, 'proyectos/_index.html', context)
 
@@ -398,81 +490,150 @@ def ProyectoDetalle(request, project_id: int) -> render:
          available_ids = [p["id"] for p in projects]
          raise Http404(f"Proyecto no encontrado. Buscando ID: {project_id} (tipo {type(project_id)}). IDs disponibles: {available_ids}")
          
-    return render(request, 'proyectos/detail.html', {'project': project})
+    return render(
+        request,
+        'proyectos/detail.html',
+        {
+            'project': project,
+            'last_data_update': _get_last_data_update(project),
+        },
+    )
 
 def Resultados(request) -> render:
     from ..models import selection_national
 
-    # Obtain results from the database, prefetching related documents and results
-    # Only active national selections that have year <= current year or whatever logic
-    qs = selection_national.objects.filter(is_active=True).prefetch_related("results", "documents").order_by("-year")
+    def _is_results_doc(doc_like) -> bool:
+        label = (doc_like.get("label") or doc_like.get("title") or "").lower()
+        doc_type = (doc_like.get("type") or "").lower()
+        href = doc_like.get("href")
+        if not href:
+            return False
+        return any(token in label for token in ["ganador", "acta"]) or any(
+            token in doc_type for token in ["pdf", "acta"]
+        )
 
-    historical_results_db = [sn.to_dict() for sn in qs]
+    current_year = timezone.now().year
 
-    # Datos históricos de ediciones anteriores (Fallback)
+    # 1) Resultados nacionales desde BD
+    national_qs = (
+        selection_national.objects.filter(is_active=True)
+        .prefetch_related("results", "documents")
+        .order_by("-year")
+    )
+    historical_results_db = [sn.to_dict() for sn in national_qs]
+
+    # 2) Fallback para anios historicos sin registro en BD
     historical_results_fallback = [
-        {
-            "year": 2024,
-            "totalProjects": 47,
-            "universities": 5,
-            "documents": [
-                {
-                    "label": "Acta de resultados",
-                    "type": "PDF",
-                    "href": "https://iniciacioncientifica.utp.ac.pa/wp-content/uploads/2024/12/acta-jic-2024.pdf",
-                },
-                {
-                    "label": "Listado de ganadores",
-                    "type": "PDF",
-                    "href": "https://iniciacioncientifica.utp.ac.pa/wp-content/uploads/2024/12/ganadores-jic-2024.pdf",
-                },
-            ]
-        },
-        {
-            "year": 2023,
-            "totalProjects": 42,
-            "universities": 5,
-            "documents": [
-                {
-                    "label": "Acta de resultados",
-                    "type": "PDF",
-                    "href": "https://iniciacioncientifica.utp.ac.pa/wp-content/uploads/2023/12/acta-jic-2023.pdf",
-                },
-                {
-                    "label": "Listado de ganadores",
-                    "type": "PDF",
-                    "href": "https://iniciacioncientifica.utp.ac.pa/wp-content/uploads/2023/12/ganadores-jic-2023.pdf",
-                },
-                {
-                    "label": "Fotografías del evento",
-                    "type": "ZIP",
-                    "href": "https://iniciacioncientifica.utp.ac.pa/galeria-jic-2023/",
-                },
-            ]
-        },
-        {
-            "year": 2022,
-            "totalProjects": 38,
-            "universities": 4,
-            "documents": [
-                {
-                    "label": "Acta de resultados",
-                    "type": "PDF",
-                    "href": "https://iniciacioncientifica.utp.ac.pa/wp-content/uploads/2022/11/acta-jic-2022.pdf",
-                },
-                {
-                    "label": "Listado de ganadores",
-                    "type": "PDF",
-                    "href": "https://iniciacioncientifica.utp.ac.pa/wp-content/uploads/2022/11/ganadores-jic-2022.pdf",
-                },
-            ]
-        },
+        {"year": 2024, "totalProjects": 47, "universities": 5},
+        {"year": 2023, "totalProjects": 42, "universities": 5},
+        {"year": 2022, "totalProjects": 38, "universities": 4},
     ]
-    
-    context = {
-        'historical_results': historical_results_db if historical_results_db else historical_results_fallback,
+
+    # 3) Documentos por anio (misma fuente de Recursos), filtrando solo ganadores/acta
+    excluded_tags = [
+        "manual",
+        "boletin",
+        "memoria",
+        "plantilla de articulo",
+        "plantilla_articulo",
+        "manuales",
+        "boletines",
+        "memorias",
+        "plantillas de articulos",
+    ]
+    docs_qs = Document.objects.filter(is_active=True).exclude(tags__name__in=excluded_tags)
+    docs_qs = docs_qs.exclude(title__icontains="manual")
+    docs_qs = docs_qs.exclude(title__icontains="boletin")
+    docs_qs = docs_qs.exclude(title__icontains="memoria")
+    docs_qs = docs_qs.exclude(title__icontains="plantilla")
+    docs_qs = docs_qs.distinct()
+
+    docs_by_year = {}
+    for doc in docs_qs:
+        candidate_doc = {"label": doc.title, "type": "PDF", "href": doc.url}
+        if not _is_results_doc(candidate_doc):
+            continue
+
+        years_found = set()
+        for tag in doc.tags.names():
+            if tag.isdigit() and len(tag) == 4 and tag.startswith("20"):
+                try:
+                    years_found.add(int(tag))
+                except ValueError:
+                    continue
+
+        if not years_found:
+            title_match = re.search(r"(20\d{2})", doc.title or "")
+            if title_match:
+                years_found.add(int(title_match.group(1)))
+
+        if not years_found and getattr(doc, "created_at", None):
+            years_found.add(doc.created_at.year)
+
+        for year in years_found:
+            docs_by_year.setdefault(year, [])
+            docs_by_year[year].append(candidate_doc)
+
+    # 4) Unificar resultados por anio (BD tiene prioridad sobre fallback)
+    results_by_year = {
+        item["year"]: dict(item)
+        for item in historical_results_fallback
+        if item.get("year")
     }
-    return render(request, 'resultados/_index.html', context)
+    for item in historical_results_db:
+        year = item.get("year")
+        if year:
+            results_by_year[year] = dict(item)
+
+    # Incluir anos que existen en Documentos aunque no tengan registro en selection_national.
+    for year in docs_by_year.keys():
+        if year and year not in results_by_year:
+            results_by_year[year] = {
+                "year": year,
+                "status": "finalizada",
+                "totalProjects": 0,
+                "universities": 0,
+                "results": [],
+                "documents": [],
+            }
+
+    # 5) Sincronizar documentos: primero los de Recursos, si no hay usar los del registro
+    for year, result_item in results_by_year.items():
+        resource_docs = docs_by_year.get(year, [])
+        db_docs = [d for d in (result_item.get("documents") or []) if _is_results_doc(d)]
+        chosen_docs = resource_docs if resource_docs else db_docs
+
+        seen_hrefs = set()
+        dedup_docs = []
+        for doc_item in chosen_docs:
+            href = doc_item.get("href")
+            if not href or href in seen_hrefs:
+                continue
+            seen_hrefs.add(href)
+            dedup_docs.append(doc_item)
+
+        result_item["documents"] = dedup_docs
+
+    normalized_results = sorted(results_by_year.values(), key=lambda x: x.get("year", 0), reverse=True)
+    current_result = next((r for r in normalized_results if r.get("year") == current_year), None)
+    historical_results = [r for r in normalized_results if r.get("year") != current_year]
+
+    paginator_historical = Paginator(historical_results, 3)
+    page_obj = paginator_historical.get_page(request.GET.get("page", 1))
+
+    last_data_update = _get_last_data_update(national_qs, docs_qs, include_year=False)
+    if not last_data_update or last_data_update > timezone.now():
+        last_data_update = timezone.now()
+
+    context = {
+        "current_year": current_year,
+        "current_result": current_result,
+        "historical_results": list(page_obj.object_list),
+        "page_obj": page_obj,
+        "page_query": "",
+        "last_data_update": last_data_update,
+    }
+    return render(request, "resultados/_index.html", context)
 
 def Recursos(request) -> render:
     tab = request.GET.get('tab', 'docs')
@@ -482,7 +643,7 @@ def Recursos(request) -> render:
     
     excluded_tags = ['manual', 'boletin', 'memoria', 'plantilla de articulo', 'plantilla_articulo', 'manuales', 'boletines', 'memorias', 'plantillas de articulos']
     
-    all_docs = Document.objects.exclude(tags__name__in=excluded_tags)
+    all_docs = Document.objects.filter(is_active=True).exclude(tags__name__in=excluded_tags)
     
     # Also exclude by title for documents that might be missing tags
     all_docs = all_docs.exclude(title__icontains='manual')
@@ -504,16 +665,26 @@ def Recursos(request) -> render:
                     years_found.add(int(tag))
                 except ValueError:
                     continue
+
+        if not years_found:
+            title_match = re.search(r"(20\d{2})", doc.title or "")
+            if title_match:
+                years_found.add(int(title_match.group(1)))
+
+        if not years_found and getattr(doc, "created_at", None):
+            years_found.add(doc.created_at.year)
+
+        if not years_found:
+            years_found.add(0)
         
-        if years_found:
-            for year in years_found:
-                if year not in docs_by_year:
-                    docs_by_year[year] = []
-                
-                docs_by_year[year].append({
-                    'label': doc.title,
-                    'href': doc.url
-                })
+        for year in years_found:
+            if year not in docs_by_year:
+                docs_by_year[year] = []
+
+            docs_by_year[year].append({
+                'label': doc.title,
+                'href': doc.url
+            })
     
     documents_by_edition_list = [{"year": year, "docs": docs} for year, docs in docs_by_year.items()]
     documents_by_edition_list.sort(key=lambda x: x['year'], reverse=True)
@@ -523,14 +694,14 @@ def Recursos(request) -> render:
 
     # 2. Bulletins and Memories
     if tab == 'boletines':
-        boletines_list = Document.objects.filter(tags__name='boletin').order_by('-created_at')
+        boletines_list = Document.objects.filter(is_active=True, tags__name='boletin').order_by('-created_at')
         paginator_b = Paginator(boletines_list, 6)
         boletines = paginator_b.get_page(request.GET.get('page', 1))
     else:
         boletines = []
 
     if tab == 'memorias':
-        memorias_list = Document.objects.filter(tags__name='memoria').order_by('-created_at')
+        memorias_list = Document.objects.filter(is_active=True, tags__name='memoria').order_by('-created_at')
         paginator_m = Paginator(memorias_list, 6)
         memorias = paginator_m.get_page(request.GET.get('page', 1))
     else:
@@ -568,6 +739,7 @@ def Recursos(request) -> render:
         'videos': videos,
         'page_obj': page_obj,
         'page_query': f'tab=galeria&img_cat={current_img_cat}' if tab == 'galeria' else '',
+        'last_data_update': _get_last_data_update(all_docs, boletines, memorias),
     }
     return render(request, 'recursos/_index.html', context)
 
@@ -604,7 +776,14 @@ def Selecciones(request) -> render:
         return redirect("Resultados")
 
     selecciones = [s.to_dict() for s in active]
-    return render(request, "resultados/selecciones/_index.html", {"selecciones": selecciones})
+    return render(
+        request,
+        "resultados/selecciones/_index.html",
+        {
+            "selecciones": selecciones,
+            "last_data_update": _get_last_data_update(active),
+        },
+    )
 
 def Contacto(request) -> render:
     

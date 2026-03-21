@@ -393,43 +393,70 @@ def documents_by_edition_fallback() -> dict[str, list[dict]]:
 
 def videos_fallback() -> list[dict]:
     return [
-           {
-               "title": "Inauguración JIC 2023",
-               "thumbnail": "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
-               "url": "#",
-               "description": "Ceremonia de apertura de la JIC 2023 con autoridades universitarias."
-           },
-           {
-               "title": "Conferencia: El Futuro de la Investigación",
-               "thumbnail": "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
-               "url": "#",
-               "description": "Dra. María Pérez discute las tendencias en investigación tecnológica."
-           },
-           {
-               "title": "Premiación JIC 2022",
-               "thumbnail": "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
-               "url": "#",
-               "description": "Revive el emocionante momento de la entrega de premios de la edición 2022."
-           },
-           {
-               "title": "Taller: Cómo escribir un artículo científico",
-               "thumbnail": "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
-               "url": "#",
-               "description": "Guía paso a paso para estructurar y redactar un paper exitoso."
-           },
-           {
-               "title": "Presentación de Proyectos Destacados",
-               "thumbnail": "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
-               "url": "#",
-               "description": "Los 5 mejores proyectos de ingeniería presentan sus resultados."
-           },
-           {
-               "title": "Clausura JIC 2021",
-               "thumbnail": "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
-               "url": "#",
-               "description": "Mensaje de cierre y perspectivas para el futuro de la investigación estudiantil."
-           }
-       ]
+        {
+            "title": "JIC - ¿Qué es la Ciencia?",
+            "thumbnail": "https://img.youtube.com/vi/RvCvRVcGhcE/maxresdefault.jpg",
+            "url": "https://www.youtube.com/watch?v=RvCvRVcGhcE",
+            "description": "Introducción fundamental al concepto de ciencia, explorando sus definiciones, objetivos e impacto en el desarrollo del conocimiento humano.",
+            "category": "Conceptos Básicos",
+        },
+        {
+            "title": "JIC - ¿Cómo funciona la ciencia?",
+            "thumbnail": "http://localhost:9010/jic-media/video_thumbnails/2026/uPWVYp_ielY_f069202e.jpg",
+            "url": "https://www.youtube.com/watch?v=uPWVYp_ielY",
+            "description": "Explicación detallada del método científico, la formulación de hipótesis y el proceso de validación en la investigación.",
+            "category": "Conceptos Básicos",
+        },
+        {
+            "title": "JIC - Investigaciones Experimentales",
+            "thumbnail": "http://localhost:9010/jic-media/video_thumbnails/2026/R7_Nwx-re70_48aad951.jpg",
+            "url": "https://www.youtube.com/watch?v=R7_Nwx-re70",
+            "description": "Guía sobre metodologías experimentales, diseño de grupos de control y variables en entornos controlados y semi-controlados.",
+            "category": "Metodología",
+        },
+        {
+            "title": "JIC - Investigaciones No Experimentales",
+            "thumbnail": "http://localhost:9010/jic-media/video_thumbnails/2026/gB87b-cOxYE_20c88364.jpg",
+            "url": "https://www.youtube.com/watch?v=gB87b-cOxYE",
+            "description": "Análisis de diseños de investigación no experimentales, incluyendo estudios observacionales, correlacionales y descriptivos.",
+            "category": "Metodología",
+        },
+        {
+            "title": "JIC - Proyectos de Ingeniería y Desarrollo",
+            "thumbnail": "http://localhost:9010/jic-media/video_thumbnails/2026/cP7khhGqzjs_1e3177a2.jpg",
+            "url": "https://www.youtube.com/watch?v=cP7khhGqzjs",
+            "description": "Enfoque práctico para la investigación en ingeniería, desde la concepción de prototipos hasta la implementación de soluciones tecnológicas.",
+            "category": "Ingeniería",
+        },
+        {
+            "title": "JIC - Criterios a Evaluar",
+            "thumbnail": "http://localhost:9010/jic-media/video_thumbnails/2026/Kr8vZgOzTYE_e31a44ad.jpg",
+            "url": "https://www.youtube.com/watch?v=Kr8vZgOzTYE",
+            "description": "Desglose de los criterios de evaluación utilizados en la Jornada de Iniciación Científica para calificar los proyectos presentados.",
+            "category": "Evaluación",
+        },
+        {
+            "title": "Presentaciones Efectivas",
+            "thumbnail": "http://localhost:9010/jic-media/video_thumbnails/2026/h7OhKI89sDc_6ab18126.jpg",
+            "url": "https://www.youtube.com/watch?v=h7OhKI89sDc",
+            "description": "Consejos y técnicas para realizar presentaciones orales impactantes, estructurar el contenido y comunicar hallazgos científicos con claridad.",
+            "category": "Habilidades Blandas",
+        },
+        {
+            "title": "Pósteres Científicos",
+            "thumbnail": "http://localhost:9010/jic-media/video_thumbnails/2026/Jdx6j3a-pYU_0ac6e46c.jpg",
+            "url": "https://www.youtube.com/watch?v=Jdx6j3a-pYU",
+            "description": "Directrices para el diseño y elaboración de pósteres científicos, asegurando una visualización efectiva de los datos y resultados.",
+            "category": "Presentación",
+        },
+        {
+            "title": "Comunicación Oral Efectiva",
+            "thumbnail": "http://localhost:9010/jic-media/video_thumbnails/2026/vq9FcTl3-AY_ebfc4388.jpg",
+            "url": "https://www.youtube.com/watch?v=vq9FcTl3-AY",
+            "description": "Taller sobre oratoria y comunicación verbal y no verbal para defender proyectos de investigación ante un jurado o audiencia.",
+            "category": "Habilidades Blandas",
+        },
+    ]
 
 
 def gallery_images_fallback() -> list[dict]:

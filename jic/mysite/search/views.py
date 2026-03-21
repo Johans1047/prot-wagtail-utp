@@ -4,10 +4,13 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 
 from wagtail.models import Page
-from wagtail.documents.models import Document
+from wagtail.documents import get_document_model
 from web.models import BlogPage, resource_document
 from web.utils import get_processed_projects
 from web.utils import WagtailDocWrapper
+
+
+Document = get_document_model()
 
 # To enable logging of search queries for use with the "Promoted search results" module
 # <https://docs.wagtail.org/en/stable/reference/contrib/searchpromotions.html>
@@ -69,7 +72,11 @@ def search(request):
                 is_active=True
             ).order_by('-year', 'sort_order'))
 
-            wagtail_docs = Document.objects.filter(title__icontains=search_query)
+            wagtail_docs = (
+                Document.objects.filter(is_active=True)
+                .filter(Q(title__icontains=search_query) | Q(tags__name__icontains=search_query))
+                .distinct()
+            )
             for doc in wagtail_docs:
                 document_results_list.append(WagtailDocWrapper(doc))
                 

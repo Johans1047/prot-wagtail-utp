@@ -3,6 +3,7 @@ import logging
 import time
 from urllib.error import URLError
 from urllib.request import Request, urlopen
+from urllib.parse import urlparse, parse_qs
 
 from django.conf import settings
 from django.urls import reverse
@@ -24,6 +25,50 @@ _PROJECTS_CACHE: dict[str, object] = {
 }
 
 
+def _resolve_image_url(image_obj) -> str | None:
+    if not image_obj:
+        return None
+
+    # Supports both Django ImageField (image.url) and Wagtail FK image (image.file.url).
+    try:
+        if getattr(image_obj, "url", None):
+            return image_obj.url
+    except Exception:
+        pass
+
+    try:
+        file_obj = getattr(image_obj, "file", None)
+        if file_obj and getattr(file_obj, "url", None):
+            return file_obj.url
+    except Exception:
+        pass
+
+    return None
+
+
+def _youtube_thumbnail_from_url(youtube_url: str | None) -> str | None:
+    if not youtube_url:
+        return None
+
+    try:
+        parsed = urlparse(youtube_url)
+        host = (parsed.netloc or "").lower()
+
+        if "youtu.be" in host:
+            video_id = parsed.path.strip("/")
+        else:
+            video_id = parse_qs(parsed.query).get("v", [""])[0]
+            if not video_id and "/shorts/" in parsed.path:
+                video_id = parsed.path.split("/shorts/")[-1].split("/")[0]
+
+        if video_id:
+            return f"https://img.youtube.com/vi/{video_id}/maxresdefault.jpg"
+    except Exception:
+        return None
+
+    return None
+
+
 class WagtailDocWrapper:
     def __init__(self, doc):
         self.title = doc.title
@@ -34,12 +79,29 @@ class WagtailDocWrapper:
         self.is_wagtail_doc = True
         
         tags = [t.lower() for t in doc.tags.names()]
-        if 'boletin' in tags or 'boletines' in tags:
+        title_lower = (doc.title or "").lower()
+
+        if any(t in tags for t in ["boletin", "boletines"]) or "boletin" in title_lower:
             self.doc_type = 'boletines'
-        elif 'memoria' in tags or 'memorias' in tags:
+            self.doc_type_title = 'Boletín'
+        elif any(t in tags for t in ["memoria", "memorias"]) or "memoria" in title_lower:
             self.doc_type = 'memorias'
+            self.doc_type_title = 'Memoria'
+        elif any(t in tags for t in ["manual", "manuales"]) or "manual" in title_lower:
+            self.doc_type = 'manuales'
+            self.doc_type_title = 'Manual'
+        elif any(t in tags for t in ["lineamiento", "lineamientos"]) or "lineamiento" in title_lower:
+            self.doc_type = 'lineamientos'
+            self.doc_type_title = 'Lineamiento'
+        elif any(t in tags for t in ["plantilla", "plantillas", "plantilla de articulo", "plantillas de articulos"]) or "plantilla" in title_lower:
+            self.doc_type = 'plantillas'
+            self.doc_type_title = 'Plantilla'
+        elif any(t in tags for t in ["acta", "actas", "acta de resultados"]) or "acta" in title_lower:
+            self.doc_type = 'actas'
+            self.doc_type_title = 'Acta de Resultados'
         else:
             self.doc_type = 'otros'
+            self.doc_type_title = 'Documento'
     
     def get_doc_type_display(self):
         return "Documento PDF"
@@ -381,7 +443,7 @@ def get_recursos_gallery(request, tab, current_img_cat, fallback_images) -> tupl
     return gallery_images, gallery_categories, page_obj_gall
 
 def get_recursos_videos(request, tab, fallback_videos) -> tuple[list[dict], Paginator.page]: #Paginator.page | None
-    from .models import video
+    from .models import video   
     from django.core.paginator import Paginator
     from django.db.utils import OperationalError, ProgrammingError
     videos = []
@@ -390,7 +452,11 @@ def get_recursos_videos(request, tab, fallback_videos) -> tuple[list[dict], Pagi
     try:
         db_videos = video.objects.filter(is_active=True).order_by('sort_order', '-created_at')
         for v in db_videos:
-            thumb_url = v.thumbnail.url if v.thumbnail else '/static/images/hero-jic.jpg'
+            thumb_url = (
+                _resolve_image_url(v.thumbnail)
+                or _youtube_thumbnail_from_url(v.youtube_url)
+                or '/static/images/hero-jic.jpg'
+            )
             video_url = v.youtube_url if v.youtube_url else (v.video_file.url if v.video_file else '#')
             videos.append({
                 'title': v.title,
@@ -398,8 +464,8 @@ def get_recursos_videos(request, tab, fallback_videos) -> tuple[list[dict], Pagi
                 'url': video_url,
                 'description': v.description,
             })
-    except (OperationalError, ProgrammingError, Exception):
-        pass
+    except (OperationalError, ProgrammingError, Exception) as exc:
+        logger.warning("Could not load videos from DB: %s", exc)
         
     if not videos:
         videos = fallback_videos

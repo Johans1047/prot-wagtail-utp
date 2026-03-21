@@ -13,16 +13,28 @@
         <p>{{ snippet.description }}</p>
     {% endif %}
     
-    {% if snippet.video_file %}
-        <div class="my-5 border border-[#ddd] rounded overflow-hidden">
-            {% if snippet.thumbnail %}
-                <img src="{{ snippet.thumbnail.url }}" alt="{{ snippet.title }}" class="w-full h-auto max-w-[400px] block">          {% endif %}
+    <div class="my-5 border border-[#ddd] rounded overflow-hidden bg-white">
+        {% if snippet.get_preview_thumbnail_url %}
+            <img src="{{ snippet.get_preview_thumbnail_url }}" alt="{{ snippet.title }}" class="w-full h-auto max-w-100 block">
+        {% endif %}
+
+        {% if snippet.video_file %}
             <video width="100%" height="auto" controls class="max-w-100">
                 <source src="{{ snippet.video_file.url }}" type="video/mp4">
                 Tu navegador no soporta la etiqueta de video.
             </video>
-        </div>
-    {% endif %}
+        {% elif snippet.youtube_url %}
+            <div class="p-3 text-sm text-stone-700 bg-stone-100 border-t border-[#ddd]">
+                <p><strong>No se puede reproducir aquí directamente.</strong></p>
+                <p>{{ snippet.preview_unavailable_reason }}</p>
+                <p class="mt-1">Puedes abrirlo en YouTube: <a href="{{ snippet.youtube_url }}" target="_blank" rel="noopener noreferrer">{{ snippet.youtube_url }}</a></p>
+            </div>
+        {% else %}
+            <div class="p-3 text-sm text-stone-700 bg-stone-100 border-t border-[#ddd]">
+                Este video no tiene archivo ni enlace de YouTube configurado.
+            </div>
+        {% endif %}
+    </div>
     
     {% if snippet.duration_seconds %}
         <p><strong>Duración:</strong> {{ snippet.duration_seconds }} segundos</p>

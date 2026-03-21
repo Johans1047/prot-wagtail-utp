@@ -250,6 +250,7 @@ JIC_PROJECTS_RETRY_AFTER_ERROR = int(os.getenv("JIC_PROJECTS_RETRY_AFTER_ERROR",
 # if untrusted users are allowed to upload files -
 # see https://docs.wagtail.org/en/stable/advanced_topics/deploying.html#user-uploaded-files
 WAGTAILDOCS_EXTENSIONS = ['csv', 'docx', 'key', 'odt', 'pdf', 'pptx', 'rtf', 'txt', 'xlsx', 'zip']
+WAGTAILDOCS_DOCUMENT_MODEL = "web.Document"
 
 # Allowed file extensions for videos
 # Supported video formats: MP4, WebM, Ogg

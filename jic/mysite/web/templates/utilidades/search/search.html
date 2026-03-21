@@ -12,7 +12,7 @@
         <!-- Search Header -->
         <div class="mb-12 text-center">
             <h1 class="text-4xl font-bold text-foreground mb-3 font-serif">Búsqueda</h1>
-            <p class="text-muted-foreground text-lg">Encuentra proyectos, resultados y contenido</p>
+            <p class="text-muted-foreground text-lg">Encuentra proyectos, noticias, resultados y contenido</p>
         </div>
 
         <!-- Search Form -->
@@ -26,7 +26,7 @@
                     aria-label="Buscar proyectos, noticias, documentos y contenido"
                     {% if search_query %}value="{{ search_query }}"{% endif %}
                     class="w-full px-4 py-3 border border-border rounded-lg bg-card text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent focus:outline-none shadow-sm"
-                    placeholder="Buscar proyectos, resultados, categorías..."
+                    placeholder="Buscar proyectos, noticias,resultados, categorías..."
                     autocomplete="off"
                 >
                 <button type="submit" class="px-6 py-3 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors shadow-sm">
@@ -168,7 +168,24 @@
                                 <!-- Document Info -->
                                 <div class="flex-1 min-w-0">
                                     <h4 class="text-lg font-semibold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                                        {% if doc.doc_type == 'boletines' %}Boletín{% elif doc.doc_type == 'memorias' %}Memoria{% else %}{{ doc.get_doc_type_display }}{% endif %} JIC {{ doc.title|extract_year }}
+                                        {% if doc.doc_type == 'boletines' %}
+                                            Boletín
+                                        {% elif doc.doc_type == 'memorias' %}
+                                            Memoria
+                                        {% elif doc.doc_type == 'manuales' %}
+                                            Manual
+                                        {% elif doc.doc_type == 'lineamientos' %}
+                                            Lineamiento
+                                        {% elif doc.doc_type == 'plantillas' %}
+                                            Plantilla
+                                        {% elif doc.doc_type == 'actas' %}
+                                            Acta de Resultados
+                                        {% elif doc.doc_type_title %}
+                                            {{ doc.doc_type_title }}
+                                        {% else %}
+                                            {{ doc.get_doc_type_display }}
+                                        {% endif %}
+                                        {% if doc.title|extract_year %} JIC {{ doc.title|extract_year }}{% endif %}
                                     </h4>
                                     
                                     {% if doc.description %}
@@ -179,7 +196,7 @@
                                     
                                     <div class="flex gap-2 flex-wrap">
                                         <span class="inline-block px-2.5 py-1 text-xs font-medium bg-secondary/50 text-foreground rounded-md">
-                                            {{ doc.get_doc_type_display }}
+                                            Documento PDF
                                         </span>
                                         {% if doc.year %}
                                         <span class="inline-block px-2.5 py-1 text-xs font-medium bg-secondary/30 text-muted-foreground rounded-md">

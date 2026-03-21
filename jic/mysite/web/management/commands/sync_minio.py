@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.core.files.storage import default_storage
 from wagtail.images.models import Image
-from wagtail.documents.models import Document
+from wagtail.documents import get_document_model
 from web.models import (
     video,
     resource_document,
@@ -11,6 +11,9 @@ from web.models import (
     organizer_committee_member,
     GalleryImage
 )
+
+
+Document = get_document_model()
 
 class Command(BaseCommand):
     help = 'Synchronize MinIO deletions by removing database records pointing to non-existent files.'
