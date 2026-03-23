@@ -16,6 +16,13 @@ from pathlib import Path
 from theme.tailwind_watcher import run_tailwind_watch
 
 
+def env_bool(name: str, default: bool = False) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 BASE_DIR = PROJECT_DIR.parent
 
@@ -29,9 +36,9 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-0$hb3)ta6z_952&)u2#
 # SECURITY WARNING: define the correct hosts in production!
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,testserver").split(",")
 
-# Start TailwindCSS watcher in DEBUG mode
-DEBUG = True
-if DEBUG:
+# Start TailwindCSS watcher only in DEBUG mode and only for the autoreload main process.
+DEBUG = env_bool("DEBUG", True)
+if DEBUG and env_bool("TAILWIND_WATCH", True) and os.getenv("RUN_MAIN") == "true":
     run_tailwind_watch()
     
 
@@ -103,45 +110,19 @@ WSGI_APPLICATION = "mysite.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-# DB_ENGINE = os.getenv("DB_ENGINE", "sqlite").lower()
 
-# if DB_ENGINE == "postgres":
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": os.getenv("DB_NAME", "db_jicweb"),
-#         "USER": os.getenv("DB_USER", "mast_jicweb"),
-#         "PASSWORD": os.getenv("DB_PASSWORD", "g0hNw,0p1MvY"),
-#         "HOST": os.getenv("DB_HOST", "jicweb_master"),
-#         "PORT": os.getenv("DB_PORT", "5432"),
-#         "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
-#     }
-# }
-
+# Use local PostgreSQL database (jicweb_master) - load from container environment
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("DB_NAME", "neondb"),
-        "USER": os.getenv("DB_USER", "neondb_owner"),
-        "PASSWORD": os.getenv("DB_PASSWORD", "npg_5BbI6jRtUXPx"),
-        "HOST": os.getenv("DB_HOST", "ep-autumn-resonance-a8vwe9xp-pooler.eastus2.azure.neon.tech"),
-        "PORT": os.getenv("DB_PORT", "5432"),
+        "NAME": os.getenv("POSTGRESQL_DATABASE", "db_jicweb"),
+        "USER": os.getenv("POSTGRESQL_USERNAME", "mast_jicweb"),
+        "PASSWORD": os.getenv("POSTGRESQL_PASSWORD", "g0hNw10p1MvY"),
+        "HOST": os.getenv("POSTGRESQL_HOST", "jicweb_master"),
+        "PORT": os.getenv("POSTGRESQL_DATABASE_PORT_NUMBER", "5432"),
         "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
-        "OPTIONS": {
-            "sslmode": os.getenv("DB_SSLMODE", "require"),
-            "channel_binding": os.getenv("DB_CHANNEL_BINDING", "require"),
-        },
     }
 }
-
-
-# else:
-#     DATABASES = {
-#         "default": {
-#             "ENGINE": "django.db.backends.sqlite3",
-#             "NAME": BASE_DIR / "db.sqlite3",
-#         }
-#     }
 
 
 # Password validation
@@ -258,6 +239,8 @@ WAGTAILDOCS_EXTENSIONS = ['csv', 'docx', 'key', 'odt', 'pdf', 'pptx', 'rtf', 'tx
 
 # Custom document model to add additional metadata fields.
 WAGTAILDOCS_DOCUMENT_MODEL = "web.Document"
+# Use custom document form to validate file size
+WAGTAILDOCS_DOCUMENT_FORM_BASE = "web.image_forms.DocumentAdminForm"
 
 # Allowed file extensions for videos
 # Supported video formats: MP4, WebM, Ogg
@@ -266,7 +249,7 @@ WAGTAIL_VIDEO_EXTENSIONS = ['mp4', 'webm', 'ogg', 'mov', 'avi']
 # Disable Gravatar to disable the use of remote avatars
 WAGTAIL_GRAVATAR_PROVIDER_URL = None
 
-# Use inherited image admin form to customize tags help text and potentially make them required in the future.
+# Use inherited image admin form to customize tags help text and validate file size
 WAGTAILIMAGES_IMAGE_FORM_BASE = "web.image_forms.ImageAdminForm"
 # Custom image and rendition models to implement custom compression.
 WAGTAILIMAGES_IMAGE_MODEL = "web.CustomImage"
