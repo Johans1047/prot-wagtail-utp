@@ -3,8 +3,11 @@ from pathlib import Path
 from django.apps import apps
 from django.core.files.base import File
 from django.db import models
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from wagtail.images import get_image_model
+from wagtail.images.models import AbstractRendition
+
+from .image_pipeline import optimize_and_apply_to_field_file
 
 
 def _sync_key(instance, field_name: str) -> str:
@@ -47,13 +50,33 @@ def sync_instance_image_fields(sender, instance, **kwargs) -> None:
             _sync_image_field(instance, field.name)
 
 
+def compress_model_image_fields(sender, instance, **kwargs) -> None:
+    for field in sender._meta.fields:
+        if not isinstance(field, models.ImageField):
+            continue
+
+        field_file = getattr(instance, field.name, None)
+        if not field_file or not getattr(field_file, "name", ""):
+            continue
+
+        if getattr(field_file, "_committed", True):
+            continue
+
+        optimize_and_apply_to_field_file(field_file)
+
+
 def register_imagefield_sync_signals() -> None:
     app_config = apps.get_app_config("web")
-
+    image_model = get_image_model()
+    
     for model in app_config.get_models():
+        if model is image_model or issubclass(model, AbstractRendition):
+            continue
+
         image_fields = [field for field in model._meta.fields if isinstance(field, models.ImageField)]
         if not image_fields:
             continue
 
         dispatch_uid = f"web.sync_imagefield_to_wagtail.{model._meta.label_lower}"
+        pre_save.connect(compress_model_image_fields, sender=model, dispatch_uid=f"{dispatch_uid}.compress")
         post_save.connect(sync_instance_image_fields, sender=model, dispatch_uid=dispatch_uid)

@@ -1,7 +1,7 @@
 {% load static %}
 <section id="gallery" class="relative overflow-hidden h-[calc(100dvh-72px)]" data-carousel="slide" data-carousel-interval="{{ title_section.carousel_interval }}">
     <!-- Carousel wrapper -->
-    <div class="absolute inset-0 z-0 overflow-hidden">
+    <div class="absolute inset-0 z-0 overflow-hidden bg-black">
         {% for carousel_image in title_section.carousel_images.all %}
         <div class="hidden duration-700 ease-in-out" data-carousel-item{% if forloop.first %}="active"{% endif %}>
             {% if carousel_image.image.file.url %}

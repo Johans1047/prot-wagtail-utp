@@ -11,62 +11,11 @@ from django.utils import timezone
 from wagtail.admin.menu import MenuItem
 from django.core.paginator import Paginator
 from django.db.utils import OperationalError, ProgrammingError
+from wagtail.images import get_image_model
 from wagtail.images.models import Image
 
 
 logger = logging.getLogger(__name__)
-
-
-# In-process cache to avoid repeated slow API timeouts on every request.
-_PROJECTS_CACHE: dict[str, object] = {
-    "data": None,
-    "expires_at": 0.0,
-    "last_error_at": 0.0,
-}
-
-
-def _resolve_image_url(image_obj) -> str | None:
-    if not image_obj:
-        return None
-
-    # Supports both Django ImageField (image.url) and Wagtail FK image (image.file.url).
-    try:
-        if getattr(image_obj, "url", None):
-            return image_obj.url
-    except Exception:
-        pass
-
-    try:
-        file_obj = getattr(image_obj, "file", None)
-        if file_obj and getattr(file_obj, "url", None):
-            return file_obj.url
-    except Exception:
-        pass
-
-    return None
-
-
-def _youtube_thumbnail_from_url(youtube_url: str | None) -> str | None:
-    if not youtube_url:
-        return None
-
-    try:
-        parsed = urlparse(youtube_url)
-        host = (parsed.netloc or "").lower()
-
-        if "youtu.be" in host:
-            video_id = parsed.path.strip("/")
-        else:
-            video_id = parse_qs(parsed.query).get("v", [""])[0]
-            if not video_id and "/shorts/" in parsed.path:
-                video_id = parsed.path.split("/shorts/")[-1].split("/")[0]
-
-        if video_id:
-            return f"https://img.youtube.com/vi/{video_id}/maxresdefault.jpg"
-    except Exception:
-        return None
-
-    return None
 
 
 class WagtailDocWrapper:
@@ -122,7 +71,93 @@ class LazyMenuItem(MenuItem):
     @url.setter
     def url(self, value):
         pass
-    
+
+
+# In-process cache to avoid repeated slow API timeouts on every request.
+_PROJECTS_CACHE: dict[str, object] = {
+    "data": None,
+    "expires_at": 0.0,
+    "last_error_at": 0.0,
+}
+
+
+def _resolve_image_url(image_obj) -> str | None:
+    if not image_obj:
+        return None
+
+    # Supports both Django ImageField (image.url) and Wagtail FK image (image.file.url).
+    try:
+        if getattr(image_obj, "url", None):
+            return image_obj.url
+    except Exception:
+        pass
+
+    try:
+        file_obj = getattr(image_obj, "file", None)
+        if file_obj and getattr(file_obj, "url", None):
+            return file_obj.url
+    except Exception:
+        pass
+
+    return None
+
+
+def _youtube_thumbnail_from_url(youtube_url: str | None) -> str | None:
+    if not youtube_url:
+        return None
+
+    try:
+        parsed = urlparse(youtube_url)
+        host = (parsed.netloc or "").lower()
+
+        if "youtu.be" in host:
+            video_id = parsed.path.strip("/")
+        else:
+            video_id = parse_qs(parsed.query).get("v", [""])[0]
+            if not video_id and "/shorts/" in parsed.path:
+                video_id = parsed.path.split("/shorts/")[-1].split("/")[0]
+
+        if video_id:
+            return f"https://img.youtube.com/vi/{video_id}/maxresdefault.jpg"
+    except Exception:
+        return None
+
+    return None
+
+
+def _get_wagtail_rendition_url(image_obj, filter_spec: str) -> str | None:
+    if not image_obj:
+        return None
+
+    try:
+        rendition = image_obj.get_rendition(filter_spec)
+        if rendition and getattr(rendition, "url", None):
+            return rendition.url
+    except Exception:
+        return None
+
+    return None
+
+
+def _get_synced_imagefield_rendition_url(instance, field_name: str, filter_spec: str) -> str | None:
+    field_file = getattr(instance, field_name, None)
+    if not field_file or not getattr(field_file, "name", ""):
+        return None
+
+    # Titles are synced in signals.py with this deterministic prefix.
+    key_prefix = f"[auto-sync:{instance._meta.label_lower}:{instance.pk}:{field_name}] "
+
+    try:
+        image_model = get_image_model()
+        synced_image = image_model.objects.filter(title__startswith=key_prefix).first()
+    except Exception:
+        synced_image = None
+
+    if not synced_image:
+        return None
+
+    return _get_wagtail_rendition_url(synced_image, filter_spec)
+
 
 def _get_mock_projects_data() -> dict:
     return json.loads(
@@ -291,8 +326,112 @@ def _parse_winner(value) -> tuple[int, str]:
     return 0, ""
 
 
-def get_processed_projects() -> list[dict]:
-    projects_payload = get_raw_projects_data()
+def _is_truthy(value) -> bool:
+    return str(value).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _auto_sync_projects_to_database(normalized_projects: list[dict]) -> None:
+    """Persist normalized API projects into local project/consultant tables."""
+    auto_sync_enabled = _is_truthy(getattr(settings, "JIC_PROJECTS_AUTO_SYNC_DB", True))
+    if not auto_sync_enabled or not normalized_projects:
+        return
+
+    try:
+        from .models import consultant, project
+    except Exception:
+        return
+
+    winner_map = {0: 0, 1: 1, 2: 2, 3: 3}
+
+    try:
+        for item in normalized_projects:
+            advisor_name = (item.get("advisor") or "").strip()
+            advisor_email = (item.get("contact") or "").strip()
+            institution = (item.get("institution") or item.get("university") or "").strip()
+            advisor_obj = None
+
+            if advisor_name:
+                advisor_obj, _ = consultant.objects.update_or_create(
+                    name=advisor_name,
+                    defaults={
+                        "email": advisor_email,
+                        "institution": institution,
+                        "is_active": True,
+                    },
+                )
+
+            title = (item.get("title") or "").strip()
+            year = int(item.get("year") or 0)
+            university = (item.get("university") or "").strip()
+            if not title or not year or not university:
+                continue
+
+            project.objects.update_or_create(
+                title=title,
+                year=year,
+                defaults={
+                    "abstract": (item.get("abstract") or "").strip(),
+                    "advisor": advisor_obj,
+                    "university": university,
+                    "university_short_name": (item.get("university_short_name") or "").strip() or None,
+                    "category": (item.get("category") or "").strip(),
+                    "winner": winner_map.get(int(item.get("winner") or 0), 0),
+                },
+            )
+    except (OperationalError, ProgrammingError, Exception) as exc:
+        logger.warning("Could not auto-sync API projects to DB: %s", exc)
+
+
+def _get_projects_from_database() -> list[dict]:
+    """Return normalized projects from local DB (project + consultant)."""
+    try:
+        from .models import project
+    except Exception:
+        return []
+
+    try:
+        rows = project.objects.select_related("advisor").all().order_by("-year", "title")
+    except (OperationalError, ProgrammingError, Exception):
+        return []
+
+    winner_label_map = {
+        0: "",
+        1: "Primer Lugar",
+        2: "Segundo Lugar",
+        3: "Tercer Lugar",
+    }
+
+    normalized_projects = []
+    for p in rows:
+        advisor_name = p.advisor.name if p.advisor else ""
+        advisor_email = p.advisor.email if p.advisor else ""
+        advisor_institution = p.advisor.institution if p.advisor else ""
+        short_name = (p.university_short_name or "").strip()
+        university = (p.university or "").strip()
+        university_display = f"{university} ({short_name})" if short_name else university
+
+        normalized_projects.append(
+            {
+                "id": int(p.id),
+                "title": (p.title or "").strip(),
+                "university": university,
+                "university_short_name": short_name,
+                "university_display": university_display,
+                "category": (p.category or "").strip(),
+                "year": int(p.year or 0),
+                "contact": (advisor_email or "").strip(),
+                "advisor": (advisor_name or "").strip(),
+                "winner": int(p.winner or 0),
+                "winner_label": winner_label_map.get(int(p.winner or 0), ""),
+                "abstract": (p.abstract or "").strip(),
+                "institution": (advisor_institution or university or "").strip(),
+            }
+        )
+
+    return normalized_projects
+
+
+def _normalize_projects_payload(projects_payload: dict) -> list[dict]:
     raw_projects = projects_payload.get("ganadores_historicos") or projects_payload.get("proyectos") or []
 
     normalized_projects = []
@@ -325,6 +464,24 @@ def get_processed_projects() -> list[dict]:
         )
 
     normalized_projects.sort(key=lambda p: (p["year"], p["title"]), reverse=True)
+    return normalized_projects
+
+
+def sync_projects_from_api() -> list[dict]:
+    """Fetch projects from API/fallback payload and persist them to local DB when enabled."""
+    projects_payload = get_raw_projects_data()
+    normalized_projects = _normalize_projects_payload(projects_payload)
+    _auto_sync_projects_to_database(normalized_projects)
+    return normalized_projects
+
+
+def get_processed_projects() -> list[dict]:
+    # Priority order: local DB (imported/admin data) -> external API -> in-code fallback.
+    projects_from_db = _get_projects_from_database()
+    if projects_from_db:
+        return projects_from_db
+
+    normalized_projects = sync_projects_from_api()
     return normalized_projects
 
 
@@ -398,11 +555,19 @@ def get_recursos_gallery(request, tab, current_img_cat, fallback_images) -> tupl
                      description = item.image.description
                      
                 alt_text = item.alt_text if hasattr(item, 'alt_text') and item.alt_text else item.image.title
+                thumb_src = (
+                    _get_wagtail_rendition_url(item.image, "fill-600x600|jpegquality-75")
+                    or item.image.file.url
+                )
+                lightbox_src = (
+                    _get_wagtail_rendition_url(item.image, "max-1800x1800|jpegquality-82")
+                    or item.image.file.url
+                )
 
                 gallery_images.append({
                     'obj': item.image,
-                    'src': item.image.file.url,
-                    'full_src': item.image.file.url,
+                    'src': thumb_src,
+                    'full_src': lightbox_src,
                     'alt': alt_text,
                     'title': item.image.title,
                     'description': description,
@@ -416,10 +581,19 @@ def get_recursos_gallery(request, tab, current_img_cat, fallback_images) -> tupl
                 db_images = list(page_obj_gall.object_list)
             
             for img in db_images:
+                thumb_src = (
+                    _get_wagtail_rendition_url(img, "fill-600x600|jpegquality-75")
+                    or img.file.url
+                )
+                lightbox_src = (
+                    _get_wagtail_rendition_url(img, "max-1800x1800|jpegquality-82")
+                    or img.file.url
+                )
+
                 gallery_images.append({
                     'obj': img,
-                    'src': img.file.url,
-                    'full_src': img.file.url,
+                    'src': thumb_src,
+                    'full_src': lightbox_src,
                     'alt': img.title,
                     'title': img.title,
                     'description': img.get_title() if hasattr(img, 'get_title') else '',
@@ -452,15 +626,25 @@ def get_recursos_videos(request, tab, fallback_videos) -> tuple[list[dict], Pagi
     try:
         db_videos = video.objects.filter(is_active=True).order_by('sort_order', '-created_at')
         for v in db_videos:
+            thumb_rendition_url = _get_synced_imagefield_rendition_url(v, 'thumbnail', 'fill-640x360|jpegquality-75')
+            poster_rendition_url = _get_synced_imagefield_rendition_url(v, 'thumbnail', 'max-1280x720|jpegquality-82')
+
             thumb_url = (
-                _resolve_image_url(v.thumbnail)
+                thumb_rendition_url
+                or _resolve_image_url(v.thumbnail)
                 or _youtube_thumbnail_from_url(v.youtube_url)
                 or '/static/images/hero-jic.jpg'
+            )
+            poster_url = (
+                poster_rendition_url
+                or _resolve_image_url(v.thumbnail)
+                or thumb_url
             )
             video_url = v.youtube_url if v.youtube_url else (v.video_file.url if v.video_file else '#')
             videos.append({
                 'title': v.title,
                 'thumbnail': thumb_url,
+                'poster': poster_url,
                 'url': video_url,
                 'description': v.description,
             })
@@ -476,4 +660,3 @@ def get_recursos_videos(request, tab, fallback_videos) -> tuple[list[dict], Pagi
         videos = page_obj_vid.object_list
         
     return videos, page_obj_vid
-

@@ -398,10 +398,8 @@
                     data-alt="{{ img.alt }}"
                 >
                     <div class="overflow-hidden flex-1">
-                        <!-- Usamos la directiva de imagen de Wagtail para obtener una miniatura muy liviana desde el template. Esto traslada la carga pesada al HTML evitando que la vista reviente y cachea el resultado. -->
-                        {% image img.obj max-600x600 as tmp_img %}
                         <img
-                            src="{{ tmp_img.url }}"
+                            src="{{ img.src }}"
                             alt="{{ img.alt }}"
                             loading="lazy"
                             decoding="async"
@@ -490,7 +488,7 @@
                     <div
                         class="video-thumbnail relative aspect-video w-full bg-secondary block overflow-hidden cursor-pointer"
                         data-video-url="{{ v.url }}"
-                        data-video-poster="{{ v.thumbnail }}"
+                        data-video-poster="{{ v.poster|default:v.thumbnail }}"
                     >
                         <img
                             src="{{ v.thumbnail }}"
@@ -533,7 +531,7 @@
                                 type="button"
                                 class="video-play-btn inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors cursor-pointer"
                                 data-video-url="{{ v.url }}"
-                                data-video-poster="{{ v.thumbnail }}"
+                                data-video-poster="{{ v.poster|default:v.thumbnail }}"
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"

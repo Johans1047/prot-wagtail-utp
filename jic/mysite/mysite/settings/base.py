@@ -219,6 +219,10 @@ STORAGES = {
 # can exceed this limit within Wagtail's page editor.
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10_000
 
+# Allow larger uploads so originals can be compressed after upload.
+FILE_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024
+DATA_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024
+
 
 # Wagtail settings
 
@@ -244,19 +248,40 @@ JIC_PROJECTS_API_URL = os.getenv("JIC_PROJECTS_API_URL", "http://192.168.140.114
 JIC_PROJECTS_API_TIMEOUT = int(os.getenv("JIC_PROJECTS_API_TIMEOUT", "3"))
 JIC_PROJECTS_CACHE_TTL = int(os.getenv("JIC_PROJECTS_CACHE_TTL", "300"))
 JIC_PROJECTS_RETRY_AFTER_ERROR = int(os.getenv("JIC_PROJECTS_RETRY_AFTER_ERROR", "60"))
+JIC_PROJECTS_AUTO_SYNC_DB = os.getenv("JIC_PROJECTS_AUTO_SYNC_DB", "1").lower() in {"1", "true", "yes", "on"}
 
 # Allowed file extensions for documents in the document library.
 # This can be omitted to allow all files, but note that this may present a security risk
 # if untrusted users are allowed to upload files -
 # see https://docs.wagtail.org/en/stable/advanced_topics/deploying.html#user-uploaded-files
 WAGTAILDOCS_EXTENSIONS = ['csv', 'docx', 'key', 'odt', 'pdf', 'pptx', 'rtf', 'txt', 'xlsx', 'zip']
+
+# Custom document model to add additional metadata fields.
 WAGTAILDOCS_DOCUMENT_MODEL = "web.Document"
 
 # Allowed file extensions for videos
 # Supported video formats: MP4, WebM, Ogg
 WAGTAIL_VIDEO_EXTENSIONS = ['mp4', 'webm', 'ogg', 'mov', 'avi']
 
-# Disable Gravatar to to disable the use of remote avatars
+# Disable Gravatar to disable the use of remote avatars
 WAGTAIL_GRAVATAR_PROVIDER_URL = None
+
+# Use inherited image admin form to customize tags help text and potentially make them required in the future.
+WAGTAILIMAGES_IMAGE_FORM_BASE = "web.image_forms.ImageAdminForm"
+# Custom image and rendition models to implement custom compression.
+WAGTAILIMAGES_IMAGE_MODEL = "web.CustomImage"
+WAGTAILIMAGES_RENDITION_MODEL = "web.CustomRendition"
+
+IMAGE_MAX_SOURCE_SIZE = 10 * 1024 * 1024
+IMAGE_MAX_FINAL_SIZE = 5 * 1024 * 1024
+WAGTAILIMAGES_MAX_UPLOAD_SIZE = IMAGE_MAX_SOURCE_SIZE
+WAGTAILIMAGES_JPEG_QUALITY = 85
+WAGTAILIMAGES_WEBP_QUALITY = 85
+
+# Compression behavior shared by all uploaded raster images.
+IMAGE_COMPRESSION_MAX_DIMENSION = 2560
+IMAGE_COMPRESSION_QUALITY_STEPS = (86, 80, 74, 68, 62, 56, 50, 44)
+IMAGE_COMPRESSION_SCALE_STEPS = (1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4)
+IMAGE_COMPRESSION_CONVERT_PNG_TO_WEBP = True
 
 WAGTAILADMIN_PERMITTED_LANGUAGES = [('en', 'English'), ('es', 'Spanish'),]

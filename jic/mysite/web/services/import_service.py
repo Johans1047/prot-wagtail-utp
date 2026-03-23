@@ -217,15 +217,41 @@ class ImportService:
                 advisor = None
                 if asesor_nombre and str(asesor_nombre).lower() != 'nan':
                     asesor_nombre = str(asesor_nombre).strip()
-                    try:
-                        advisor = consultant.objects.get(name=asesor_nombre)
-                    except consultant.DoesNotExist:
-                        result.add_error(
-                            idx + 2, 
-                            'Proyecto', 
-                            f'Asesor "{asesor_nombre}" no encontrado'
+                    asesor_email = str(fila.get('email', '')).strip()
+                    asesor_institucion = str(fila.get('institucion', universidad)).strip()
+
+                    advisor = consultant.objects.filter(name__iexact=asesor_nombre).first()
+                    if advisor is None:
+                        advisor = consultant.objects.create(
+                            name=asesor_nombre,
+                            email=asesor_email if asesor_email and asesor_email.lower() != 'nan' else '',
+                            institution=(
+                                asesor_institucion
+                                if asesor_institucion and asesor_institucion.lower() != 'nan'
+                                else (universidad if universidad and universidad.lower() != 'nan' else '')
+                            ),
+                            is_active=True,
                         )
-                        continue
+                        result.created_consultants += 1
+                    elif actualizar:
+                        updated = False
+                        if asesor_email and asesor_email.lower() != 'nan' and advisor.email != asesor_email:
+                            advisor.email = asesor_email
+                            updated = True
+                        if (
+                            asesor_institucion
+                            and asesor_institucion.lower() != 'nan'
+                            and advisor.institution != asesor_institucion
+                        ):
+                            advisor.institution = asesor_institucion
+                            updated = True
+                        if not advisor.is_active:
+                            advisor.is_active = True
+                            updated = True
+
+                        if updated:
+                            advisor.save(update_fields=['email', 'institution', 'is_active'])
+                            result.updated_consultants += 1
                 
                 # Parse winner from numeric or textual values.
                 winner = ImportService._parse_winner_value(fila.get('premio', 0))

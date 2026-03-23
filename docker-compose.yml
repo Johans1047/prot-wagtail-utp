@@ -225,7 +225,8 @@ services:
       - DB_PORT=${DB_PORT}
       - DB_SSLMODE=${DB_SSLMODE}
       - DB_CHANNEL_BINDING=${DB_CHANNEL_BINDING}
-      - JIC_PROJECTS_API_URL=${JIC_PROJECTS_API_URL:-http://192.168.140.114:8000/api/proyectos-jic}
+      # - JIC_PROJECTS_API_URL=${JIC_PROJECTS_API_URL:-http://192.168.140.114:8000/api/proyectos-jic}
+      - JIC_PROJECTS_API_URL=${JIC_PROJECTS_API_URL:-http://jic_projects_mock_api:8001/api/proyectos-jic}
       - JIC_PROJECTS_API_TIMEOUT=${JIC_PROJECTS_API_TIMEOUT:-3}
       # - DB_OPTIONS=-c search_path=public
       - MINIO_ENDPOINT=${MINIO_ENDPOINT}
@@ -265,7 +266,7 @@ services:
       - DB_PORT=${DB_PORT}
       - DB_SSLMODE=${DB_SSLMODE}
       - DB_CHANNEL_BINDING=${DB_CHANNEL_BINDING}
-      - JIC_PROJECTS_API_URL=${JIC_PROJECTS_API_URL:-http://10.171.233.89:8000/api/proyectos-jic}
+      - JIC_PROJECTS_API_URL=${JIC_PROJECTS_API_URL:-http://jic_projects_mock_api:8001/api/proyectos-jic}
       - JIC_PROJECTS_API_TIMEOUT=${JIC_PROJECTS_API_TIMEOUT:-3}
       # - DB_OPTIONS=-c search_path=public
       - MINIO_ENDPOINT=${MINIO_ENDPOINT}
@@ -275,6 +276,69 @@ services:
       - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME}
     depends_on:
       - jicweb_app
+    networks:
+      - netX
+
+  jic_projects_mock_api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jic_projects_mock_api
+    command: >
+      sh -c "pip install --no-cache-dir -r /app/mock_projects_api/requirements.txt && uvicorn mock_projects_api.app:app --host 0.0.0.0 --port 8001"
+    volumes:
+      - ./mock_projects_api:/app/mock_projects_api
+    ports:
+      - "8001:8001"
+    environment:
+      - PYTHONUNBUFFERED=${PYTHONUNBUFFERED}
+    networks:
+      - netX
+
+  jic_projects_sync_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jic_projects_sync_worker
+    command: >
+      sh -c "
+        INTERVAL=$${JIC_PROJECTS_SYNC_INTERVAL:-60};
+        echo \"[projects-sync] Interval: $${INTERVAL}s (weekly)\";
+        while true; do
+          TS=$$(date -u +%Y-%m-%dT%H:%M:%SZ);
+          echo \"[$$TS] Running API->DB sync...\";
+          python mysite/manage.py sync_projects_api --skip-checks || echo \"[$$TS] Sync failed; retrying next cycle.\";
+          sleep $${INTERVAL};
+        done
+      "
+    volumes:
+      - ./jic/mysite:/app/mysite
+    environment:
+      - DEBUG=${DEBUG}
+      - PYTHONUNBUFFERED=${PYTHONUNBUFFERED}
+      - DB_REPLICATION_ENABLED=${DB_REPLICATION_ENABLED}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_SSLMODE=${DB_SSLMODE}
+      - DB_CHANNEL_BINDING=${DB_CHANNEL_BINDING}
+      - JIC_PROJECTS_API_URL=${JIC_PROJECTS_API_URL:-http://jic_projects_mock_api:8001/api/proyectos-jic}
+      - JIC_PROJECTS_API_TIMEOUT=${JIC_PROJECTS_API_TIMEOUT:-3}
+      - JIC_PROJECTS_AUTO_SYNC_DB=${JIC_PROJECTS_AUTO_SYNC_DB:-1}
+      - JIC_PROJECTS_SYNC_INTERVAL=${JIC_PROJECTS_SYNC_INTERVAL:-60}
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_USE_SSL=${MINIO_USE_SSL}
+      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME}
+    depends_on:
+      jicweb_master:
+        condition: service_healthy
+      jic_projects_mock_api:
+        condition: service_started
+    restart: unless-stopped
     networks:
       - netX
 

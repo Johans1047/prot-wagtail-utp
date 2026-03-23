@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
+from django.core.files.images import get_image_dimensions
 from django.db.models import Case, When
 from django.utils import timezone
 from urllib.parse import urlparse, parse_qs
@@ -11,10 +12,16 @@ from wagtail.admin.panels import FieldPanel, InlinePanel
 from wagtail.documents.models import Document as WagtailDocument
 from wagtail.embeds.blocks import EmbedBlock
 from wagtail.fields import StreamField
+from wagtail.images import get_image_model_string
 from wagtail.images.blocks import ImageChooserBlock
+from wagtail.images.models import AbstractImage, AbstractRendition, Image as WagtailImage
 from wagtail.models import PreviewableMixin, Orderable, Page
 from .forms import _FaqAdminForm
+from .image_pipeline import optimize_and_apply_to_field_file
 from .utils import get_video_file_path, get_video_thumbnail_path, get_document_path
+
+
+IMAGE_MODEL = get_image_model_string()
 
 
 class BlogIndexPage(Page):
@@ -44,7 +51,7 @@ class BlogPage(Page):
         help_text="Marcar cuando la nota fue enviada por un colaborador externo.",
     )
     cover_image = models.ForeignKey(
-        "wagtailimages.Image",
+        IMAGE_MODEL,
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
@@ -785,6 +792,101 @@ class Document(WagtailDocument):
     admin_form_fields = WagtailDocument.admin_form_fields + ("is_active",)
 
 
+class CustomImage(AbstractImage):
+    admin_form_fields = WagtailImage.admin_form_fields
+
+    def save(self, *args, **kwargs):
+        field_file = getattr(self, "file", None)
+        if field_file and getattr(field_file, "name", "") and not getattr(self, "_compression_in_progress", False):
+            self._compression_in_progress = True
+            try:
+                result = optimize_and_apply_to_field_file(field_file)
+                if result:
+                    self.file_size = result.final_size
+                    if result.replace_file and result.width and result.height:
+                        self.width = result.width
+                        self.height = result.height
+            finally:
+                self._compression_in_progress = False
+
+        return super().save(*args, **kwargs)
+    
+    class Meta:
+        verbose_name = "Imagen"
+        verbose_name_plural = "Imágenes"
+
+
+class CustomRendition(AbstractRendition):
+    image = models.ForeignKey(CustomImage, on_delete=models.CASCADE, related_name="renditions")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if getattr(self, "width", None) is None or getattr(self, "height", None) is None:
+            width = getattr(self, "width", None)
+            height = getattr(self, "height", None)
+
+            if self.file:
+                try:
+                    if hasattr(self.file, "seek"):
+                        self.file.seek(0)
+                    w, h = get_image_dimensions(self.file)
+                    width = width or w
+                    height = height or h
+                    if hasattr(self.file, "seek"):
+                        self.file.seek(0)
+                except Exception:
+                    pass
+
+            if (not width or not height) and getattr(self, "filter_spec", ""):
+                import re
+                match = re.search(r"(\d+)x(\d+)", self.filter_spec)
+                if match:
+                    width = width or int(match.group(1))
+                    height = height or int(match.group(2))
+
+            if (not width or not height) and getattr(self, "image", None):
+                width = width or getattr(self.image, "width", None)
+                height = height or getattr(self.image, "height", None)
+
+            self.width = width or 1
+            self.height = height or 1
+
+    def save(self, *args, **kwargs):
+        if self.width and self.height:
+            return super().save(*args, **kwargs)
+
+        width, height = None, None
+
+        if self.file:
+            try:
+                if hasattr(self.file, "seek"):
+                    self.file.seek(0)
+                width, height = get_image_dimensions(self.file)
+                if hasattr(self.file, "seek"):
+                    self.file.seek(0)
+            except Exception:
+                pass
+
+        if (not width or not height) and getattr(self, "filter_spec", ""):
+            import re
+
+            match = re.search(r"(\d+)x(\d+)", self.filter_spec)
+            if match:
+                width = width or int(match.group(1))
+                height = height or int(match.group(2))
+
+        if (not width or not height) and getattr(self, "image", None):
+            width = width or getattr(self.image, "width", None)
+            height = height or getattr(self.image, "height", None)
+
+        self.width = width or 1
+        self.height = height or 1
+        return super().save(*args, **kwargs)
+
+    class Meta:
+        unique_together = (("image", "filter_spec", "focal_point_key"),)
+
+
 class Gallery(ClusterableModel):
     """
     Singleton gallery snippet to manage ordered images.
@@ -824,7 +926,7 @@ class Gallery(ClusterableModel):
 class GalleryImage(Orderable):
     gallery = ParentalKey(Gallery, on_delete=models.CASCADE, related_name="gallery_images")
     image = models.ForeignKey(
-        'wagtailimages.Image',
+        IMAGE_MODEL,
         on_delete=models.CASCADE,
         related_name='+',
         verbose_name="Imagen"
@@ -855,7 +957,7 @@ class title_section_image(Orderable):
         related_name="carousel_images",
     )
     image = models.ForeignKey(
-        'wagtailimages.Image',
+        IMAGE_MODEL,
         on_delete=models.CASCADE,
         related_name='+',
         verbose_name="Imagen del carrusel"

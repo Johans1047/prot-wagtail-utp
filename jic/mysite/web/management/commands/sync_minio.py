@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.core.files.storage import default_storage
-from wagtail.images.models import Image
+from wagtail.images import get_image_model
 from wagtail.documents import get_document_model
 from web.models import (
     video,
@@ -12,7 +12,7 @@ from web.models import (
     GalleryImage
 )
 
-
+Image = get_image_model()
 Document = get_document_model()
 
 class Command(BaseCommand):
@@ -48,15 +48,23 @@ class Command(BaseCommand):
                 missing_files = []
 
                 for field_name in fields:
-                    field_file = getattr(instance, field_name)
-                    
-                    # Skip if field is empty/null
-                    if not field_file or not field_file.name:
+                    field_value = getattr(instance, field_name, None)
+
+                    # Resolve to a file name for both FileField values and related objects (e.g. wagtail image FK).
+                    file_name = None
+                    if field_value is not None:
+                        if hasattr(field_value, "name"):
+                            file_name = field_value.name
+                        elif hasattr(field_value, "file") and getattr(field_value.file, "name", None):
+                            file_name = field_value.file.name
+
+                    # Skip if field is empty/null or does not point to a file.
+                    if not file_name:
                         continue
                         
                     # Check if file exists in storage (MinIO)
-                    if not default_storage.exists(field_file.name):
-                        missing_files.append(field_file.name)
+                    if not default_storage.exists(file_name):
+                        missing_files.append(file_name)
                         should_delete = True
 
                 if should_delete:

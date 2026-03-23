@@ -11,7 +11,7 @@
         {% if error %}
         <div class="messages" role="status" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
             <ul>
-                <li class="error" style="opacity: 1; transform: none; position: relative;">
+                <li class="error" style="opacity: 1; transform: none; position: relative; background: #fff7ed; border: 1px solid #fdba74; color: #7c2d12; border-radius: 8px; padding: 0.9rem 1rem;">
                     <svg class="icon icon-warning messages-icon" aria-hidden="true"><use href="#icon-warning"></use></svg>
                     <span><strong>Error:</strong> {{ error }}</span>
                 </li>
@@ -46,13 +46,13 @@
         {% if resultado.errores %}
         <div class="messages" role="status" style="margin-bottom: 1.5rem;">
             <ul>
-                <li class="warning" style="opacity: 1; transform: none; position: relative; display: block; padding-bottom: 1rem;">
+                <li class="warning" style="opacity: 1; transform: none; position: relative; display: block; padding-bottom: 1rem; background: #fffbeb; border: 1px solid #fbbf24; color: #78350f; border-radius: 8px; padding: 1rem;">
                     <svg class="icon icon-warning messages-icon" aria-hidden="true"><use href="#icon-warning"></use></svg>
                     <span><strong>⚠ Errores encontrados ({{ resultado.total_errores }})</strong></span>
                     <div style="margin-top: 1rem; margin-left: 2.5rem; overflow-x: auto;">
-                        <table class="listing" style="width: 100%;">
+                        <table class="listing" style="width: 100%; background: #ffffff; color: #1f2937; border: 1px solid #fde68a; border-radius: 6px; overflow: hidden;">
                             <thead>
-                                <tr>
+                                <tr style="background: #fef3c7; color: #78350f;">
                                     <th>Fila</th>
                                     <th>Modelo</th>
                                     <th>Error</th>
@@ -60,10 +60,10 @@
                             </thead>
                             <tbody>
                                 {% for error_item in resultado.errores %}
-                                <tr>
+                                <tr style="background: #fffbeb;">
                                     <td>{{ error_item.fila }}</td>
                                     <td>{{ error_item.modelo }}</td>
-                                    <td class="error" style="color: var(--w-color-critical-200);">{{ error_item.error }}</td>
+                                    <td class="error" style="color: #7f1d1d; font-weight: 500;">{{ error_item.error }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

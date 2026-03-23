@@ -118,14 +118,23 @@ class MinioStorage(Storage):
         return dirs, files
 
     def get_available_name(self, name, max_length=None):
-        # Prefix with uuid to avoid collisions
+        # Keep the original name whenever possible. Only suffix on collisions.
+        if max_length and len(name) > max_length:
+            name = name[:max_length]
+
+        if not self.exists(name):
+            return name
+
         ext = ""
         if "." in name:
             ext = name[name.rfind("."):]
             base = name[:name.rfind(".")]
         else:
             base = name
-        unique = f"{base}_{uuid4().hex[:8]}{ext}"
-        if max_length and len(unique) > max_length:
-            unique = unique[:max_length]
-        return unique
+
+        while True:
+            candidate = f"{base}_{uuid4().hex[:8]}{ext}"
+            if max_length and len(candidate) > max_length:
+                candidate = candidate[:max_length]
+            if not self.exists(candidate):
+                return candidate

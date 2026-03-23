@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.urls import include, path
 from django.contrib import admin
+from django.views.generic import RedirectView
 
 from django.shortcuts import render
 
@@ -15,6 +16,8 @@ from search import views as search_views
 
 urlpatterns = [
     path("django-admin/", admin.site.urls),
+    path("admin/", RedirectView.as_view(url="/panel/admin/", permanent=False)),
+    path("admin/<path:subpath>", RedirectView.as_view(url="/panel/admin/%(subpath)s", permanent=False)),
     path("panel/admin/", include(wagtailadmin_urls)),
     path("panel/admin/<path:subpath>", lambda request, subpath: render(request, "wagtailadmin/404.html", status=404)),
     path("panel/documents/", include(wagtaildocs_urls)),

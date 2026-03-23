@@ -17,6 +17,7 @@ class ImportForm(forms.Form):
         help_text='Cargue un archivo CSV o Excel con los datos a importar.'
     )
     actualizar = forms.BooleanField(
+        initial=True,
         required=False,
         label='Actualizar existentes',
         help_text='Si está marcado, actualizará registros existentes; si no, solo creará nuevos.'
