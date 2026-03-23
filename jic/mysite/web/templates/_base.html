@@ -34,6 +34,10 @@
 <body class="flex flex-col min-h-screen">
     {% include 'alert.html' with messages=messages %}
 
+    {% if user.is_staff %}
+        {% wagtailuserbar 'top-right' %}
+    {% endif %}
+
     {% include 'header.html' %}
     <main id="contenido-principal" class="pt-18 overflow-x-hidden">
         {% block content %}{% endblock %}
