@@ -27,24 +27,46 @@
                 
                 <div class="grid gap-6 md:grid-cols-2 mb-8">
                     <div>
-                        <h3 class="mb-1 text-sm font-semibold text-muted-foreground">Universidad</h3>
+                        <h2 class="mb-1 text-sm font-semibold text-muted-foreground">Universidad</h2>
                         <p class="font-medium text-foreground">{{ project.university_display|default:project.university }}</p>
                     </div>
                      <div>
-                        <h3 class="mb-1 text-sm font-semibold text-muted-foreground">Asesor</h3>
+                        <h2 class="mb-1 text-sm font-semibold text-muted-foreground">Asesor</h2>
                         <p class="font-medium text-foreground">{{ project.advisor|default:'-' }}</p>
                     </div>
                 </div>
 
+                {% if project.students %}
                 <div class="mb-8">
-                    <h3 class="mb-3 text-lg font-semibold text-foreground">Resumen</h3>
+                    <h2 class="mb-3 text-lg font-semibold text-foreground">Estudiantes</h2>
+                    <ul class="list-disc space-y-1 pl-5 text-muted-foreground">
+                        {% for student in project.students %}
+                        <li>{{ student }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                {% if project.keywords %}
+                <div class="mb-8">
+                    <h2 class="mb-3 text-lg font-semibold text-foreground">Palabras clave</h2>
+                    <div class="flex flex-wrap gap-2">
+                        {% for keyword in project.keywords %}
+                        <span class="inline-flex items-center rounded-full bg-secondary px-2.5 py-1 text-xs text-foreground">{{ keyword }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="mb-8">
+                    <h2 class="mb-3 text-lg font-semibold text-foreground">Resumen</h2>
                     <div class="prose max-w-none text-muted-foreground">
                         <p class="leading-relaxed">{{ project.abstract }}</p>
                     </div>
                 </div>
 
                 <div class="border-t border-border pt-6">
-                    <h3 class="mb-2 text-sm font-semibold text-foreground">Contacto</h3>
+                    <h2 class="mb-2 text-sm font-semibold text-foreground">Contacto</h2>
                     {% if project.contact %}
                     <a href="mailto:{{ project.contact }}" class="inline-flex gap-1 items-center text-primary hover:underline">
                         <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>

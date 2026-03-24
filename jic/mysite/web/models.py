@@ -16,7 +16,7 @@ from wagtail.images import get_image_model_string
 from wagtail.images.blocks import ImageChooserBlock
 from wagtail.images.models import AbstractImage, AbstractRendition, Image as WagtailImage
 from wagtail.models import PreviewableMixin, Orderable, Page
-from .forms import _FaqAdminForm
+from .forms.forms import _FaqAdminForm
 from .image_pipeline import optimize_and_apply_to_field_file
 from .utils import get_video_file_path, get_video_thumbnail_path, get_document_path
 
@@ -948,6 +948,28 @@ class GalleryImage(Orderable):
         verbose_name_plural = "Gallery Images"
 
 
+class CollectionResourceVisibility(models.Model):
+    collection = models.OneToOneField(
+        "wagtailcore.Collection",
+        on_delete=models.CASCADE,
+        related_name="resource_visibility",
+        verbose_name="Colección",
+    )
+    is_visible_in_resources = models.BooleanField(
+        "Visible en galería de Recursos",
+        default=True,
+        help_text="Controla si esta colección de Wagtail aparece en la pestaña Galería de Recursos.",
+    )
+
+    class Meta:
+        verbose_name = "Visibilidad de colección en Recursos"
+        verbose_name_plural = "Visibilidad de colecciones en Recursos"
+
+    def __str__(self):
+        state = "Visible" if self.is_visible_in_resources else "Oculta"
+        return f"{self.collection.name} ({state})"
+
+
 class title_section_image(Orderable):
     """Carousel image for the title/hero section."""
     
@@ -1143,7 +1165,7 @@ class selection_national(PreviewableMixin, ClusterableModel):
 
     STATUS_CHOICES = [
         ("finalizada", "Finalizada"),
-        ("en proceso", "En proceso"),
+        ("en_proceso", "En proceso"),
     ]
 
     year = models.PositiveIntegerField("Año JIC", unique=True)
@@ -1151,7 +1173,7 @@ class selection_national(PreviewableMixin, ClusterableModel):
         "Estado",
         max_length=20,
         choices=STATUS_CHOICES,
-        default="en proceso",
+        default="en_proceso",
     )
     total_projects = models.PositiveIntegerField("Total de Proyectos (Histórico)", default=0, help_text="Para datos históricos, si no se usan los resultados por categoría.")
     host_place = models.CharField(
@@ -1214,6 +1236,7 @@ class selection_national(PreviewableMixin, ClusterableModel):
             "results": [
                 {
                     "category": r.category, 
+                    "category_display": r.get_category_display(),
                     "participating_projects": r.participating_projects, 
                     "winners": r.winners
                 }

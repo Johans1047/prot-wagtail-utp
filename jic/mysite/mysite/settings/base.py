@@ -115,11 +115,11 @@ WSGI_APPLICATION = "mysite.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRESQL_DATABASE", "db_jicweb"),
-        "USER": os.getenv("POSTGRESQL_USERNAME", "mast_jicweb"),
-        "PASSWORD": os.getenv("POSTGRESQL_PASSWORD", "g0hNw10p1MvY"),
-        "HOST": os.getenv("POSTGRESQL_HOST", "jicweb_master"),
-        "PORT": os.getenv("POSTGRESQL_DATABASE_PORT_NUMBER", "5432"),
+        "NAME": os.getenv("POSTGRESQL_DATABASE"),
+        "USER": os.getenv("POSTGRESQL_POSTGRES_USERNAME"),
+        "PASSWORD": os.getenv("POSTGRESQL_POSTGRES_PASSWORD"),
+        "HOST": os.getenv("POSTGRESQL_HOST"),
+        "PORT": os.getenv("POSTGRESQL_DATABASE_PORT_NUMBER"),
         "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
     }
 }
@@ -201,8 +201,8 @@ STORAGES = {
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10_000
 
 # Allow larger uploads so originals can be compressed after upload.
-FILE_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024
-DATA_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 1000 * 1024 * 1024
+DATA_UPLOAD_MAX_MEMORY_SIZE = 1000 * 1024 * 1024
 
 
 # Wagtail settings
@@ -240,7 +240,7 @@ WAGTAILDOCS_EXTENSIONS = ['csv', 'docx', 'key', 'odt', 'pdf', 'pptx', 'rtf', 'tx
 # Custom document model to add additional metadata fields.
 WAGTAILDOCS_DOCUMENT_MODEL = "web.Document"
 # Use custom document form to validate file size
-WAGTAILDOCS_DOCUMENT_FORM_BASE = "web.image_forms.DocumentAdminForm"
+WAGTAILDOCS_DOCUMENT_FORM_BASE = "web.forms.image_forms.DocumentAdminForm"
 
 # Allowed file extensions for videos
 # Supported video formats: MP4, WebM, Ogg
@@ -250,7 +250,7 @@ WAGTAIL_VIDEO_EXTENSIONS = ['mp4', 'webm', 'ogg', 'mov', 'avi']
 WAGTAIL_GRAVATAR_PROVIDER_URL = None
 
 # Use inherited image admin form to customize tags help text and validate file size
-WAGTAILIMAGES_IMAGE_FORM_BASE = "web.image_forms.ImageAdminForm"
+WAGTAILIMAGES_IMAGE_FORM_BASE = "web.forms.image_forms.ImageAdminForm"
 # Custom image and rendition models to implement custom compression.
 WAGTAILIMAGES_IMAGE_MODEL = "web.CustomImage"
 WAGTAILIMAGES_RENDITION_MODEL = "web.CustomRendition"

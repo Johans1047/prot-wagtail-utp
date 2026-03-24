@@ -550,7 +550,13 @@ def Resultados(request) -> render:
 
     docs_by_year = {}
     for doc in docs_qs:
-        candidate_doc = {"label": doc.title, "type": "PDF", "href": doc.url}
+        tag_names = {tag.strip().lower() for tag in doc.tags.names()}
+        candidate_doc = {
+            "label": doc.title,
+            "type": "PDF",
+            "href": doc.url,
+            "tags": tag_names,
+        }
         if not _is_results_doc(candidate_doc):
             continue
 
@@ -603,6 +609,17 @@ def Resultados(request) -> render:
         db_docs = [d for d in (result_item.get("documents") or []) if _is_results_doc(d)]
         chosen_docs = resource_docs if resource_docs else db_docs
 
+        if year == current_year:
+            current_year_tag = str(current_year)
+            chosen_docs = [
+                d
+                for d in chosen_docs
+                if current_year_tag in {str(t).strip().lower() for t in d.get("tags", [])}
+                and {"ganador", "ganadores"}.intersection(
+                    {str(t).strip().lower() for t in d.get("tags", [])}
+                )
+            ]
+
         seen_hrefs = set()
         dedup_docs = []
         for doc_item in chosen_docs:
@@ -610,7 +627,8 @@ def Resultados(request) -> render:
             if not href or href in seen_hrefs:
                 continue
             seen_hrefs.add(href)
-            dedup_docs.append(doc_item)
+            safe_doc = {k: v for k, v in doc_item.items() if k != "tags"}
+            dedup_docs.append(safe_doc)
 
         result_item["documents"] = dedup_docs
 

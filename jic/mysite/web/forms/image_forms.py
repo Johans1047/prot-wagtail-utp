@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from wagtail.images.forms import BaseImageForm
 from wagtail.documents.forms import BaseDocumentForm
+from wagtail.images.forms import BaseImageForm
 
 
 class ImageAdminForm(BaseImageForm):
@@ -18,12 +18,12 @@ class ImageAdminForm(BaseImageForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        file_field = cleaned_data.get('file')
-        
+        file_field = cleaned_data.get("file")
+
         if file_field:
-            max_size = getattr(settings, 'WAGTAILIMAGES_MAX_UPLOAD_SIZE', 10 * 1024 * 1024)
+            max_size = getattr(settings, "WAGTAILIMAGES_MAX_UPLOAD_SIZE", 10 * 1024 * 1024)
             file_size = file_field.size
-            
+
             if file_size > max_size:
                 max_size_mb = max_size / (1024 * 1024)
                 file_size_mb = file_size / (1024 * 1024)
@@ -31,7 +31,7 @@ class ImageAdminForm(BaseImageForm):
                     f"El archivo es demasiado grande ({file_size_mb:.2f} MB). "
                     f"El tamaño máximo permitido es {max_size_mb:.2f} MB."
                 )
-        
+
         return cleaned_data
 
 
@@ -49,12 +49,12 @@ class DocumentAdminForm(BaseDocumentForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        file_field = cleaned_data.get('file')
-        
+        file_field = cleaned_data.get("file")
+
         if file_field:
-            max_size = getattr(settings, 'FILE_UPLOAD_MAX_MEMORY_SIZE', 20 * 1024 * 1024)
+            max_size = getattr(settings, "FILE_UPLOAD_MAX_MEMORY_SIZE", 20 * 1024 * 1024)
             file_size = file_field.size
-            
+
             if file_size > max_size:
                 max_size_mb = max_size / (1024 * 1024)
                 file_size_mb = file_size / (1024 * 1024)
@@ -62,5 +62,5 @@ class DocumentAdminForm(BaseDocumentForm):
                     f"El archivo es demasiado grande ({file_size_mb:.2f} MB). "
                     f"El tamaño máximo permitido es {max_size_mb:.2f} MB."
                 )
-        
+
         return cleaned_data

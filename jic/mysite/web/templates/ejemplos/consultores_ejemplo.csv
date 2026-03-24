@@ -1,6 +1,0 @@
-nombre,email,institucion,activo
-"Dr. Juan Carlos Pérez Silva","juan.perez@universidad.edu.co","Universidad Nacional de Colombia",true
-"Dra. María Alejandra García López","maria.garcia@puj.edu.co","Pontificia Universidad Javeriana",true
-"Ing. Carlos Andrés Rodríguez Martínez","carlos.rodriguez@udi.edu.co","Universidad de Ibagué",true
-"Prof. Sandra Beatriz López Jiménez","sandra.lopez@unicauca.edu.co","Universidad del Cauca",false
-"Dr. Fabio García Castañeda","fabio.garcia@utb.edu.co","Universidad Tecnológica de Bolívar",true

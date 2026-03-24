@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.utils import timezone
 from wagtail.admin.menu import MenuItem
 from django.core.paginator import Paginator
+from django.db.models import Q
 from django.db.utils import OperationalError, ProgrammingError
 from wagtail.images import get_image_model
 from wagtail.images.models import Image
@@ -167,87 +168,99 @@ def _get_mock_projects_data() -> dict:
                     "ganadores_historicos": [
             {
                             "id": 1,
-                            "titulo": "Sistema de monitoreo ambiental con IoT para la detección temprana de contaminantes",
-                            "ano": "2024",
-                            "universidad": "Universidad Tecnológica de Panamá",
+                            "titulo": "Sistema de monitoreo ambiental con IoT",
+                            "ano": "2025",
+                            "universidad": "Universidad Tecnologica de Panama",
                             "siglas": "UTP",
-                            "resumen": "Desarrollo de una red de sensores IoT para monitoreo de calidad del aire y alertas tempranas en zonas urbanas.",
-                            "categoria": "Ingeniería",
+                            "resumen": "Desarrollo de sensores IoT para medir calidad del aire y emitir alertas tempranas en tiempo real.",
+                            "categoria": "Ingenieria",
                             "premio": "Primer Lugar",
-                            "asesor": "Juan Pérez",
-                            "email": "juan.perez@utp.ac.pa",
-                            "institucion": "Universidad Tecnológica de Panamá",
-                            "activo": 1
+                            "asesor": "Carlos Mendoza",
+                            "email": "carlos.mendoza@utp.ac.pa",
+                            "institucion": "Facultad de Ingenieria Electrica",
+                            "activo": 1,
+                            "estudiantes": ["Andrés Fuentes", "Valeria Ríos", "Miguel Herrera"],
+                            "keywords": ["IoT", "calidad del aire", "sensores", "alertas tempranas", "monitoreo"]
             },
             {
                             "id": 2,
-                            "titulo": "Análisis de biomarcadores en pacientes con diabetes tipo 2 en población panameña",
-                            "ano": "2024",
-                            "universidad": "Universidad de Panamá",
+                            "titulo": "Gemelo digital para mantenimiento predictivo industrial",
+                            "ano": "2025",
+                            "universidad": "Universidad de Panama",
                             "siglas": "UP",
-                            "resumen": "Evaluación clínica de biomarcadores asociados a progresión de diabetes tipo 2 en cohortes universitarias.",
-                            "categoria": "Ciencias de la Salud",
-                            "premio": "Primer Lugar",
-                            "asesor": "María García",
+                            "resumen": "Plataforma de analitica para anticipar fallas en maquinaria critica mediante series temporales.",
+                            "categoria": "Ingenieria",
+                            "premio": "Segundo Lugar",
+                            "asesor": "Maria Garcia",
                             "email": "maria.garcia@up.ac.pa",
-                            "institucion": "Universidad de Panamá",
-                            "activo": 1
+                            "institucion": "Facultad de Ingenieria",
+                            "activo": 1,
+                            "estudiantes": ["Camila Núñez", "Sebastián Mora", "Lucía Pinto"],
+                            "keywords": ["gemelo digital", "mantenimiento predictivo", "series temporales", "analítica industrial"]
             },
             {
                             "id": 3,
-                            "titulo": "Modelado matemático de ecosistemas costeros del Golfo de Panamá",
-                            "ano": "2024",
-                            "universidad": "Universidad Tecnológica de Panamá",
-                            "siglas": "UTP",
-                            "resumen": "Se propone un modelo de dinámica de poblaciones para analizar resiliencia ecológica en ecosistemas costeros.",
-                            "categoria": "Ciencias Naturales y Exactas",
-                            "premio": "Segundo Lugar",
-                            "asesor": "Ana López",
-                            "email": "ana.lopez@utp.ac.pa",
-                            "institucion": "Universidad Tecnológica de Panamá",
-                            "activo": 1
+                            "titulo": "Materiales biodegradables con residuos agricolas",
+                            "ano": "2025",
+                            "universidad": "Universidad Autonoma de Chiriqui",
+                            "siglas": "UNACHI",
+                            "resumen": "Creacion de biopolimeros para empaques sostenibles aprovechando subproductos agroindustriales.",
+                            "categoria": "Ingenieria",
+                            "premio": "Tercer Lugar",
+                            "asesor": "Diana Herrera",
+                            "email": "diana.herrera@unachi.ac.pa",
+                            "institucion": "Laboratorio de Innovacion Sostenible",
+                            "activo": 1,
+                            "estudiantes": ["Daniela Salas", "Jorge Quirós", "Fernanda Leal"],
+                            "keywords": ["biopolímeros", "empaques sostenibles", "residuos agrícolas", "agroindustria", "economía circular"]
             },
             {
                             "id": 4,
-                            "titulo": "Impacto socioeconómico de la migración en comunidades rurales de Darién",
-                            "ano": "2024",
-                            "universidad": "Universidad Latina de Panamá",
+                            "titulo": "Analisis de biomarcadores en diabetes tipo 2",
+                            "ano": "2025",
+                            "universidad": "Universidad Latina de Panama",
                             "siglas": "ULAT",
-                            "resumen": "Estudio mixto sobre movilidad humana, empleo y acceso a servicios en comunidades de alta vulnerabilidad.",
-                            "categoria": "Ciencias Sociales y Humanísticas",
-                            "premio": "Segundo Lugar",
+                            "resumen": "Estudio de biomarcadores clinicos asociados a progresion de diabetes tipo 2 en poblacion universitaria.",
+                            "categoria": "Ciencias de la Salud",
+                            "premio": "Primer Lugar",
                             "asesor": "Roberto Castillo",
                             "email": "roberto.castillo@ulatina.edu.pa",
-                            "institucion": "Universidad Latina de Panamá",
-                            "activo": 1
+                            "institucion": "Facultad de Medicina",
+                            "activo": 1,
+                            "estudiantes": ["Andrea Villar", "Tomás Espino", "Natalia Cruz"],
+                            "keywords": ["biomarcadores", "diabetes tipo 2", "población universitaria", "diagnóstico clínico"]
             },
             {
                             "id": 5,
-                            "titulo": "Desarrollo de materiales biodegradables a partir de residuos agrícolas",
-                            "ano": "2023",
-                            "universidad": "Universidad Católica Santa María la Antigua",
+                            "titulo": "Prediccion de brotes de dengue con ML",
+                            "ano": "2025",
+                            "universidad": "Universidad Catolica Santa Maria La Antigua",
                             "siglas": "USMA",
-                            "resumen": "Investigación de compuestos biodegradables para empaque sostenible usando subproductos agroindustriales.",
-                            "categoria": "Ingeniería",
-                            "premio": "Tercer Lugar",
+                            "resumen": "Modelo predictivo con datos climaticos y epidemiologicos para apoyar decisiones de salud publica.",
+                            "categoria": "Ciencias de la Salud",
+                            "premio": "Segundo Lugar",
                             "asesor": "Fernando Morales",
-                            "email": "fmorales@usma.ac.pa",
-                            "institucion": "Universidad Católica Santa María la Antigua",
-                            "activo": 1
+                            "email": "fernando.morales@usma.ac.pa",
+                            "institucion": "Centro de Analitica en Salud",
+                            "activo": 1,
+                            "estudiantes": ["Ricardo Blanco", "Sofía Arias", "Manuel Delgado"],
+                            "keywords": ["dengue", "machine learning", "epidemiología", "salud pública", "predicción"]
             },
             {
                             "id": 6,
-                            "titulo": "Evaluación de plantas medicinales nativas con propiedades antiinflamatorias",
-                            "ano": "2023",
-                            "universidad": "Universidad Autónoma de Chiriquí",
-                            "siglas": "UNACHI",
-                            "resumen": "Caracterización fitoquímica y pruebas preliminares de actividad antiinflamatoria in vitro.",
+                            "titulo": "Plantas medicinales con actividad antiinflamatoria",
+                            "ano": "2025",
+                            "universidad": "Universidad Especializada de las Americas",
+                            "siglas": "UDELAS",
+                            "resumen": "Caracterizacion fitoquimica y pruebas in vitro de especies nativas con potencial terapeutico.",
                             "categoria": "Ciencias de la Salud",
                             "premio": "Tercer Lugar",
-                            "asesor": "Diana Herrera",
-                            "email": "dherrera@unachi.ac.pa",
-                            "institucion": "Universidad Autónoma de Chiriquí",
-                            "activo": 1
+                            "asesor": "Patricia Solis",
+                            "email": "patricia.solis@udelas.ac.pa",
+                            "institucion": "Instituto de Investigacion Biomedica",
+                            "activo": 1,
+                            "estudiantes": ["Isabela Mora", "Carlos Rivas", "Alejandra Vega"],
+                            "keywords": ["fitoquímica", "plantas medicinales", "antiinflamatorio", "especies nativas", "in vitro"]
             }
           ]
         }
@@ -307,6 +320,16 @@ def _parse_year(value) -> int:
         return int(str(value).strip())
     except (TypeError, ValueError):
         return 0
+
+
+def _normalize_string_list(value) -> list[str]:
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+
+    if isinstance(value, str):
+        return [item.strip() for item in value.split(",") if item.strip()]
+
+    return []
 
 
 def _parse_winner(value) -> tuple[int, str]:
@@ -425,6 +448,8 @@ def _get_projects_from_database() -> list[dict]:
                 "winner_label": winner_label_map.get(int(p.winner or 0), ""),
                 "abstract": (p.abstract or "").strip(),
                 "institution": (advisor_institution or university or "").strip(),
+                "students": [],
+                "keywords": [],
             }
         )
 
@@ -460,11 +485,69 @@ def _normalize_projects_payload(projects_payload: dict) -> list[dict]:
                 "winner_label": winner_label,
                 "abstract": (project.get("resumen") or project.get("abstract") or "").strip(),
                 "institution": (project.get("institucion") or "").strip(),
+                "students": _normalize_string_list(project.get("estudiantes", project.get("students"))),
+                "keywords": _normalize_string_list(project.get("keywords", project.get("palabras_clave"))),
             }
         )
 
     normalized_projects.sort(key=lambda p: (p["year"], p["title"]), reverse=True)
     return normalized_projects
+
+
+def _build_project_match_keys(item: dict) -> tuple[tuple, tuple, tuple]:
+    project_id = int(item.get("id") or 0)
+    year = int(item.get("year") or 0)
+    title = (item.get("title") or "").strip().lower()
+    university = (item.get("university") or "").strip().lower()
+
+    by_id = (project_id,)
+    by_title_year_university = (title, year, university)
+    by_title_year = (title, year)
+    return by_id, by_title_year_university, by_title_year
+
+
+def _enrich_projects_with_api_fields(base_projects: list[dict]) -> list[dict]:
+    if not base_projects:
+        return base_projects
+
+    api_projects = sync_projects_from_api()
+    if not api_projects:
+        return base_projects
+
+    by_id: dict[tuple, dict] = {}
+    by_tyu: dict[tuple, dict] = {}
+    by_ty: dict[tuple, dict] = {}
+
+    for api_item in api_projects:
+        key_id, key_tyu, key_ty = _build_project_match_keys(api_item)
+        if key_id[0] > 0:
+            by_id[key_id] = api_item
+        if key_tyu[0] and key_tyu[1] > 0:
+            by_tyu[key_tyu] = api_item
+        if key_ty[0] and key_ty[1] > 0:
+            by_ty[key_ty] = api_item
+
+    enriched = []
+    for item in base_projects:
+        key_id, key_tyu, key_ty = _build_project_match_keys(item)
+
+        match = None
+        if key_id[0] > 0:
+            match = by_id.get(key_id)
+        if not match:
+            match = by_tyu.get(key_tyu)
+        if not match:
+            match = by_ty.get(key_ty)
+
+        if match:
+            merged = dict(item)
+            merged["students"] = match.get("students") or item.get("students") or []
+            merged["keywords"] = match.get("keywords") or item.get("keywords") or []
+            enriched.append(merged)
+        else:
+            enriched.append(item)
+
+    return enriched
 
 
 def sync_projects_from_api() -> list[dict]:
@@ -479,7 +562,7 @@ def get_processed_projects() -> list[dict]:
     # Priority order: local DB (imported/admin data) -> external API -> in-code fallback.
     projects_from_db = _get_projects_from_database()
     if projects_from_db:
-        return projects_from_db
+        return _enrich_projects_with_api_fields(projects_from_db)
 
     normalized_projects = sync_projects_from_api()
     return normalized_projects
@@ -522,17 +605,80 @@ def get_document_path(instance, filename) -> str:
     return f"documentos/{doc_type}/{year}/{filename}"
 
 
+def _sanitize_alt_text(filename_or_title: str) -> str:
+    """
+    Convert filename or title into accessible alt text.
+    Removes file extensions, cleans special characters, and provides fallback.
+    
+    Examples:
+    - "2025.10.01 JIC GRAN FINAL - JIC GRAN FINAL (93).jpg" → "Evento JIC 2025"
+    - "image_2025_award.png" → "Premiación JIC"
+    - "photo.jpg" → "Imagen del evento"
+    """
+    if not filename_or_title:
+        return "Imagen del evento"
+    
+    import re
+    
+    text = str(filename_or_title).strip()
+    
+    # Remove file extensions
+    text = re.sub(r'\.\w+$', '', text)
+    
+    # Remove obvious duplicate halves around hyphen, e.g. "JIC GRAN FINAL - JIC GRAN FINAL"
+    if " - " in text:
+        left, right = text.split(" - ", 1)
+        if left.strip().lower() == right.strip().lower():
+            text = left.strip()
+    
+    # Remove file hashes and technical suffixes (e.g., "(93)", "abc123")
+    text = re.sub(r'\s*\(\d+\)\s*', ' ', text)
+    text = re.sub(r'\s*[a-f0-9]{8,}\s*', ' ', text)
+    
+    # Clean up dates in format YYYY.MM.DD or YYYY-MM-DD
+    text = re.sub(r'\d{4}[.\-]\d{2}[.\-]\d{2}\s*', '', text)
+    
+    # Replace underscores and extra spaces
+    text = text.replace('_', ' ').strip()
+    text = re.sub(r'\s+', ' ', text)
+    
+    # If the source still looks like a technical filename, return a safe generic alt.
+    looks_like_filename = bool(
+        re.search(r"\b(img|dsc|pxl|whatsapp|screenshot|image)\b", text, re.IGNORECASE)
+        or re.search(r"\d{2,}", text)
+        or re.search(r"\b[jJ][pP][eE]?[gG]\b|\b[pP][nN][gG]\b|\b[wW][eE][bB][pP]\b", text)
+    )
+
+    # If we have meaningful cleaned text, use it.
+    if len(text) > 8 and not looks_like_filename:
+        return text
+    
+    # Default fallback based on context
+    return "Fotografia del evento JIC"
+
+
 def get_recursos_gallery(request, tab, current_img_cat, fallback_images) -> tuple[list[dict], list[str], Paginator.page]: #Paginator.page | None
     from .models import Gallery
     gallery_images = []
     gallery_categories = ['General']
     page_obj_gall = None
+    gallery_is_configured = False
     
     try:
         gallery = Gallery.objects.prefetch_related('gallery_images__image__tags').first()
         
         if gallery and gallery.gallery_images.exists():
-            gallery_images_qs = gallery.gallery_images.select_related('image').order_by('-image__created_at')
+            gallery_is_configured = True
+            gallery_images_qs = (
+                gallery.gallery_images
+                .select_related('image')
+                .order_by('-image__created_at')
+            )
+            gallery_images_qs = gallery_images_qs.filter(
+                Q(image__collection__resource_visibility__is_visible_in_resources=True)
+                | Q(image__collection__resource_visibility__isnull=True)
+            )
+
             gallery_categories = list(set(gallery_images_qs.exclude(category__isnull=True).exclude(category='').values_list('category', flat=True)))
             gallery_categories = sorted(gallery_categories, reverse=True)
             if not gallery_categories:
@@ -554,7 +700,10 @@ def get_recursos_gallery(request, tab, current_img_cat, fallback_images) -> tupl
                 if not description and hasattr(item.image, 'description') and item.image.description:
                      description = item.image.description
                      
-                alt_text = item.alt_text if hasattr(item, 'alt_text') and item.alt_text else item.image.title
+                raw_alt = item.alt_text if hasattr(item, 'alt_text') and item.alt_text else ''
+                if not raw_alt:
+                    raw_alt = description if description else item.image.title
+                alt_text = _sanitize_alt_text(raw_alt)
                 thumb_src = (
                     _get_wagtail_rendition_url(item.image, "fill-600x600|jpegquality-75")
                     or item.image.file.url
@@ -590,11 +739,15 @@ def get_recursos_gallery(request, tab, current_img_cat, fallback_images) -> tupl
                     or img.file.url
                 )
 
+                raw_alt = img.title
+                if hasattr(img, 'description') and img.description:
+                    raw_alt = img.description
+
                 gallery_images.append({
                     'obj': img,
                     'src': thumb_src,
                     'full_src': lightbox_src,
-                    'alt': img.title,
+                    'alt': _sanitize_alt_text(raw_alt),
                     'title': img.title,
                     'description': img.get_title() if hasattr(img, 'get_title') else '',
                     'category': 'General',
@@ -603,8 +756,13 @@ def get_recursos_gallery(request, tab, current_img_cat, fallback_images) -> tupl
     except (OperationalError, ProgrammingError, Exception) as e:
         print(f'Error loading gallery: {e}')
         
-    if not gallery_images:
-        gallery_images = fallback_images
+    if not gallery_images and not gallery_is_configured:
+        gallery_images = []
+        for img in fallback_images:
+            raw_alt = img.get('alt') or img.get('description') or img.get('title') or ''
+            normalized = dict(img)
+            normalized['alt'] = _sanitize_alt_text(raw_alt)
+            gallery_images.append(normalized)
         gallery_categories = sorted(list(set(img['category'] for img in gallery_images)), reverse=True)
         if current_img_cat != 'all':
             gallery_images = [img for img in gallery_images if img['category'] == current_img_cat]
@@ -660,3 +818,21 @@ def get_recursos_videos(request, tab, fallback_videos) -> tuple[list[dict], Pagi
         videos = page_obj_vid.object_list
         
     return videos, page_obj_vid
+
+# Photo collection name in Wagtail to identify gallery images.
+PHOTO_COLLECTION_ROOT_NAME = "Fotos"
+def _is_photo_collection(collection):
+    """
+    Verify if the given Wagtail collection is the designated photo collection or a descendant of it, based on the collection name.
+    """
+    if collection.name == PHOTO_COLLECTION_ROOT_NAME:
+        return True
+    
+    # Check if it is a descendant of the photo collection root
+    parent = collection.get_parent()
+    while parent:
+        if parent.name == PHOTO_COLLECTION_ROOT_NAME:
+            return True
+        parent = parent.get_parent()
+    
+    return False

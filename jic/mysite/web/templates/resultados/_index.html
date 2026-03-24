@@ -1,4 +1,6 @@
 {% extends '_base.html' %}
+{% load static %}
+
 {% block title %}Resultados{% endblock %}
 {% block meta_description %}Resultados y actas de las ediciones anteriores de la Jornada de Iniciación Científica Nacional de Panamá.{% endblock %}
 
@@ -7,5 +9,9 @@
     {% include 'resultados/components/results.html' %}
     {% include 'resultados/components/historical.html' %}
     {% include 'pagination.html' with color="bg-card" %}
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/alert.js' %}?{% now "U" %}"></script>
 {% endblock %}
 

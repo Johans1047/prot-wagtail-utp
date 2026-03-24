@@ -78,79 +78,109 @@
                 </div>
             </article>
 
-            {% if current_result and current_result.documents %}
-            <article class="rounded-xl border border-border bg-stone-neutral-50 p-6">
-                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            {% if current_result %}
+            <article class="overflow-hidden rounded-xl border border-border bg-card">
+                <!-- Header -->
+                <header class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between p-6 pb-4">
                     <div>
-                        <h3 class="font-semibold text-foreground">Documentos JIC {{ current_year }}</h3>
-                        <p class="text-sm text-muted-foreground">Documentación disponible de la edición actual.</p>
+                        <h3 class="font-serif text-xl text-foreground md:text-2xl">Resultados JIC {{ current_year }}</h3>
+                        <p class="mt-1 text-sm text-muted-foreground">
+                            {% if current_result.host_university %}Sede: <strong>{{ current_result.host_university }}</strong> &middot; {% endif %}
+                            <strong>{{ current_result.universities|default:"0" }}</strong> Universidades Participantes
+                            {% if current_result.totalProjects %}&middot; <strong>{{ current_result.totalProjects }}</strong> Proyectos Históricos{% endif %}
+                        </p>
                     </div>
-                    <span class="inline-flex w-fit items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                        {{ current_result.status|default:"en_proceso"|title }}
+                    {% if current_result.status %}
+                    {% if current_result.results or current_result.documents or current_result.status == 'en_proceso' or current_result.status == 'pendiente' %}
+                    <span class="inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold
+                        {% if current_result.status == 'completada' or current_result.status == 'finalizada' %}bg-green-100 text-green-800
+                        {% elif current_result.status == 'en_proceso' %}bg-yellow-100 text-yellow-800
+                        {% else %}bg-primary/10 text-primary{% endif %}">
+                        {% if current_result.status == "en_proceso" %}En proceso{% elif current_result.status == 'completada' or current_result.status == 'finalizada' %}Finalizada{% else %}{{ current_result.status|title }}{% endif %}
                     </span>
+                    {% endif %}
+                    {% endif %}
+                </header>
+
+                {% if current_result.results %}
+                <!-- Results table -->
+                <div class="overflow-x-auto px-6 pb-4">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-border text-left text-xs text-muted-foreground">
+                                <th class="pb-2 pr-4 font-medium">Categoría</th>
+                                <th class="pb-2 px-4 text-center font-medium">Proyectos Participantes</th>
+                                <th class="pb-2 pl-4 text-center font-medium">Ganadores</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in current_result.results %}
+                            <tr class="border-t border-border">
+                                <td class="py-3 pr-4 font-medium text-foreground">{{ r.category_display|default:r.category|title }}</td>
+                                <td class="px-4 py-3 text-center text-muted-foreground">{{ r.participating_projects }}</td>
+                                <td class="pl-4 py-3 text-center font-semibold text-primary">{{ r.winners }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-                <div class="mt-4 flex flex-wrap gap-2">
-                    {% for doc in current_result.documents %}
-                    <a
-                        href="{{ doc.href }}"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="inline-flex items-center gap-2 rounded-lg border border-stone-neutral-300 bg-card px-4 py-2 text-sm text-foreground transition-colors hover:border-stone-neutral-400 hover:bg-stone-neutral-200"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            class="lucide lucide-download h-3.5 w-3.5 text-muted-foreground"
-                            aria-hidden="true"
-                        ><path d="M12 15V3"></path><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5"></path></svg>
-                        {{ doc.label }}
-                        <span class="rounded-sm bg-stone-neutral-200 px-1.5 py-0.5 text-2xs font-bold text-muted-foreground">{{ doc.type|default:"PDF" }}</span>
-                    </a>
-                    {% endfor %}
+                {% endif %}
+
+                {% if current_result.documents %}
+                <!-- Documents -->
+                <div class="border-t border-border bg-stone-neutral-50 p-6">
+                    <h4 class="mb-3 text-sm font-semibold text-foreground">Documentos y actas de resultados:</h4>
+                    <div class="flex flex-wrap gap-2">
+                        {% for doc in current_result.documents %}
+                        <a
+                            href="{{ doc.href }}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="inline-flex items-center gap-2 rounded-lg border border-stone-neutral-300 bg-card px-4 py-2 text-sm text-foreground transition-colors hover:border-stone-neutral-400 hover:bg-stone-neutral-200"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="lucide lucide-download h-3.5 w-3.5 text-muted-foreground"
+                                aria-hidden="true"
+                                ><path d="M12 15V3"></path><path
+                                    d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                                ></path><path d="m7 10 5 5 5-5"></path></svg
+                            >
+                            {{ doc.label }}
+                            <span
+                                class="rounded-sm bg-stone-neutral-200 px-1.5 py-0.5 text-2xs font-bold text-muted-foreground"
+                                >{{ doc.type }}</span
+                            >
+                        </a>
+                        {% endfor %}
+                    </div>
                 </div>
+                {% endif %}
+
+                {% if not current_result.results and not current_result.documents %}
+                {% if current_result.status == 'pendiente' or current_result.status == 'en_proceso' %}
+                <div class="border-t border-border bg-yellow-50 p-6 text-center">
+                    <p class="text-sm text-yellow-800">
+                        La JIC Nacional {{ current_year }} está actualmente en proceso. Los resultados y actas oficiales se publicarán en esta sección al concluir.
+                    </p>
+                </div>
+                {% else %}
+                <div class="border-t border-border p-6 text-center">
+                    <p class="text-sm text-muted-foreground">
+                        Aún no se han detallado resultados para esta edición.
+                    </p>
+                </div>
+                {% endif %}
+                {% endif %}
             </article>
-            {% else %}
-            <!-- Resultados pendientes -->
-            <aside
-                class="rounded-xl border-2 border-dashed border-border bg-card p-8 text-center"
-                aria-label="Estado de resultados"
-            >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="lucide lucide-calendar mx-auto mb-3 h-8 w-8 text-muted-foreground md:h-10 md:w-10"
-                    aria-hidden="true"
-                >
-                    <path d="M8 2v4"></path>
-                    <path d="M16 2v4"></path>
-                    <rect width="18" height="18" x="3" y="4" rx="2"></rect>
-                    <path d="M3 10h18"></path>
-                </svg>
-                <p
-                    class="text-base font-semibold text-foreground md:text-lg lg:text-xl"
-                >
-                    Los resultados de la JIC Nacional {{ current_year }} serán
-                    publicados al finalizar el evento.
-                </p>
-                <p class="mt-2 text-xs text-muted-foreground md:text-sm">
-                    Visita esta página después del evento para ver los
-                    resultados oficiales.
-                </p>
-            </aside>
             {% endif %}
         </div>
     </div>

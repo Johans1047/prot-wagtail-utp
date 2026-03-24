@@ -6,8 +6,10 @@ from django.db import models
 from django.db.models.signals import post_save, pre_save
 from wagtail.images import get_image_model
 from wagtail.images.models import AbstractRendition
+from wagtail.models import Collection
 
 from .image_pipeline import optimize_and_apply_to_field_file
+from .models import CollectionResourceVisibility
 
 
 def _sync_key(instance, field_name: str) -> str:
@@ -80,3 +82,22 @@ def register_imagefield_sync_signals() -> None:
         dispatch_uid = f"web.sync_imagefield_to_wagtail.{model._meta.label_lower}"
         pre_save.connect(compress_model_image_fields, sender=model, dispatch_uid=f"{dispatch_uid}.compress")
         post_save.connect(sync_instance_image_fields, sender=model, dispatch_uid=dispatch_uid)
+
+
+def sync_collection_resources_visibility(sender, instance, **kwargs) -> None:
+    pending = getattr(instance, "_resource_visibility_pending", None)
+    if pending is None:
+        return
+
+    CollectionResourceVisibility.objects.update_or_create(
+        collection=instance,
+        defaults={"is_visible_in_resources": bool(pending)},
+    )
+
+
+def register_collection_visibility_signal() -> None:
+    post_save.connect(
+        sync_collection_resources_visibility,
+        sender=Collection,
+        dispatch_uid="web.collection_resources_visibility.sync",
+    )

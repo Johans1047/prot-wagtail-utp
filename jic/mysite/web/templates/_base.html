@@ -52,8 +52,7 @@
 
     {% if debug %} <script src="http://127.0.0.1:35729/livereload.js"></script> {% endif %}
     <script src="{% static 'js/flowbite.min.js' %}"></script>
-    <script src="{% static 'js/winners_carousel.js' %}"></script>
-    <script src="{% static 'js/alert.js' %}"></script>
+    {% block extra_js %}{% endblock %}
 </body>
 
 </html>

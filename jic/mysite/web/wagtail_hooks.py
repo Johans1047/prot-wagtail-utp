@@ -1,12 +1,16 @@
 from django.urls import reverse, path
 from django.utils.html import format_html
 from django.templatetags.static import static
+from functools import cached_property
 from wagtail import hooks
 from wagtail.admin.menu import MenuItem, SubmenuMenuItem, Menu
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet, SnippetViewSetGroup
+from wagtail.admin.views import collections as wagtail_collections_views
+from wagtail.admin.forms.collections import CollectionForm
 from .policies import SingletonPermissionPolicy
-from .utils import LazyMenuItem
+from .utils import LazyMenuItem, _is_photo_collection
+from .forms.collection_forms import ExtendedCollectionForm
 from .models import (
     important_date,
     frequently_ask_question,
@@ -280,3 +284,41 @@ def register_import_menu():
         icon_name='upload',
         order=105,
     )
+
+
+# ─────────── Custom create/edit views for collections to apply ExtendedCollectionForm ─────────── 
+# ─────────── conditionally based on whether it's a photo collection or not. ───────────
+_original_create_view_class = wagtail_collections_views.Create
+_original_edit_view_class = wagtail_collections_views.Edit
+
+
+class PhotoCollectionCreateView(_original_create_view_class):
+    """Create view que aplica ExtendedCollectionForm solo si parent es colección de fotos."""
+    
+    @cached_property
+    def form_class(self):
+        from wagtail.models import Collection
+        
+        parent_id = self.request.GET.get('parent')
+        if parent_id:
+            try:
+                parent = Collection.objects.get(id=parent_id)
+                if _is_photo_collection(parent):
+                    return ExtendedCollectionForm
+            except Collection.DoesNotExist:
+                pass
+        return CollectionForm
+
+
+class PhotoCollectionEditView(_original_edit_view_class):
+    """Edit view que aplica ExtendedCollectionForm solo si la colección actual es de fotos."""
+    
+    @cached_property
+    def form_class(self):
+        if _is_photo_collection(self.object):
+            return ExtendedCollectionForm
+        return CollectionForm
+
+
+wagtail_collections_views.Create = PhotoCollectionCreateView
+wagtail_collections_views.Edit = PhotoCollectionEditView

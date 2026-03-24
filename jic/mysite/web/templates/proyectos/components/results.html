@@ -10,12 +10,14 @@
             <table class="w-full text-sm">
                 <thead>
                     <tr class="bg-secondary/45">
-                        <th class="px-4 py-3 text-left font-semibold text-foreground">Año</th>
-                        <th class="px-4 py-3 text-left font-semibold text-foreground">Título</th>
-                        <th class="hidden px-4 py-3 text-left font-semibold text-foreground md:table-cell">Universidad</th>
-                        <th class="hidden px-4 py-3 text-left font-semibold text-foreground lg:table-cell">Categoría</th>
-                        <th class="hidden px-4 py-3 text-left font-semibold text-foreground sm:table-cell">Asesor</th>
-                        <th class="w-12 px-4 py-3 text-center font-semibold text-foreground"></th>
+                        <th scope="col" class="px-4 py-3 text-left font-semibold text-foreground">Año</th>
+                        <th scope="col" class="px-4 py-3 text-left font-semibold text-foreground">Título</th>
+                        <th scope="col" class="hidden px-4 py-3 text-left font-semibold text-foreground md:table-cell">Universidad</th>
+                        <th scope="col" class="hidden px-4 py-3 text-left font-semibold text-foreground lg:table-cell">Categoría</th>
+                        <th scope="col" class="hidden px-4 py-3 text-left font-semibold text-foreground sm:table-cell">Asesor</th>
+                        <th scope="col" class="w-12 px-4 py-3 text-center font-semibold text-foreground">
+                            <span class="sr-only">Acciones</span>
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
@@ -32,6 +34,8 @@
                             data-contact="{{ project.contact|escape }}"
                             data-prize="{{ project.winner_label|default:''|escape }}"
                             data-abstract="{{ project.abstract|escape }}"
+                            data-students="{{ project.students|default:''|join:'||'|escape }}"
+                            data-keywords="{{ project.keywords|default:''|join:'||'|escape }}"
                             onclick="openProjectModal(this)"
                         >
                             <td class="px-4 py-3 text-foreground">
@@ -100,14 +104,22 @@
                 <span id="modal-prize" class="ml-2 hidden rounded-full bg-yellow-100 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide text-yellow-800"></span>
             </div>
         </div>
-        <h2 id="modal-title" class="text-xl font-bold text-foreground"></h2>
+        <h2 id="modal-title" class="text-xl font-bold text-foreground">Detalle del proyecto</h2>
         <div class="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
             <div><span class="text-muted-foreground">Universidad: </span><span id="modal-university" class="font-medium text-foreground"></span></div>
             <div><span class="text-muted-foreground">Asesor: </span><span id="modal-advisor" class="font-medium text-foreground"></span></div>
             <div><span class="text-muted-foreground">Contacto: </span><a id="modal-contact" class="font-medium text-primary hover:underline" href="#"></a></div>
         </div>
+        <div id="modal-students-section" class="mt-6 hidden">
+            <p class="mb-2 text-sm font-semibold text-foreground">Estudiantes</p>
+            <ul id="modal-students" class="list-disc space-y-1 pl-5 text-sm text-muted-foreground"></ul>
+        </div>
+        <div id="modal-keywords-section" class="mt-6 hidden">
+            <p class="mb-2 text-sm font-semibold text-foreground">Palabras clave</p>
+            <div id="modal-keywords" class="flex flex-wrap gap-2"></div>
+        </div>
         <div class="mt-6">
-            <h3 class="mb-2 text-sm font-semibold text-foreground">Resumen</h3>
+            <p class="mb-2 text-sm font-semibold text-foreground">Resumen</p>
             <p id="modal-abstract" class="text-sm leading-relaxed text-muted-foreground"></p>
             <a id="modal-view-more" href="" class="mt-2 hidden items-center gap-1 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90">
                 Ver más
@@ -160,6 +172,37 @@
         } else {
             viewMoreEl.classList.remove('inline-flex');
             viewMoreEl.classList.add('hidden');
+        }
+
+        var students = (d.students || '').split('||').map(function (item) { return item.trim(); }).filter(Boolean);
+        var studentsSection = document.getElementById('modal-students-section');
+        var studentsList = document.getElementById('modal-students');
+        studentsList.innerHTML = '';
+        if (students.length) {
+            students.forEach(function (student) {
+                var li = document.createElement('li');
+                li.textContent = student;
+                studentsList.appendChild(li);
+            });
+            studentsSection.classList.remove('hidden');
+        } else {
+            studentsSection.classList.add('hidden');
+        }
+
+        var keywords = (d.keywords || '').split('||').map(function (item) { return item.trim(); }).filter(Boolean);
+        var keywordsSection = document.getElementById('modal-keywords-section');
+        var keywordsWrap = document.getElementById('modal-keywords');
+        keywordsWrap.innerHTML = '';
+        if (keywords.length) {
+            keywords.forEach(function (keyword) {
+                var chip = document.createElement('span');
+                chip.className = 'inline-flex items-center rounded-full bg-secondary px-2.5 py-1 text-xs text-foreground';
+                chip.textContent = keyword;
+                keywordsWrap.appendChild(chip);
+            });
+            keywordsSection.classList.remove('hidden');
+        } else {
+            keywordsSection.classList.add('hidden');
         }
 
         document.getElementById('project-modal').style.display = 'flex';
