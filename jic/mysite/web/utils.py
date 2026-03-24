@@ -559,7 +559,13 @@ def sync_projects_from_api() -> list[dict]:
 
 
 def get_processed_projects() -> list[dict]:
-    # Priority order: local DB (imported/admin data) -> external API -> in-code fallback.
+    # Optional API-first mode for environments that must always reflect external API.
+    if _is_truthy(getattr(settings, "JIC_PROJECTS_PREFER_API", False)):
+        api_projects = sync_projects_from_api()
+        if api_projects:
+            return api_projects
+
+    # Default priority order: local DB (imported/admin data) -> external API -> in-code fallback.
     projects_from_db = _get_projects_from_database()
     if projects_from_db:
         return _enrich_projects_with_api_fields(projects_from_db)

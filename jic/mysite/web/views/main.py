@@ -231,13 +231,23 @@ def Jic(request) -> render:
         }
     ]
 
+    show_national_coordinators = True
     try:
-        coordinadores_nacionales = list(coordinator.objects.filter(is_active=True).order_by("sort_order"))
+        nat_coords_section = national_coordinators_section.get_singleton()
+        show_national_coordinators = bool(nat_coords_section.is_active)
     except (OperationalError, ProgrammingError):
+        show_national_coordinators = True
+
+    if show_national_coordinators:
+        try:
+            coordinadores_nacionales = list(coordinator.objects.filter(is_active=True).order_by("sort_order"))
+        except (OperationalError, ProgrammingError):
+            coordinadores_nacionales = []
+
+        if not coordinadores_nacionales:
+            coordinadores_nacionales = coordinators_fallback()
+    else:
         coordinadores_nacionales = []
-        
-    if not coordinadores_nacionales:
-        coordinadores_nacionales = coordinators_fallback()
 
     try:
         comite_organizador = list(organizer_committee_member.objects.filter(is_active=True).order_by("sort_order"))
@@ -253,6 +263,7 @@ def Jic(request) -> render:
         'awards': awards,
         'organizations': organizations,
         'sponsors': sponsors,
+        'show_national_coordinators': show_national_coordinators,
         'coordinadores_nacionales': coordinadores_nacionales,
         'comite_organizador': comite_organizador,
         'last_data_update': _get_last_data_update(
@@ -269,13 +280,23 @@ def Jic(request) -> render:
     return render(request, 'jic/_index.html', context)
 
 def JicCoordinadores(request) -> render:
+    show_national_coordinators = True
     try:
-        coordinadores_nacionales = list(coordinator.objects.filter(is_active=True).order_by("sort_order"))
+        nat_coords_section = national_coordinators_section.get_singleton()
+        show_national_coordinators = bool(nat_coords_section.is_active)
     except (OperationalError, ProgrammingError):
-        coordinadores_nacionales = []
+        show_national_coordinators = True
 
-    if not coordinadores_nacionales:
-        coordinadores_nacionales = coordinators_fallback()
+    if show_national_coordinators:
+        try:
+            coordinadores_nacionales = list(coordinator.objects.filter(is_active=True).order_by("sort_order"))
+        except (OperationalError, ProgrammingError):
+            coordinadores_nacionales = []
+
+        if not coordinadores_nacionales:
+            coordinadores_nacionales = coordinators_fallback()
+    else:
+        coordinadores_nacionales = []
 
     try:
         comite_organizador = list(organizer_committee_member.objects.filter(is_active=True).order_by("sort_order"))
@@ -290,6 +311,7 @@ def JicCoordinadores(request) -> render:
         last_data_update = timezone.now()
 
     context = {
+        'show_national_coordinators': show_national_coordinators,
         'coordinadores_nacionales': coordinadores_nacionales,
         'comite_organizador': comite_organizador,
         'last_data_update': last_data_update,
@@ -417,8 +439,13 @@ def Proyectos(request) -> render:
     universities_options = [
         {"value": "all", "label": "Todas las universidades"},
     ]
-    for uni in sorted(set(p['university'] for p in all_projects if p.get('university'))):
-        universities_options.append({"value": uni, "label": uni})
+    universities_index = {
+        p["university"]: (p.get("university_display") or p["university"])
+        for p in all_projects
+        if p.get("university")
+    }
+    for uni in sorted(universities_index):
+        universities_options.append({"value": uni, "label": universities_index[uni]})
 
     paginator = Paginator(filtered, 10)
     page_obj = paginator.get_page(request.GET.get('page', 1))

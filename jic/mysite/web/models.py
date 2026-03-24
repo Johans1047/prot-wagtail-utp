@@ -382,6 +382,56 @@ class event_intro(PreviewableMixin, models.Model):
         return {"snippet": self}
 
 
+class national_coordinators_section(PreviewableMixin, models.Model):
+    """Control de visibilidad para la sección de Coordinadores Nacionales - Singleton."""
+
+    _singleton_id = 1
+
+    title = models.CharField(
+        "Título de la sección",
+        max_length=200,
+        default="Coordinadores Nacionales",
+        help_text="Título que se muestra en la sección"
+    )
+    description = models.TextField(
+        "Descripción",
+        default="Representantes de cada universidad participante en la JIC.",
+        help_text="Descripción breve de la sección"
+    )
+    is_active = models.BooleanField(
+        "Mostrar sección",
+        default=True,
+        help_text="Activar o desactivar la sección completa de Coordinadores Nacionales"
+    )
+
+    panels = [
+        FieldPanel("title"),
+        FieldPanel("description"),
+        FieldPanel("is_active"),
+    ]
+
+    class Meta:
+        verbose_name = "Sección de Coordinadores Nacionales"
+        verbose_name_plural = "Sección de Coordinadores Nacionales"
+
+    def save(self, *args, **kwargs):
+        """Enforce singleton behavior."""
+        self.pk = self._singleton_id
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        """Prevent deletion of singleton."""
+        pass
+
+    @classmethod
+    def get_singleton(cls):
+        obj, created = cls.objects.get_or_create(pk=cls._singleton_id)
+        return obj
+
+    def __str__(self) -> str:
+        return self.title
+
+
 class coordinator(PreviewableMixin, models.Model):
     """National coordinator for JIC by university."""
 

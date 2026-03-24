@@ -138,7 +138,7 @@
                         id="projects-university"
                         name="university"
                         aria-label="Filtrar por universidad"
-                        class="cursor-pointer w-full sm:w-auto appearance-none rounded-lg border border-input bg-stone-neutral-50 px-3 py-2 pr-10 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        class="cursor-pointer w-full sm:w-52 md:w-64 appearance-none rounded-lg border border-input bg-stone-neutral-50 px-3 py-2 pr-10 text-sm text-foreground whitespace-normal wrap-break-word focus:outline-none focus:ring-2 focus:ring-ring"
                     >
                         {% for u in universities_options %}
                             <option value="{{ u.value }}" {% if university_filter == u.value %}selected{% endif %}>{{ u.label }}</option>

@@ -14,7 +14,9 @@
             </a>
         </div>
     </div>
-    {% comment %} {% include 'jic/components/national_coordinators.html' %} {% endcomment%}
+    {% if show_national_coordinators %}
+    {% include 'jic/components/national_coordinators.html' %}
+    {% endif %}
     {% include 'jic/components/organizer_committee.html' %}
 {% endblock %}
 

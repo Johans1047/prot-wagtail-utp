@@ -18,6 +18,7 @@ from .models import (
     jic_category,
     award,
     event_intro,
+    national_coordinators_section,
     coordinator,
     organizer_committee_member,
     selection_institutional,
@@ -102,6 +103,13 @@ class AwardViewSet(SnippetViewSet):
     search_fields = ("prize", "entity", "description")
 
 
+class NationalCoordinatorsSectionViewSet(SnippetViewSet):
+    model = national_coordinators_section
+    menu_label = "Sección Coordinadores"
+    icon = "cog"
+    permission_policy = SingletonPermissionPolicy(national_coordinators_section)
+
+
 class CoordinatorViewSet(SnippetViewSet):
     model = coordinator
     menu_label = "Coordinadores"
@@ -128,6 +136,7 @@ class JicGroup(SnippetViewSetGroup):
         BackgroundItemViewSet,
         JicCategoryViewSet,
         AwardViewSet,
+        NationalCoordinatorsSectionViewSet,
         CoordinatorViewSet,
         OrganizerCommitteeViewSet,
     )

@@ -7,21 +7,26 @@
             <!-- Snippets de universidades -->
             <div class="mt-5 flex flex-wrap gap-2">
                 {% for coord in coordinadores_nacionales %}
-                <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm">
+                <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-stone-neutral-50 px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm">
                     <span class="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary text-[0.6rem]">{{ coord.shortName|slice:":2" }}</span>
                     {{ coord.shortName }}
                 </span>
                 {% endfor %}
-                <span class="inline-flex items-center gap-1.5 rounded-full border border-dashed border-border bg-transparent px-3 py-1.5 text-xs text-muted-foreground">
-                    + m&aacute;s universidades
-                </span>
             </div>
         </div>
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {% for coord in coordinadores_nacionales %}
-            <div class="flex gap-4 rounded-xl border border-border bg-background p-5">
-                <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-secondary">
+            <div class="flex gap-4 rounded-xl border border-border bg-stone-neutral-100 p-5">
+                <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-secondary overflow-hidden">
+                    {% if coord.photo %}
+                    <img 
+                        src="{{ coord.photo.url|default:coord.photo }}" 
+                        alt="Foto de {{ coord.name }}" 
+                        class="h-full w-full object-cover"
+                    >
+                    {% else %}
                     <span class="text-sm font-bold text-muted-foreground/60">{{ coord.shortName }}</span>
+                    {% endif %}
                 </div>
                 <div class="min-w-0 flex-1">
                     <h3 class="font-semibold text-foreground">{{ coord.shortName }}</h3>

@@ -230,6 +230,7 @@ JIC_PROJECTS_API_TIMEOUT = int(os.getenv("JIC_PROJECTS_API_TIMEOUT", "3"))
 JIC_PROJECTS_CACHE_TTL = int(os.getenv("JIC_PROJECTS_CACHE_TTL", "300"))
 JIC_PROJECTS_RETRY_AFTER_ERROR = int(os.getenv("JIC_PROJECTS_RETRY_AFTER_ERROR", "60"))
 JIC_PROJECTS_AUTO_SYNC_DB = os.getenv("JIC_PROJECTS_AUTO_SYNC_DB", "1").lower() in {"1", "true", "yes", "on"}
+JIC_PROJECTS_PREFER_API = os.getenv("JIC_PROJECTS_PREFER_API", "0").lower() in {"1", "true", "yes", "on"}
 
 # Allowed file extensions for documents in the document library.
 # This can be omitted to allow all files, but note that this may present a security risk

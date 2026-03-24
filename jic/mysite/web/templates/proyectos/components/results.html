@@ -61,7 +61,7 @@
                             <td class="max-w-xs px-4 py-3 font-medium text-foreground group-hover:text-primary">
                                 {{ project.title }}
                             </td>
-                            <td class="hidden px-4 py-3 text-muted-foreground md:table-cell">{{ project.university_display|default:project.university }}</td>
+                            <td class="hidden px-4 py-3 text-muted-foreground md:table-cell">{{ project.university_short_name|default:'-' }}</td>
                             <td class="hidden px-4 py-3 lg:table-cell"><span class="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">{{ project.category }}</span></td>
                             <td class="hidden px-4 py-3 text-muted-foreground sm:table-cell">{{ project.advisor|default:'-' }}</td>
                             <td class="px-4 py-3 text-center">
