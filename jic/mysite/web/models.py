@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.core.files.images import get_image_dimensions
 from django.db.models import Case, When
+from django.db.models.functions import Lower
 from django.utils import timezone
 from urllib.parse import urlparse, parse_qs
 from modelcluster.fields import ParentalKey
@@ -1324,6 +1325,12 @@ class consultant(models.Model):
         ordering = ["name"]
         verbose_name = "Asesor"
         verbose_name_plural = "Asesores"
+        constraints = [
+            models.UniqueConstraint(
+                Lower("name"),
+                name="web_consultant_name_ci_unique",
+            )
+        ]
 
     def __str__(self) -> str:
         return self.name
@@ -1374,6 +1381,13 @@ class project(PreviewableMixin, models.Model):
         ordering = ["-year", "title"]
         verbose_name = "Investigación"
         verbose_name_plural = "Investigaciones"
+        constraints = [
+            models.UniqueConstraint(
+                Lower("title"),
+                models.F("year"),
+                name="web_project_title_year_ci_unique",
+            )
+        ]
 
     def __str__(self) -> str:
         return self.title

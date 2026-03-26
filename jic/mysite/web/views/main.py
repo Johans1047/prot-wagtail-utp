@@ -178,6 +178,21 @@ def Inicio(request) -> render:
         'university': 'all'
     })
 
+    # Load sponsors and organizations
+    organizations = [
+        {
+            "nombre": "Universidad Tecnológica de Panamá",
+            "siglas": "UTP"
+        }
+    ]
+
+    sponsors = [
+        {
+            "nombre": "Secretaría Nacional de Ciencia, Tecnología e Innovación",
+            "siglas": "SENACYT"
+        }
+    ]
+
     context = {
         'title_section': ts,
         'introductions': _event_intro,
@@ -188,11 +203,13 @@ def Inicio(request) -> render:
         'winners_by_place': winners_by_place,
         'latest_winners_year': latest_winners_year,
         'winners_filters': winners_filters,
+        'organizations': organizations,
+        'sponsors': sponsors,
     }
     
     return render(request, 'inicio/_index.html', context)
 
-def Jic(request) -> render:
+def AcercaDe(request) -> render:
     try:
         background_items = list(background_item.objects.all())
     except (OperationalError, ProgrammingError):
@@ -257,9 +274,20 @@ def Jic(request) -> render:
     if not comite_organizador:
         comite_organizador = organizer_committee_members_fallback()
 
+    # Get categories document
+    categories_doc = None
+    try:
+        categories_doc = Document.objects.filter(
+            is_active=True,
+            tags__name__iexact='categorías'
+        ).first()
+    except (OperationalError, ProgrammingError):
+        pass
+
     context = {
         'background_items': background_items,
         'jic_categories': jic_categories,
+        'categories_doc': categories_doc,
         'awards': awards,
         'organizations': organizations,
         'sponsors': sponsors,
@@ -279,7 +307,7 @@ def Jic(request) -> render:
         context['last_data_update'] = timezone.now()
     return render(request, 'jic/_index.html', context)
 
-def JicCoordinadores(request) -> render:
+def AcercaDeCoordinadores(request) -> render:
     show_national_coordinators = True
     try:
         nat_coords_section = national_coordinators_section.get_singleton()
@@ -739,14 +767,14 @@ def Recursos(request) -> render:
 
     # 2. Bulletins and Memories
     if tab == 'boletines':
-        boletines_list = Document.objects.filter(is_active=True, tags__name='boletin').order_by('-created_at')
+        boletines_list = Document.objects.filter(is_active=True, tags__name='boletin').distinct().order_by('-created_at')
         paginator_b = Paginator(boletines_list, 6)
         boletines = paginator_b.get_page(request.GET.get('page', 1))
     else:
         boletines = []
 
     if tab == 'memorias':
-        memorias_list = Document.objects.filter(is_active=True, tags__name='memoria').order_by('-created_at')
+        memorias_list = Document.objects.filter(is_active=True, tags__name='memoria').distinct().order_by('-created_at')
         paginator_m = Paginator(memorias_list, 6)
         memorias = paginator_m.get_page(request.GET.get('page', 1))
     else:

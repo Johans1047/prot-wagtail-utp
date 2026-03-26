@@ -1,24 +1,31 @@
 {% extends '_base.html' %}
-{% block title %}JIC{% endblock %}
+{% block title %}Acerca de{% endblock %}
 {% block meta_description %}Conoce la historia, estructura, categorías y reconocimientos de la Jornada de Iniciación Científica Nacional de Panamá.{% endblock %}
 
 {% block content %}
-    {% include 'hero.html' with titulo="La JIC" descripcion="Conoce todo sobre la Jornada de Iniciación Científica, su historia y estructura." color="bg-cobalt-700/90" text_color="text-primary-foreground" %}
+    {% include 'hero.html' with titulo="Acerca de" descripcion="Conoce todo sobre la Jornada de Iniciación Científica, su historia y estructura." color="bg-cobalt-700/90" text_color="text-primary-foreground" %}
     {% include 'jic/components/concept.html' %}
     {% include 'jic/components/background.html' %}
     {% include 'jic/components/categories.html' %}
-    <section class="bg-card py-16 lg:py-24 border-t border-border">
-        <div class="mx-auto max-w-7xl px-4 lg:px-8 flex flex-col gap-16">
+
+    <section class="bg-card py-8 lg:py-12">
+        <div class="mx-auto max-w-7xl px-4 lg:px-8 flex flex-col gap-8">
             {% include 'jic/components/recognitions.html' %}
-            {% include 'jic/components/organize.html' %}
-            {% include 'jic/components/sponsors.html' %}
         </div>
     </section>
-    <section class="border-t border-border bg-card py-16 lg:py-20">
+
+    <section class="bg-card py-8 lg:py-12 flex items-center justify-center">
+        <div class="flex gap-16">
+            {% include 'jic/components/sponsors.html' with margin='-mb-6' scale='scale-75' show_description=False %}
+            {% include 'jic/components/organize.html' with margin='-mb-6' scale='scale-135' show_description=False %}
+        </div>
+    </section>
+
+    <section class="border-t border-border bg-card pt-16 pb-8 lg:pt-20 lg:pb-10">
         <div class="mx-auto max-w-7xl px-4 lg:px-8 text-center">
-            <h2 class="font-serif text-2xl text-foreground md:text-3xl">Coordinadores y Comité Organizador</h2>
+            <h2 class="font-serif font-extrabold tracking-tight text-2xl text-foreground md:text-3xl">Coordinadores y Comité Organizador</h2>
             <p class="mt-3 text-muted-foreground max-w-xl mx-auto">Conoce a los coordinadores nacionales de cada universidad y al equipo responsable de organizar la JIC.</p>
-            <a href="{% url 'JicCoordinadores' %}" class="mt-8 inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors">
+            <a href="{% url 'AcercaDeCoordinadores' %}" class="mt-8 inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors">
                 Ver coordinadores y comité
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />

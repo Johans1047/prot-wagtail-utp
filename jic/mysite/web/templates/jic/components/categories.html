@@ -1,5 +1,5 @@
 {% load static %}
-<section class="py-16 lg:py-24 bg-stone-neutral-50">
+<section class="py-8 lg:py-12 bg-stone-neutral-50">
     <div class="mx-auto max-w-7xl px-4 lg:px-8">
         <div class="mb-10 flex items-center gap-3">
             <svg
@@ -20,7 +20,7 @@
                     d="M15 3v18"
                 ></path></svg
             >
-            <h2 class="font-serif text-2xl text-foreground md:text-3xl">
+            <h2 class="font-serif font-extrabold tracking-tight text-2xl text-foreground md:text-3xl">
                 Categorías
             </h2>
         </div>
@@ -47,6 +47,30 @@
             {% empty %}
             <p class="text-muted-foreground col-span-2">No hay categorías publicadas.</p>
             {% endfor %}
+            <div class="rounded-lg border border-teal/30 bg-teal/5 p-4 text-sm mt-10 col-span-2">
+                <p class="text-muted-foreground">
+                    <strong class="text-foreground">Nota:</strong> Para más información acerca de las categorías
+                    {% if categories_doc %}
+                    <a
+                        href="{{ categories_doc.url }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="font-medium text-teal underline-offset-2 underline"
+                    >
+                        revisar el siguiente enlace
+                    </a>
+                    {% else %}
+                    <a
+                        href="https://ridda2.utp.ac.pa"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="font-medium text-teal underline-offset-2 underline"
+                    >
+                        revisar el siguiente enlace
+                    </a>
+                    {% endif %}
+                </p>
+            </div>
         </div>
     </div>
 </section>

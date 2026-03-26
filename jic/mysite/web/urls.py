@@ -5,8 +5,8 @@ from . import views
 
 urlpatterns = [
     path('', views.Inicio, name='Inicio'),
-    path('jic/', views.Jic, name='Jic'),
-    path('jic/coordinadores/', views.JicCoordinadores, name='JicCoordinadores'),
+    path('acerca-de/', views.AcercaDe, name='AcercaDe'),
+    path('acerca-de/coordinadores/', views.AcercaDeCoordinadores, name='AcercaDeCoordinadores'),
     path('participar/', views.Participar, name='Participar'),
     path('noticias/', views.Noticias, name='Noticias'),
     path('noticias/<slug:slug>/', views.NoticiaDetalle, name='NoticiaDetalle'),

@@ -1,34 +1,37 @@
 {% load static %}
+
 <section aria-labelledby="organiza-title">
-    <header class="mb-8 text-center">
-        <h2 class="font-serif text-2xl text-foreground md:text-3xl">
+    <header class="text-center">
+        <h2 class="font-serif font-extrabold tracking-tight text-2xl text-foreground md:text-3xl">
             <span id="organiza-title">Organiza</span>
         </h2>
+        {% if show_description|default_if_none:True %}
         <p class="mt-2 text-muted-foreground">
             Instituciones responsables de la organización de la JIC
         </p>
+        {% endif %}
     </header>
     <div class="flex flex-wrap items-center justify-center gap-8">
         {% for org in organizations %}
             <article class="flex flex-col items-center gap-3 group">
-                <div class="flex h-48 w-48 items-center justify-center overflow-hidden" style="height: 12rem;">
+                <div class="flex h-48 w-48 items-center justify-center overflow-hidden {{ margin|default:'' }}">
                     {% if org.siglas|upper == 'UTP' %}
                     <img
                         src="{% static 'img/utp-logo.svg' %}"
                         alt="Logo UTP"
-                        class="block w-auto object-contain h-full max-w-none translate-y-[-2%] origin-center scale-[1.7]"
+                        class="block w-auto object-contain h-full max-w-none translate-y-[-2%] origin-center {{ scale|default:'scale-100' }}"
                     />
                     {% else %}
                     <img
                         src="{% static 'img/placeholders/placeholder-lab-2.svg' %}"
                         alt="Placeholder de logo para {{ org.nombre }}"
-                        class="h-16 w-16 object-contain opacity-75 grayscale contrast-200 brightness-75 -translate-y-3"
+                        class="h-16 w-16 object-contain opacity-75 grayscale contrast-200 brightness-75 -translate-y-3 {{ scale|default:'scale-100' }}"
                     />
                     {% endif %}
                 </div>
                 
                 <p
-                    class="text-sm font-medium text-muted-foreground text-center max-w-45 leading-snug"
+                    class="font-medium text-muted-foreground text-center max-w-45 leading-snug {{ text_size|default:'text-sm' }}"
                 >
                     {{ org.nombre }}
                 </p>

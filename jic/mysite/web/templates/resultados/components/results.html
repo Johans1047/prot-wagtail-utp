@@ -1,12 +1,12 @@
-<section class="py-16 lg:py-20 bg-card">
+<section class="pt-16 pb-8 lg:py-20 lg:pb-10 bg-card">
     <div class="mx-auto max-w-7xl px-4 lg:px-8">
         <h2
-            class="mb-6 font-serif text-2xl text-foreground md:text-3xl lg:text-4xl"
+            class="mb-6 font-serif font-extrabold tracking-tight text-2xl text-foreground md:text-3xl lg:text-4xl"
         >
             Edición actual: JIC {{ current_year }}
         </h2>
 
-        <div class="flex flex-col gap-12">
+        <div class="flex flex-col gap-6">
             <!-- Selecciones institucionales -->
             <article class="rounded-xl border border-border bg-stone-neutral-50 p-6">
                 <div
@@ -83,7 +83,7 @@
                 <!-- Header -->
                 <header class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between p-6 pb-4">
                     <div>
-                        <h3 class="font-serif text-xl text-foreground md:text-2xl">Resultados JIC {{ current_year }}</h3>
+                        <h3 class="font-serif font-extrabold tracking-tight text-xl text-foreground md:text-2xl">Resultados JIC {{ current_year }}</h3>
                         <p class="mt-1 text-sm text-muted-foreground">
                             {% if current_result.host_university %}Sede: <strong>{{ current_result.host_university }}</strong> &middot; {% endif %}
                             <strong>{{ current_result.universities|default:"0" }}</strong> Universidades Participantes

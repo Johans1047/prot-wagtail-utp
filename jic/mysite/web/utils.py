@@ -374,14 +374,21 @@ def _auto_sync_projects_to_database(normalized_projects: list[dict]) -> None:
             advisor_obj = None
 
             if advisor_name:
-                advisor_obj, _ = consultant.objects.update_or_create(
-                    name=advisor_name,
-                    defaults={
-                        "email": advisor_email,
-                        "institution": institution,
-                        "is_active": True,
-                    },
-                )
+                # Match consultant by name case-insensitively to avoid duplicate advisors.
+                advisor_obj = consultant.objects.filter(name__iexact=advisor_name).first()
+                if advisor_obj:
+                    advisor_obj.name = advisor_name
+                    advisor_obj.email = advisor_email
+                    advisor_obj.institution = institution
+                    advisor_obj.is_active = True
+                    advisor_obj.save(update_fields=["name", "email", "institution", "is_active"])
+                else:
+                    advisor_obj = consultant.objects.create(
+                        name=advisor_name,
+                        email=advisor_email,
+                        institution=institution,
+                        is_active=True,
+                    )
 
             title = (item.get("title") or "").strip()
             year = int(item.get("year") or 0)
@@ -389,18 +396,35 @@ def _auto_sync_projects_to_database(normalized_projects: list[dict]) -> None:
             if not title or not year or not university:
                 continue
 
-            project.objects.update_or_create(
-                title=title,
-                year=year,
-                defaults={
-                    "abstract": (item.get("abstract") or "").strip(),
-                    "advisor": advisor_obj,
-                    "university": university,
-                    "university_short_name": (item.get("university_short_name") or "").strip() or None,
-                    "category": (item.get("category") or "").strip(),
-                    "winner": winner_map.get(int(item.get("winner") or 0), 0),
-                },
-            )
+            existing_project = project.objects.filter(title__iexact=title, year=year).first()
+            if existing_project:
+                existing_project.title = title
+                existing_project.abstract = (item.get("abstract") or "").strip()
+                existing_project.advisor = advisor_obj
+                existing_project.university = university
+                existing_project.university_short_name = (item.get("university_short_name") or "").strip() or None
+                existing_project.category = (item.get("category") or "").strip()
+                existing_project.winner = winner_map.get(int(item.get("winner") or 0), 0)
+                existing_project.save(update_fields=[
+                    "title",
+                    "abstract",
+                    "advisor",
+                    "university",
+                    "university_short_name",
+                    "category",
+                    "winner",
+                ])
+            else:
+                project.objects.create(
+                    title=title,
+                    year=year,
+                    abstract=(item.get("abstract") or "").strip(),
+                    advisor=advisor_obj,
+                    university=university,
+                    university_short_name=(item.get("university_short_name") or "").strip() or None,
+                    category=(item.get("category") or "").strip(),
+                    winner=winner_map.get(int(item.get("winner") or 0), 0),
+                )
     except (OperationalError, ProgrammingError, Exception) as exc:
         logger.warning("Could not auto-sync API projects to DB: %s", exc)
 
@@ -409,12 +433,19 @@ def _get_projects_from_database() -> list[dict]:
     """Return normalized projects from local DB (project + consultant)."""
     try:
         from .models import project
-    except Exception:
+    except Exception as e:
+        logger.warning("Could not import project model: %s", e)
         return []
 
     try:
         rows = project.objects.select_related("advisor").all().order_by("-year", "title")
-    except (OperationalError, ProgrammingError, Exception):
+        row_count = rows.count()
+        logger.debug("Database query returned %d project rows", row_count)
+    except (OperationalError, ProgrammingError) as e:
+        logger.warning("Database error fetching projects: %s", e)
+        return []
+    except Exception as e:
+        logger.error("Unexpected error fetching projects from database: %s", e, exc_info=True)
         return []
 
     winner_label_map = {
@@ -453,6 +484,7 @@ def _get_projects_from_database() -> list[dict]:
             }
         )
 
+    logger.debug("Normalized %d projects from database", len(normalized_projects))
     return normalized_projects
 
 
@@ -561,16 +593,28 @@ def sync_projects_from_api() -> list[dict]:
 def get_processed_projects() -> list[dict]:
     # Optional API-first mode for environments that must always reflect external API.
     if _is_truthy(getattr(settings, "JIC_PROJECTS_PREFER_API", False)):
+        logger.info("JIC_PROJECTS_PREFER_API enabled, syncing from API")
         api_projects = sync_projects_from_api()
         if api_projects:
+            logger.info("API returned %d projects", len(api_projects))
             return api_projects
+        logger.warning("API returned no projects, falling back")
 
     # Default priority order: local DB (imported/admin data) -> external API -> in-code fallback.
+    logger.debug("Attempting to fetch projects from local database")
     projects_from_db = _get_projects_from_database()
     if projects_from_db:
-        return _enrich_projects_with_api_fields(projects_from_db)
-
+        logger.info("Local database returned %d projects", len(projects_from_db))
+        enriched = _enrich_projects_with_api_fields(projects_from_db)
+        logger.info("After API enrichment: %d projects", len(enriched))
+        return enriched
+    
+    logger.warning("No projects in local database, syncing from API")
     normalized_projects = sync_projects_from_api()
+    if normalized_projects:
+        logger.info("API sync returned %d projects", len(normalized_projects))
+    else:
+        logger.warning("API returned no projects, will use in-code fallback")
     return normalized_projects
 
 

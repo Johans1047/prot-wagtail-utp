@@ -142,22 +142,26 @@ class ImportService:
                     is_active = is_active.lower() in ('true', 'sí', 'yes', '1', 'verdadero')
                 
                 if actualizar:
-                    # Update or create based on name (must be unique for this logic)
-                    obj, created = consultant.objects.update_or_create(
-                        name=nombre,
-                        defaults={
-                            'email': email if email and email.lower() != 'nan' else '',
-                            'institution': institucion if institucion and institucion.lower() != 'nan' else '',
-                            'is_active': bool(is_active),
-                        }
-                    )
-                    if created:
-                        result.created_consultants += 1
-                    else:
+                    # Match existing consultant case-insensitively to avoid duplicates.
+                    obj = consultant.objects.filter(name__iexact=nombre).first()
+                    if obj:
+                        obj.name = nombre
+                        obj.email = email if email and email.lower() != 'nan' else ''
+                        obj.institution = institucion if institucion and institucion.lower() != 'nan' else ''
+                        obj.is_active = bool(is_active)
+                        obj.save(update_fields=['name', 'email', 'institution', 'is_active'])
                         result.updated_consultants += 1
+                    else:
+                        consultant.objects.create(
+                            name=nombre,
+                            email=email if email and email.lower() != 'nan' else '',
+                            institution=institucion if institucion and institucion.lower() != 'nan' else '',
+                            is_active=bool(is_active),
+                        )
+                        result.created_consultants += 1
                 else:
                     # Create only if not exists
-                    if not consultant.objects.filter(name=nombre).exists():
+                    if not consultant.objects.filter(name__iexact=nombre).exists():
                         consultant.objects.create(
                             name=nombre,
                             email=email if email and email.lower() != 'nan' else '',
@@ -257,26 +261,33 @@ class ImportService:
                 winner = ImportService._parse_winner_value(fila.get('premio', 0))
                 
                 if actualizar:
-                    # Update or create based on title + year
-                    obj, created = project.objects.update_or_create(
-                        title=titulo,
-                        year=año,
-                        defaults={
-                            'abstract': resumen if resumen and resumen.lower() != 'nan' else '',
-                            'advisor': advisor,
-                            'university': universidad if universidad and universidad.lower() != 'nan' else '',
-                            'university_short_name': universidad_siglas if universidad_siglas and universidad_siglas.lower() != 'nan' else '',
-                            'category': categoria if categoria and categoria.lower() != 'nan' else '',
-                            'winner': winner,
-                        }
-                    )
-                    if created:
-                        result.created_projects += 1
-                    else:
+                    # Match by year + case-insensitive title to avoid duplicate rows.
+                    obj = project.objects.filter(title__iexact=titulo, year=año).first()
+                    if obj:
+                        obj.title = titulo
+                        obj.abstract = resumen if resumen and resumen.lower() != 'nan' else ''
+                        obj.advisor = advisor
+                        obj.university = universidad if universidad and universidad.lower() != 'nan' else ''
+                        obj.university_short_name = universidad_siglas if universidad_siglas and universidad_siglas.lower() != 'nan' else ''
+                        obj.category = categoria if categoria and categoria.lower() != 'nan' else ''
+                        obj.winner = winner
+                        obj.save(update_fields=['title', 'abstract', 'advisor', 'university', 'university_short_name', 'category', 'winner'])
                         result.updated_projects += 1
+                    else:
+                        project.objects.create(
+                            title=titulo,
+                            year=año,
+                            abstract=resumen if resumen and resumen.lower() != 'nan' else '',
+                            advisor=advisor,
+                            university=universidad if universidad and universidad.lower() != 'nan' else '',
+                            university_short_name=universidad_siglas if universidad_siglas and universidad_siglas.lower() != 'nan' else '',
+                            category=categoria if categoria and categoria.lower() != 'nan' else '',
+                            winner=winner,
+                        )
+                        result.created_projects += 1
                 else:
                     # Create only if not exists
-                    if not project.objects.filter(title=titulo, year=año).exists():
+                    if not project.objects.filter(title__iexact=titulo, year=año).exists():
                         project.objects.create(
                             title=titulo,
                             year=año,
