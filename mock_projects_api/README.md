@@ -22,7 +22,8 @@ El endpoint principal responde este esquema:
       "resumen": "...",
       "categoria": "...",
       "premio": "Primer Lugar",
-      "asesor": "...",
+      "asesor1": "...",
+      "asesor2": "...",
       "email": "...",
       "institucion": "...",
       "activo": 1

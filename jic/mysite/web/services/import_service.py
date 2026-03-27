@@ -3,6 +3,7 @@ Import service for handling CSV/XLSX uploads of consultants and projects.
 Prevents duplicate entries and provides detailed import results.
 """
 import pandas as pd
+import unicodedata
 from django.core.exceptions import ValidationError
 from web.models import consultant, project
 
@@ -15,6 +16,7 @@ class ImportResult:
         self.updated_consultants = 0
         self.created_projects = 0
         self.updated_projects = 0
+        self.deleted_projects = 0
         self.errors = []
     
     def add_error(self, row_num, model_name, error_msg):
@@ -31,6 +33,7 @@ class ImportResult:
             'actualizados_asesores': self.updated_consultants,
             'creados_proyectos': self.created_projects,
             'actualizados_proyectos': self.updated_projects,
+            'eliminados_proyectos': self.deleted_projects,
             'errores': self.errors,
             'total_errores': len(self.errors)
         }
@@ -42,6 +45,26 @@ class ImportService:
     SUPPORTED_FORMATS = {'.csv', '.xlsx', '.xls'}
     CONSULTANT_REQUIRED_FIELDS = {'nombre'}
     PROJECT_REQUIRED_FIELDS = {'titulo', 'universidad'}
+    OFFICIAL_UNIVERSITIES = [
+        'Universidad Católica Santa María la Antigua',
+        'Universidad Especializada de las Américas',
+        'Universidad Internacional de Ciencia y Tecnología',
+        'Universidad Latina de Panamá',
+        'Universidad Marítima Internacional de Panamá',
+        'Universidad Metropolitana de Educación, Ciencia y Tecnología',
+        'Universidad Santander',
+        'Universidad Tecnológica de Oteima',
+        'Universidad Tecnológica de Panamá',
+        'Universidad de Panamá',
+    ]
+
+    @staticmethod
+    def _clean_optional_text(raw_value) -> str:
+        if pd.isna(raw_value):
+            return ''
+
+        value = str(raw_value).strip()
+        return '' if value.lower() == 'nan' else value
 
     @staticmethod
     def _parse_winner_value(raw_value) -> int:
@@ -57,6 +80,136 @@ class ImportService:
             return 3
 
         return 0
+
+    @staticmethod
+    def _normalize_text_key(raw_value) -> str:
+        """Normalize text for resilient category matching (accents/case/punctuation)."""
+        value = ImportService._clean_optional_text(raw_value).lower()
+        value = unicodedata.normalize('NFD', value)
+        value = ''.join(ch for ch in value if unicodedata.category(ch) != 'Mn')
+        value = ''.join(ch if ch.isalnum() or ch.isspace() else ' ' for ch in value)
+        return ' '.join(value.split())
+
+    @staticmethod
+    def _normalize_category(raw_value) -> str:
+        """Map category variants to canonical labels while persisting as text."""
+        raw_text = ImportService._clean_optional_text(raw_value)
+        if not raw_text:
+            return ''
+
+        index_to_label = {
+            '0': 'Ingeniería',
+            '1': 'Ciencias de la Salud',
+            '2': 'Ciencias Naturales y Exactas',
+            '3': 'Ciencias Sociales y Humanísticas',
+        }
+
+        if raw_text in index_to_label:
+            return index_to_label[raw_text]
+
+        normalized_key = ImportService._normalize_text_key(raw_text)
+        aliases = {
+            'ingenieria': '0',
+            'ingenierias': '0',
+            'de la salud': '1',
+            'salud': '1',
+            'ciencias de la salud': '1',
+            'naturales y exactas': '2',
+            'ciencias naturales y exactas': '2',
+            'ciencias sociales': '3',
+            'sociales y humanisticas': '3',
+            'ciencias sociales y humanisticas': '3',
+        }
+
+        mapped_index = aliases.get(normalized_key)
+        if mapped_index is not None:
+            return index_to_label[mapped_index]
+
+        return raw_text
+
+    @staticmethod
+    def _normalize_university(raw_value, university_catalog: dict | None = None) -> str:
+        """Map university variants to a canonical label with first-seen fallback."""
+        raw_text = ImportService._clean_optional_text(raw_value)
+        if not raw_text:
+            return ''
+
+        official_by_key = {
+            ImportService._normalize_text_key(name): name
+            for name in ImportService.OFFICIAL_UNIVERSITIES
+        }
+
+        aliases = {
+            # USMA variants
+            'universidad catolica santa maria la antigua': 'Universidad Católica Santa María la Antigua',
+            'universidad catolica santa maria la antigua usma': 'Universidad Católica Santa María la Antigua',
+            'usma': 'Universidad Católica Santa María la Antigua',
+            # UTP variants
+            'universidad tecnologica de panama': 'Universidad Tecnológica de Panamá',
+            'utp': 'Universidad Tecnológica de Panamá',
+            # UP variants
+            'universidad de panama': 'Universidad de Panamá',
+            'up': 'Universidad de Panamá',
+            # UMECIT variants
+            'universidad metropolitana de educacion ciencia y tecnologia': 'Universidad Metropolitana de Educación, Ciencia y Tecnología',
+            'umecit': 'Universidad Metropolitana de Educación, Ciencia y Tecnología',
+            # Udelas variants
+            'universidad especializada de las americas': 'Universidad Especializada de las Américas',
+            'udelas': 'Universidad Especializada de las Américas',
+            # Others
+            'universidad internacional de ciencia y tecnologia': 'Universidad Internacional de Ciencia y Tecnología',
+            'unicyt': 'Universidad Internacional de Ciencia y Tecnología',
+            'universidad latina de panama': 'Universidad Latina de Panamá',
+            'ulat': 'Universidad Latina de Panamá',
+            'universidad maritima internacional de panama': 'Universidad Marítima Internacional de Panamá',
+            'umip': 'Universidad Marítima Internacional de Panamá',
+            'universidad santander': 'Universidad Santander',
+            'universidad tecnologica de oteima': 'Universidad Tecnológica de Oteima',
+        }
+
+        normalized_key = ImportService._normalize_text_key(raw_text)
+        if normalized_key in aliases:
+            return aliases[normalized_key]
+
+        if university_catalog is not None and normalized_key in university_catalog:
+            return university_catalog[normalized_key]
+
+        if normalized_key in official_by_key:
+            return official_by_key[normalized_key]
+
+        if university_catalog is not None:
+            # First appearance of an unknown university becomes its canonical label.
+            university_catalog[normalized_key] = raw_text
+            return raw_text
+
+        return raw_text
+
+    @staticmethod
+    def _build_university_catalog(df) -> dict:
+        """Build key->canonical university map from official list, DB, and current file order."""
+        catalog = {
+            ImportService._normalize_text_key(name): name
+            for name in ImportService.OFFICIAL_UNIVERSITIES
+        }
+
+        for value in project.objects.order_by('id').values_list('university', flat=True):
+            raw_text = ImportService._clean_optional_text(value)
+            if not raw_text:
+                continue
+            key = ImportService._normalize_text_key(raw_text)
+            if key and key not in catalog:
+                catalog[key] = raw_text
+
+        if 'universidad' in df.columns:
+            for value in df['universidad'].tolist():
+                raw_text = ImportService._clean_optional_text(value)
+                if not raw_text:
+                    continue
+                key = ImportService._normalize_text_key(raw_text)
+                if key and key not in catalog:
+                    catalog[key] = raw_text
+
+        return catalog
     
     @staticmethod
     def read_file(archivo):
@@ -104,7 +257,7 @@ class ImportService:
                 # Try to detect by columns
                 if 'nombre' in df.columns and 'email' in df.columns:
                     tipo = 'consultores'
-                elif 'titulo' in df.columns and ('año' in df.columns or 'ano' in df.columns):
+                elif ('titulo' in df.columns or 'título' in df.columns) and ('año' in df.columns or 'ano' in df.columns):
                     tipo = 'proyectos'
                 else:
                     raise ValueError('No se pudo detectar el tipo de importación. Especifique en el nombre del archivo.')
@@ -178,19 +331,23 @@ class ImportService:
     @staticmethod
     def _importar_proyectos(df, result, actualizar):
         """Import projects from DataFrame."""
-        # Check required fields
+        # Check required fields with accent variations
         year_field = 'año' if 'año' in df.columns else 'ano' if 'ano' in df.columns else None
         if not year_field:
             raise ValueError('Falta la columna "año" o "ano" en el archivo de proyectos')
 
-        campos_requeridos = ['titulo', 'universidad']
-        faltantes = [c for c in campos_requeridos if c not in df.columns]
-        if faltantes:
-            raise ValueError(f'Faltan columnas requeridas: {", ".join(faltantes)}')
+        title_field = 'título' if 'título' in df.columns else 'titulo' if 'titulo' in df.columns else None
+        if not title_field:
+            raise ValueError('Falta la columna "título" o "titulo" en el archivo de proyectos')
+
+        if 'universidad' not in df.columns:
+            raise ValueError('Falta la columna "universidad" en el archivo de proyectos')
         
+        university_catalog = ImportService._build_university_catalog(df)
+
         for idx, fila in df.iterrows():
             try:
-                titulo = str(fila.get('titulo', '')).strip()
+                titulo = str(fila.get(title_field, '')).strip()
                 año = fila.get(year_field)
                 
                 if not titulo or titulo.lower() == 'nan':
@@ -202,9 +359,14 @@ class ImportService:
                     continue
                 
                 año = int(float(año))  # Handle both int and float inputs
-                universidad = str(fila.get('universidad', '')).strip()
+                universidad = ImportService._normalize_university(
+                    fila.get('universidad', ''),
+                    university_catalog=university_catalog,
+                )
                 universidad_siglas = str(fila.get('siglas', '')).strip()
-                categoria = str(fila.get('categoria', '')).strip()
+                categoria = ImportService._normalize_category(
+                    fila.get('categoría', fila.get('categoria', fila.get('category', '')))
+                )
                 resumen = str(fila.get('resumen', fila.get('abstract', ''))).strip()
                 activo = fila.get('activo', 1)
 
@@ -216,11 +378,17 @@ class ImportService:
                 if not activo:
                     continue
                 
-                # Handle advisor lookup
-                asesor_nombre = fila.get('asesor')
+                # Handle advisor lookup (asesor preferred, fallback to asesor1 and asesor2).
+                asesor_nombre = ImportService._clean_optional_text(
+                    fila.get('asesor', fila.get('asesor1', ''))
+                )
+                asesor2_nombre = ImportService._clean_optional_text(fila.get('asesor2', ''))
+
+                if not asesor_nombre and asesor2_nombre:
+                    asesor_nombre = asesor2_nombre
+
                 advisor = None
-                if asesor_nombre and str(asesor_nombre).lower() != 'nan':
-                    asesor_nombre = str(asesor_nombre).strip()
+                if asesor_nombre:
                     asesor_email = str(fila.get('email', '')).strip()
                     asesor_institucion = str(fila.get('institucion', universidad)).strip()
 

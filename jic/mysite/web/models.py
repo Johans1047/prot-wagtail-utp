@@ -439,12 +439,13 @@ class coordinator(PreviewableMixin, models.Model):
     university_short_name = models.CharField("Sigla Universidad", max_length=20)
     name = models.CharField("Nombre del Coordinador", max_length=200)
     email = models.EmailField("Correo electrónico")
-    photo = models.ImageField(
-        "Foto del coordinador",
-        upload_to="coordinators_photos/",
+    url = models.URLField("Sitio web de la Universidad", blank=True, help_text="URL opcional de la Universidad")
+    college_logo = models.ImageField(
+        "Logo de la Universidad",
+        upload_to="university_logos/",
         null=True,
         blank=True,
-        help_text="Foto de perfil del coordinador"
+        help_text="Logo de la Universidad"
     )
     sort_order = models.PositiveIntegerField("Orden", default=0)
     is_active = models.BooleanField("Activo", default=True)
@@ -453,7 +454,8 @@ class coordinator(PreviewableMixin, models.Model):
         FieldPanel("university_short_name"),
         FieldPanel("name"),
         FieldPanel("email"),
-        FieldPanel("photo"),
+        FieldPanel("url"),
+        FieldPanel("college_logo"),
         FieldPanel("sort_order"),
         FieldPanel("is_active"),
     ]

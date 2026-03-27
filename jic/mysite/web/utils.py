@@ -1,6 +1,7 @@
 import json
 import logging
 import time
+import unicodedata
 from urllib.error import URLError
 from urllib.request import Request, urlopen
 from urllib.parse import urlparse, parse_qs
@@ -80,6 +81,63 @@ _PROJECTS_CACHE: dict[str, object] = {
     "expires_at": 0.0,
     "last_error_at": 0.0,
 }
+
+OFFICIAL_UNIVERSITIES = [
+    'Universidad Católica Santa María la Antigua',
+    'Universidad Especializada de las Américas',
+    'Universidad Internacional de Ciencia y Tecnología',
+    'Universidad Latina de Panamá',
+    'Universidad Marítima Internacional de Panamá',
+    'Universidad Metropolitana de Educación, Ciencia y Tecnología',
+    'Universidad Santander',
+    'Universidad Tecnológica de Oteima',
+    'Universidad Tecnológica de Panamá',
+    'Universidad de Panamá',
+]
+
+
+def _normalize_text_key(value: str | None) -> str:
+    text = (value or '').strip().lower()
+    text = unicodedata.normalize('NFD', text)
+    text = ''.join(ch for ch in text if unicodedata.category(ch) != 'Mn')
+    text = ''.join(ch if ch.isalnum() or ch.isspace() else ' ' for ch in text)
+    return ' '.join(text.split())
+
+
+def _normalize_university_name(value: str | None) -> str:
+    raw_text = (value or '').strip()
+    if not raw_text:
+        return ''
+
+    official_by_key = {_normalize_text_key(name): name for name in OFFICIAL_UNIVERSITIES}
+    aliases = {
+        'universidad catolica santa maria la antigua': 'Universidad Católica Santa María la Antigua',
+        'universidad catolica santa maria la antigua usma': 'Universidad Católica Santa María la Antigua',
+        'usma': 'Universidad Católica Santa María la Antigua',
+        'universidad tecnologica de panama': 'Universidad Tecnológica de Panamá',
+        'utp': 'Universidad Tecnológica de Panamá',
+        'universidad de panama': 'Universidad de Panamá',
+        'up': 'Universidad de Panamá',
+        'universidad metropolitana de educacion ciencia y tecnologia': 'Universidad Metropolitana de Educación, Ciencia y Tecnología',
+        'umecit': 'Universidad Metropolitana de Educación, Ciencia y Tecnología',
+        'universidad especializada de las americas': 'Universidad Especializada de las Américas',
+        'udelas': 'Universidad Especializada de las Américas',
+        'universidad internacional de ciencia y tecnologia': 'Universidad Internacional de Ciencia y Tecnología',
+        'unicyt': 'Universidad Internacional de Ciencia y Tecnología',
+        'universidad latina de panama': 'Universidad Latina de Panamá',
+        'ulat': 'Universidad Latina de Panamá',
+        'universidad maritima internacional de panama': 'Universidad Marítima Internacional de Panamá',
+        'umip': 'Universidad Marítima Internacional de Panamá',
+        'universidad santander': 'Universidad Santander',
+        'universidad tecnologica de oteima': 'Universidad Tecnológica de Oteima',
+    }
+
+    key = _normalize_text_key(raw_text)
+    if key in aliases:
+        return aliases[key]
+    if key in official_by_key:
+        return official_by_key[key]
+    return raw_text
 
 
 def _resolve_image_url(image_obj) -> str | None:
@@ -368,7 +426,7 @@ def _auto_sync_projects_to_database(normalized_projects: list[dict]) -> None:
 
     try:
         for item in normalized_projects:
-            advisor_name = (item.get("advisor") or "").strip()
+            advisor_name = (item.get("advisor1") or item.get("advisor") or item.get("advisor2") or "").strip()
             advisor_email = (item.get("contact") or "").strip()
             institution = (item.get("institution") or item.get("university") or "").strip()
             advisor_obj = None
@@ -392,7 +450,7 @@ def _auto_sync_projects_to_database(normalized_projects: list[dict]) -> None:
 
             title = (item.get("title") or "").strip()
             year = int(item.get("year") or 0)
-            university = (item.get("university") or "").strip()
+            university = _normalize_university_name((item.get("university") or "").strip())
             if not title or not year or not university:
                 continue
 
@@ -461,7 +519,7 @@ def _get_projects_from_database() -> list[dict]:
         advisor_email = p.advisor.email if p.advisor else ""
         advisor_institution = p.advisor.institution if p.advisor else ""
         short_name = (p.university_short_name or "").strip()
-        university = (p.university or "").strip()
+        university = _normalize_university_name((p.university or "").strip())
         university_display = f"{university} ({short_name})" if short_name else university
 
         normalized_projects.append(
@@ -474,6 +532,8 @@ def _get_projects_from_database() -> list[dict]:
                 "category": (p.category or "").strip(),
                 "year": int(p.year or 0),
                 "contact": (advisor_email or "").strip(),
+                "advisor1": (advisor_name or "").strip(),
+                "advisor2": "",
                 "advisor": (advisor_name or "").strip(),
                 "winner": int(p.winner or 0),
                 "winner_label": winner_label_map.get(int(p.winner or 0), ""),
@@ -499,8 +559,11 @@ def _normalize_projects_payload(projects_payload: dict) -> list[dict]:
 
         winner_level, winner_label = _parse_winner(project.get("premio", project.get("winner", 0)))
         university_short_name = (project.get("siglas") or project.get("university_short_name") or "").strip()
-        university = (project.get("universidad") or project.get("university") or "").strip()
+        university = _normalize_university_name((project.get("universidad") or project.get("university") or "").strip())
         university_display = f"{university} ({university_short_name})" if university_short_name else university
+        advisor1 = (project.get("asesor1") or project.get("advisor1") or project.get("asesor") or project.get("advisor") or "").strip()
+        advisor2 = (project.get("asesor2") or project.get("advisor2") or "").strip()
+        advisor = advisor1 or advisor2
 
         normalized_projects.append(
             {
@@ -512,7 +575,9 @@ def _normalize_projects_payload(projects_payload: dict) -> list[dict]:
                 "category": (project.get("categoria") or project.get("category") or "").strip(),
                 "year": _parse_year(project.get("ano", project.get("año", project.get("year")))),
                 "contact": (project.get("email") or project.get("contacto") or "").strip(),
-                "advisor": (project.get("asesor") or project.get("advisor") or "").strip(),
+                "advisor1": advisor1,
+                "advisor2": advisor2,
+                "advisor": advisor,
                 "winner": winner_level,
                 "winner_label": winner_label,
                 "abstract": (project.get("resumen") or project.get("abstract") or "").strip(),
@@ -530,7 +595,7 @@ def _build_project_match_keys(item: dict) -> tuple[tuple, tuple, tuple]:
     project_id = int(item.get("id") or 0)
     year = int(item.get("year") or 0)
     title = (item.get("title") or "").strip().lower()
-    university = (item.get("university") or "").strip().lower()
+    university = _normalize_university_name(item.get("university") or "").lower()
 
     by_id = (project_id,)
     by_title_year_university = (title, year, university)

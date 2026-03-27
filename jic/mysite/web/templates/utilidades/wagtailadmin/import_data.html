@@ -129,6 +129,13 @@
             </div>
             
             <div id="instructions-content" style="display: none; margin-top: 1rem;">
+                <div style="border-left: 4px solid #3b82f6; padding: 1rem; margin-bottom: 1rem; border-radius: 0.375rem;">
+                    <p class="w-help-text" style="margin: 0;"><strong>⚠️ Importante:</strong> El nombre del archivo debe contener una de estas palabras clave para detectarse automáticamente:</p>
+                    <ul style="margin: 0.5rem 0 0 0; padding-left: 1.5rem;">
+                        <li><strong>Para proyectos:</strong> "proyecto", "proyectos" o "projects"</li>
+                    </ul>
+                    <p class="w-help-text" style="margin: 0.5rem 0 0 0;">Ejemplo: <code>proyectos_2025.xlsx</code> o <code>projects.csv</code></p>
+                </div>
                 <p class="w-help-text w-mb-4 w-mt-6">El archivo unificado debe contener estas columnas exactas:</p>
                 <table class="listing w-text-14">
                     <thead>
@@ -142,12 +149,13 @@
                         <tr><td><strong>resumen</strong></td><td>No</td><td>Descripción del proyecto</td></tr>
                         <tr><td><strong>categoria</strong></td><td>No</td><td>Categoría del proyecto dentro de JIC</td></tr>
                         <tr><td><strong>premio</strong></td><td>No</td><td>0=No ganador, 1=Primer lugar, 2=Segundo lugar, 3=Tercer lugar</td></tr>
-                        <tr><td><strong>asesor</strong></td><td>No</td><td>Nombre exacto del Asesor/Consultor</td></tr>
+                        <tr><td><strong>asesor</strong></td><td>No</td><td>Nombre del asesor principal del proyecto</td></tr>
+                        <tr><td><strong>asesor2</strong></td><td>No</td><td>Segundo asesor (puede ir vacío o null)</td></tr>
                         <tr><td><strong>email</strong></td><td>No</td><td>Correo electrónico del asesor</td></tr>
                         <tr><td><strong>institucion</strong></td><td>No</td><td>Institución a la que pertenece el asesor</td></tr>
-                        <tr><td><strong>estudiantes</strong></td><td>No</td><td>lista de estudiantes: nombre1, nombre2, nombre3</td></tr>
-                        <tr><td><strong>keywords</strong></td><td>No</td><td>lista de palabras clave: keyword1, keyword2, keyword3</td></tr>
-                        <tr><td><strong>activo</strong></td><td>No</td><td>true/false o sí/no (Estado del asesor)</td></tr>
+                        <tr><td><strong>estudiantes</strong></td><td>No</td><td>Lista de estudiantes: nombre1, nombre2, nombre3</td></tr>
+                        <tr><td><strong>keywords</strong></td><td>No</td><td>Lista de palabras clave: keyword1, keyword2, keyword3</td></tr>
+                        <tr><td><strong>activo</strong></td><td>No</td><td>true/false o sí/no (Estado del proyecto)</td></tr>
                     </tbody>
                 </table>
 

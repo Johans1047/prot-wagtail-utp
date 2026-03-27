@@ -1,5 +1,25 @@
 {% load static %}
 <header>
+    <style>
+        /* Fallback para breakpoint 1150px cuando el CSS compilado no incluye min/max-[1150px]. */
+        @media (min-width: 1150px) {
+            .bp1150-order-1 { order: 1; }
+            .bp1150-order-2 { order: 2; }
+            .bp1150-hidden { display: none; }
+            .bp1150-flex { display: flex; }
+            .bp1150-w-auto { width: auto; }
+            .bp1150-flex-row { flex-direction: row; }
+            .bp1150-p-0 { padding: 0; }
+            .bp1150-mt-0 { margin-top: 0; }
+            .bp1150-border-0 { border-width: 0; }
+            .bp1150-rounded-md { border-radius: 0.375rem; }
+            .bp1150-py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+        }
+
+        @media (max-width: 1149.98px) {
+            .bpmax1150-rounded-sm { border-radius: 0.125rem; }
+        }
+    </style>
     <nav
         aria-label="Navegación principal"
         class="bg-neutral-card/95 backdrop-blur-sm supports-backdrop-filter:bg-card/95 fixed w-full z-[9998] top-0 inset-s-0 border-b border-default px-0.5 max-h-18"
@@ -18,24 +38,38 @@
                 />
             </a>
             <div
-                class="flex lg:order-2 space-x-3 lg:space-x-0 rtl:space-x-reverse"
+                class="flex min-[1150px]:order-2 bp1150-order-2 space-x-2 min-[1150px]:space-x-0 rtl:space-x-reverse"
             >
-                <button
-                    type="button"
-                    class="cursor-pointer text-primary-foreground bg-primary hover:bg-primary/90 box-border border border-transparent focus:ring-3 focus:ring-cobalt-700 shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2 focus:outline-none"
-                >
-                    Plataforma JIC
-                </button>
+                <div class="flex items-center justify-center gap-2">
+                    <a
+                        href="{% url 'Busqueda' %}"
+                        title="Buscar proyectos, noticias, resultados y contenido"
+                        class="flex items-center justify-center rounded-base w-9 h-9 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors flex-shrink-0"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-open:hidden" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path>
+                        </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="hidden h-4 w-4 group-open:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </a>
+                    <button
+                        type="button"
+                        class="cursor-pointer text-primary-foreground bg-primary hover:bg-primary/90 box-border border border-transparent focus:ring-3 focus:ring-cobalt-700 shadow-xs font-medium leading-5 rounded-base text-xs sm:text-sm px-3 py-2 focus:outline-none whitespace-nowrap flex-shrink-0"
+                    >
+                        Plataforma JIC
+                    </button>
+                </div>
                 <button
                     data-collapse-toggle="navbar-sticky"
                     type="button"
-                    class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-body rounded-base lg:hidden hover:bg-neutral-secondary-soft hover:text-heading focus:outline-none focus:ring-2 focus:ring-neutral-tertiary"
+                    class="inline-flex items-center p-2 w-9 h-9 justify-center text-sm text-body rounded-base min-[1150px]:hidden bp1150-hidden hover:bg-neutral-secondary-soft hover:text-heading focus:outline-none focus:ring-2 focus:ring-neutral-tertiary flex-shrink-0"
                     aria-controls="navbar-sticky"
                     aria-expanded="false"
                 >
                     <span class="sr-only">Abrir menú principal</span>
                     <svg
-                        class="w-6 h-6"
+                        class="w-5 h-5"
                         aria-hidden="true"
                         xmlns="http://www.w3.org/2000/svg"
                         width="24"
@@ -53,18 +87,18 @@
                 </button>
             </div>
             <div
-                class="rounded-base items-center justify-between hidden w-full lg:flex lg:w-auto lg:order-1 bg-card"
+                class="rounded-base items-center justify-between hidden w-full min-[1150px]:flex bp1150-flex min-[1150px]:w-auto bp1150-w-auto min-[1150px]:order-1 bp1150-order-1 bg-card"
                 id="navbar-sticky"
             >
                 {% with path=request.path %}
                 <ul
-                    class="flex flex-col p-4 gap-1 lg:p-0 mt-0 font-medium lg:space-x-1 rtl:space-x-reverse lg:flex-row lg:mt-0 lg:border-0"
+                    class="flex flex-col p-4 gap-1 min-[1150px]:p-0 bp1150-p-0 mt-0 font-medium min-[1150px]:space-x-1 rtl:space-x-reverse min-[1150px]:flex-row bp1150-flex-row min-[1150px]:mt-0 bp1150-mt-0 min-[1150px]:border-0 bp1150-border-0"
                 >
                     {% for item in nav_items %}
                     <li>
                         <a
                             href="{{ item.url }}"
-                            class="block lg:rounded-md px-3 py-1.5 lg:py-2 font-medium transition-colors max-lg:rounded-sm {% if path == item.url %}bg-primary/10 text-primary{% else %}text-muted-foreground lg:hover:bg-secondary/70 hover:text-foreground max-lg:hover:bg-secondary/15{% endif %}"
+                            class="block min-[1150px]:rounded-md bp1150-rounded-md px-3 py-1.5 min-[1150px]:py-2 bp1150-py-2 font-medium transition-colors max-[1150px]:rounded-sm bpmax1150-rounded-sm {% if path == item.url %}bg-primary/10 text-primary{% else %}text-muted-foreground min-[1150px]:hover:bg-secondary/70 hover:text-foreground max-[1150px]:hover:bg-secondary/15{% endif %}"
                             {% if path == item.url %}aria-current="page"{% endif %}
                         >{{ item.label }}</a>
                     </li>

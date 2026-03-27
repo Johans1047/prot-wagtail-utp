@@ -38,9 +38,9 @@ services:
       - POSTGRESQL_POSTGRES_PASSWORD=${POSTGRESQL_POSTGRES_PASSWORD}
       - POSTGRESQL_HOST=${POSTGRESQL_HOST}
       - POSTGRESQL_DATABASE_PORT_NUMBER=${POSTGRESQL_DATABASE_PORT_NUMBER}
-      - JIC_PROJECTS_API_URL=${JIC_PROJECTS_API_URL:-http://jic_projects_mock_api:8001/api/proyectos-jic}
-      - JIC_PROJECTS_API_TIMEOUT=${JIC_PROJECTS_API_TIMEOUT:-3}
-      - JIC_PROJECTS_PREFER_API=${JIC_PROJECTS_PREFER_API:-0}
+      - JIC_PROJECTS_API_URL=${JIC_PROJECTS_API_URL}
+      - JIC_PROJECTS_API_TIMEOUT=${JIC_PROJECTS_API_TIMEOUT}
+      - JIC_PROJECTS_PREFER_API=${JIC_PROJECTS_PREFER_API}
       # - DB_OPTIONS=-c search_path=public
       - MINIO_ENDPOINT=${MINIO_ENDPOINT}
       - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
@@ -53,24 +53,6 @@ services:
     networks:
       - netX
 
-  jic_projects_mock_api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: jic_projects_mock_api
-    env_file:
-      - .env.prod
-    command: >
-      sh -c "pip install --no-cache-dir -r /app/mock_projects_api/requirements.txt && uvicorn mock_projects_api.app:app --host 0.0.0.0 --port 8001"
-    volumes:
-      - ./mock_projects_api:/app/mock_projects_api
-    ports:
-      - "8001:8001"
-    environment:
-      - PYTHONUNBUFFERED=${PYTHONUNBUFFERED}
-    networks:
-      - netX
-
   jic_projects_sync_worker:
     build:
       context: .
@@ -80,7 +62,7 @@ services:
       - .env.prod
     command: >
       sh -c "
-        INTERVAL=$${JIC_PROJECTS_SYNC_INTERVAL:-60};
+        INTERVAL=$${JIC_PROJECTS_SYNC_INTERVAL};
         echo \"[projects-sync] Interval: $${INTERVAL}s (weekly)\";
         while true; do
           TS=$$(date -u +%Y-%m-%dT%H:%M:%SZ);
@@ -101,10 +83,10 @@ services:
       - POSTGRESQL_POSTGRES_PASSWORD=${POSTGRESQL_POSTGRES_PASSWORD}
       - POSTGRESQL_HOST=${POSTGRESQL_HOST}
       - POSTGRESQL_DATABASE_PORT_NUMBER=${POSTGRESQL_DATABASE_PORT_NUMBER}
-      - JIC_PROJECTS_API_URL=${JIC_PROJECTS_API_URL:-http://jic_projects_mock_api:8001/api/proyectos-jic}
-      - JIC_PROJECTS_API_TIMEOUT=${JIC_PROJECTS_API_TIMEOUT:-3}
-      - JIC_PROJECTS_AUTO_SYNC_DB=${JIC_PROJECTS_AUTO_SYNC_DB:-1}
-      - JIC_PROJECTS_SYNC_INTERVAL=${JIC_PROJECTS_SYNC_INTERVAL:-60}
+      - JIC_PROJECTS_API_URL=${JIC_PROJECTS_API_URL}
+      - JIC_PROJECTS_API_TIMEOUT=${JIC_PROJECTS_API_TIMEOUT}
+      - JIC_PROJECTS_AUTO_SYNC_DB=${JIC_PROJECTS_AUTO_SYNC_DB}
+      - JIC_PROJECTS_SYNC_INTERVAL=${JIC_PROJECTS_SYNC_INTERVAL}
       - MINIO_ENDPOINT=${MINIO_ENDPOINT}
       - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
       - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
@@ -127,7 +109,7 @@ services:
       - .env.prod    
     networks:
       netX:
-        ipv4_address: 172.20.1.85
+        ipv4_address: ${DB_MASTER_INTERNAL_IP}
     volumes:
       - 'jicweb_master_data_v1:/bitnami/postgresql'
     environment:
@@ -182,7 +164,7 @@ services:
       - TZ=UTC
     networks:
       netX:
-        ipv4_address: 172.20.0.75
+        ipv4_address: ${MINIO_INTERNAL_IP}
     volumes:
       - 'jicst_storage_data:/bitnami/minio/data'
     healthcheck:
@@ -197,13 +179,13 @@ services:
       - .env.prod
     entrypoint: |
       /bin/bash -c "
-        mc alias set src http://172.20.0.75:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+        mc alias set src ${MINIO_SCHEME}://${MINIO_ENDPOINT} ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
         while true; do
           TIMESTAMP=$$(date +%Y%m%d_%H%M%S);
           echo \"[$$TIMESTAMP] Iniciando backup de MinIO...\";
           mc mirror --overwrite src/${MINIO_BUCKET_NAME} /bitnami/minio/backups/$$(date +%Y%m%d)/ || echo \"[$$TIMESTAMP] ERROR: Falló el backup\";
           echo \"[$$TIMESTAMP] Backup completado en /bitnami/minio/backups/$$(date +%Y%m%d)/\";
-          sleep 86400;
+          sleep ${BACKUP_INTERVAL:-86400};
         done
       "
     environment:
@@ -225,7 +207,7 @@ services:
       - .env.prod
     entrypoint: |
       /bin/bash -c "
-        export PGPASSWORD=1*o63U9JlN5bLp;
+        export PGPASSWORD=${POSTGRESQL_POSTGRES_PASSWORD};
         while true; do
           TIMESTAMP=$$(date +%Y%m%d_%H%M%S);
           BACKUP_FILE=/bitnami/postgresql/backups/$$(date +%Y%m%d)/db_jicweb_$$TIMESTAMP.sql.gz;
@@ -233,8 +215,8 @@ services:
           echo \"[$$TIMESTAMP] Iniciando backup de PostgreSQL...\";
           pg_dump -h 172.20.1.85 -U mast_jicweb -d db_jicweb | gzip > $$BACKUP_FILE || echo \"[$$TIMESTAMP] ERROR: Falló el backup\";
           echo \"[$$TIMESTAMP] Backup completado: $$BACKUP_FILE\";
-          find /bitnami/postgresql/backups -name '*.sql.gz' -mtime +30 -delete;
-          sleep 86400;
+          find /bitnami/postgresql/backups -name '*.sql.gz' -mtime +${BACKUP_RETENTION_DAYS:-30} -delete;
+          sleep ${BACKUP_INTERVAL:-86400};
         done
       "
     volumes:
