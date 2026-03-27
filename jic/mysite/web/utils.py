@@ -454,7 +454,7 @@ def _auto_sync_projects_to_database(normalized_projects: list[dict]) -> None:
             if not title or not year or not university:
                 continue
 
-            existing_project = project.objects.filter(title__iexact=title, year=year).first()
+            existing_project = project.objects.filter(title__iexact=title).first()
             if existing_project:
                 existing_project.title = title
                 existing_project.abstract = (item.get("abstract") or "").strip()
