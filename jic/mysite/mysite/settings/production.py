@@ -1,19 +1,7 @@
 from .base import *
 
-DEBUG = False
-
-# Use WhiteNoise for static files management instead of ManifestStaticFilesStorage
-# WhiteNoise is more robust and handles compression automatically
-STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    },
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
-}
-
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,testserver").split(",")
+CSRF_TRUSTED_ORIGINS = os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "http://localhost:8001,https://localhost:8001").split(",")
 
 try:
     from .local import *

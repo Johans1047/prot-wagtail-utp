@@ -1,176 +1,264 @@
-version: '3.8'
-
-# ==============================================================================
-# PRODUCCIÓN - JIC Wagtail CMS
-# ==============================================================================
-# Este archivo es para despliegue en producción
-# Uso: docker-compose -f docker-compose.prod.yml up -d
-# ==============================================================================
-
 services:
-  # Django/Wagtail Application (Producción)
-  web:
+
+  jicweb_nginx:
+    image: nginx:latest
+    container_name: jicweb_nginx
+    ports:
+      - "8002:80"
+    volumes:
+      # - ./nginx.conf:/etc/nginx/conf.d/nginx.conf:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./jic/mysite/theme/static:/static:ro
+    depends_on:
+      - jicweb_app
+    networks:
+      - netX 
+    restart: unless-stopped
+
+  jicweb_app:
     build:
       context: .
       dockerfile: Dockerfile.prod
-    container_name: jic_wagtail_prod
-    command: gunicorn mysite.wsgi:application --bind 0.0.0.0:8000 --workers 4 --timeout 60 --access-logfile - --error-logfile -
+    container_name: jicweb_app
+    env_file:
+      - .env.prod
     volumes:
-      - static_files:/app/staticfiles
-      - media_files:/app/media
-    expose:
-      - 8000
+      # - ./jic/mysite:/app/
+      - ./jic/mysite/theme/static:/app/staticfiles
+    ports:
+      - "8000:8000"
     environment:
-      - DEBUG=False
-      - PYTHONUNBUFFERED=1
-      - SECRET_KEY=${SECRET_KEY}
-      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
-      - JIC_PROJECTS_API_URL=${JIC_PROJECTS_API_URL:-http://192.168.140.114:8000/api/proyectos-jic}
+      - DEBUG=${DEBUG}
+      - TAILWIND_WATCH=0
+      # - PYTHONUNBUFFERED=${PYTHONUNBUFFERED}
+      - DB_REPLICATION_ENABLED=${DB_REPLICATION_ENABLED}
+      # PostgreSQL connection (jicweb_master container) - using postgres user
+      - POSTGRESQL_DATABASE=${POSTGRESQL_DATABASE}
+      - POSTGRESQL_POSTGRES_USERNAME=${POSTGRESQL_POSTGRES_USERNAME}
+      - POSTGRESQL_POSTGRES_PASSWORD=${POSTGRESQL_POSTGRES_PASSWORD}
+      - POSTGRESQL_HOST=${POSTGRESQL_HOST}
+      - POSTGRESQL_DATABASE_PORT_NUMBER=${POSTGRESQL_DATABASE_PORT_NUMBER}
+      - JIC_PROJECTS_API_URL=${JIC_PROJECTS_API_URL:-http://jic_projects_mock_api:8001/api/proyectos-jic}
       - JIC_PROJECTS_API_TIMEOUT=${JIC_PROJECTS_API_TIMEOUT:-3}
-      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_HOST=db
-      - DB_PORT=5432
-      - MINIO_ENDPOINT=minio:9000
+      - JIC_PROJECTS_PREFER_API=${JIC_PROJECTS_PREFER_API:-0}
+      # - DB_OPTIONS=-c search_path=public
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
       - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
       - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
-      - MINIO_USE_SSL=${MINIO_USE_SSL:-true}
-      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:-jic-media}
-      - MINIO_EXTERNAL_ENDPOINT=${MINIO_EXTERNAL_ENDPOINT}
+      - MINIO_USE_SSL=${MINIO_USE_SSL}
+      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME}
     depends_on:
-      - db
-      - minio
+      jic_minio_storage:
+        condition: service_healthy
     networks:
-      - jic_network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      - netX
 
-  # Nginx Proxy Reverso
-  nginx:
-    image: nginx:alpine
-    container_name: jic_nginx
+  jic_projects_mock_api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jic_projects_mock_api
+    env_file:
+      - .env.prod
+    command: >
+      sh -c "pip install --no-cache-dir -r /app/mock_projects_api/requirements.txt && uvicorn mock_projects_api.app:app --host 0.0.0.0 --port 8001"
+    volumes:
+      - ./mock_projects_api:/app/mock_projects_api
     ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
-      - static_files:/app/staticfiles:ro
-      - media_files:/app/media:ro
-      - ./certbot/conf:/etc/letsencrypt:ro
-      - ./certbot/www:/var/www/certbot:ro
-    depends_on:
-      - web
-    networks:
-      - jic_network
-    restart: unless-stopped
-
-  # PostgreSQL Database (Producción)
-  db:
-    image: postgres:15-alpine
-    container_name: jic_postgres_prod
-    volumes:
-      - postgres_data_prod:/var/lib/postgresql/data
-      - ./backups:/backups
+      - "8001:8001"
     environment:
-      - POSTGRES_DB=${DB_NAME}
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=es_ES.UTF-8 --lc-ctype=es_ES.UTF-8
+      - PYTHONUNBUFFERED=${PYTHONUNBUFFERED}
     networks:
-      - jic_network
+      - netX
+
+  jic_projects_sync_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jic_projects_sync_worker
+    env_file:
+      - .env.prod
+    command: >
+      sh -c "
+        INTERVAL=$${JIC_PROJECTS_SYNC_INTERVAL:-60};
+        echo \"[projects-sync] Interval: $${INTERVAL}s (weekly)\";
+        while true; do
+          TS=$$(date -u +%Y-%m-%dT%H:%M:%SZ);
+          echo \"[$$TS] Running API->DB sync...\";
+          python mysite/manage.py sync_projects_api --skip-checks || echo \"[$$TS] Sync failed; retrying next cycle.\";
+          sleep $${INTERVAL};
+        done
+      "
+    volumes:
+      - ./jic/mysite:/app/mysite
+    environment:
+      - DEBUG=${DEBUG}
+      - PYTHONUNBUFFERED=${PYTHONUNBUFFERED}
+      - DB_REPLICATION_ENABLED=${DB_REPLICATION_ENABLED}
+      # PostgreSQL connection variables consumed by mysite/settings/base.py
+      - POSTGRESQL_DATABASE=${POSTGRESQL_DATABASE}
+      - POSTGRESQL_POSTGRES_USERNAME=${POSTGRESQL_POSTGRES_USERNAME}
+      - POSTGRESQL_POSTGRES_PASSWORD=${POSTGRESQL_POSTGRES_PASSWORD}
+      - POSTGRESQL_HOST=${POSTGRESQL_HOST}
+      - POSTGRESQL_DATABASE_PORT_NUMBER=${POSTGRESQL_DATABASE_PORT_NUMBER}
+      - JIC_PROJECTS_API_URL=${JIC_PROJECTS_API_URL:-http://jic_projects_mock_api:8001/api/proyectos-jic}
+      - JIC_PROJECTS_API_TIMEOUT=${JIC_PROJECTS_API_TIMEOUT:-3}
+      - JIC_PROJECTS_AUTO_SYNC_DB=${JIC_PROJECTS_AUTO_SYNC_DB:-1}
+      - JIC_PROJECTS_SYNC_INTERVAL=${JIC_PROJECTS_SYNC_INTERVAL:-60}
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_USE_SSL=${MINIO_USE_SSL}
+      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME}
+    depends_on:
+      jicweb_master:
+        condition: service_healthy
+      jic_projects_mock_api:
+        condition: service_started
     restart: unless-stopped
+    networks:
+      - netX
+
+  jicweb_master:
+    image: 'bitnamilegacy/postgresql:17'
+    ports:
+      - '5440:5432'
+    env_file:
+      - .env.prod    
+    networks:
+      netX:
+        ipv4_address: 172.20.1.85
+    volumes:
+      - 'jicweb_master_data_v1:/bitnami/postgresql'
+    environment:
+      - POSTGRESQL_REPLICATION_MODE=master
+      - POSTGRESQL_POSTGRES_USERNAME=${POSTGRESQL_POSTGRES_USERNAME}
+      - POSTGRESQL_POSTGRES_PASSWORD=${POSTGRESQL_POSTGRES_PASSWORD}
+      - POSTGRESQL_DATABASE=${POSTGRESQL_DATABASE}
+      - POSTGRESQL_USERNAME=${POSTGRESQL_USERNAME}
+      - POSTGRESQL_PASSWORD=${POSTGRESQL_PASSWORD}
+      - POSTGRESQL_REPLICATION_USER=${DB_REPLICATION_USER}
+      - POSTGRESQL_REPLICATION_PASSWORD=${DB_REPLICATION_PASSWORD}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: ["CMD-SHELL", "pg_isready -U mast_jicweb -d db_jicweb"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # MinIO Object Storage (Producción)
-  minio:
-    image: minio/minio:latest
-    container_name: jic_minio_prod
-    command: server /data --console-address ":9001"
-    volumes:
-      - minio_data_prod:/data
-    environment:
-      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
-      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
+  jicweb_slave:
+    image: 'bitnamilegacy/postgresql:17'
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - '5432'
+    env_file:
+      - .env.prod
     networks:
-      - jic_network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
-
-  # MinIO Client - Inicialización
-  minio-client:
-    image: minio/mc:latest
-    container_name: jic_minio_client_prod
+      - netX
     depends_on:
-      - minio
-    entrypoint: >
-      /bin/sh -c "
-      sleep 10;
-      /usr/bin/mc alias set myminio http://minio:9000 ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY};
-      /usr/bin/mc mb myminio/${MINIO_BUCKET_NAME} --ignore-existing;
-      /usr/bin/mc anonymous set download myminio/${MINIO_BUCKET_NAME};
-      exit 0;
-      "
-    networks:
-      - jic_network
-
-  # Certbot para SSL (Let's Encrypt)
-  certbot:
-    image: certbot/certbot
-    container_name: jic_certbot
-    volumes:
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
-    networks:
-      - jic_network
-
-  # Backup automático (opcional)
-  backup:
-    image: postgres:15-alpine
-    container_name: jic_backup
-    depends_on:
-      - db
+      jicweb_master:
+        condition: service_healthy
     environment:
-      - PGHOST=db
-      - PGDATABASE=${DB_NAME}
-      - PGUSER=${DB_USER}
-      - PGPASSWORD=${DB_PASSWORD}
-    volumes:
-      - ./backups:/backups
-      - ./scripts/backup.sh:/backup.sh:ro
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do /backup.sh; sleep 24h & wait $${!}; done;'"
+      - POSTGRESQL_REPLICATION_MODE=slave
+      - POSTGRESQL_REPLICATION_USER=${DB_REPLICATION_USER}
+      - POSTGRESQL_REPLICATION_PASSWORD=${DB_REPLICATION_PASSWORD}
+      - POSTGRESQL_MASTER_HOST=${POSTGRESQL_HOST}
+      - POSTGRESQL_PASSWORD=${POSTGRESQL_PASSWORD}
+      - POSTGRESQL_MASTER_PORT_NUMBER=${POSTGRESQL_DATABASE_PORT_NUMBER}
+
+  jic_minio_storage:
+    restart: "no"
+    image: bitnami/minio:latest
+    ports:
+      - 9010:9000
+      - 9011:9001
+    env_file:
+      - .env.prod
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      - MINIO_CONSOLE_ADDRESS=:9001
+      - MINIO_DEFAULT_BUCKETS=${MINIO_BUCKET_NAME}:public
+      - MINIO_SCHEME=http
+      - MINIO_SKIP_CLIENT=no
+      - TZ=UTC
     networks:
-      - jic_network
+      netX:
+        ipv4_address: 172.20.0.75
+    volumes:
+      - 'jicst_storage_data:/bitnami/minio/data'
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  jic_minio_backup:
+    image: bitnami/minio:latest
+    env_file:
+      - .env.prod
+    entrypoint: |
+      /bin/bash -c "
+        mc alias set src http://172.20.0.75:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+        while true; do
+          TIMESTAMP=$$(date +%Y%m%d_%H%M%S);
+          echo \"[$$TIMESTAMP] Iniciando backup de MinIO...\";
+          mc mirror --overwrite src/${MINIO_BUCKET_NAME} /bitnami/minio/backups/$$(date +%Y%m%d)/ || echo \"[$$TIMESTAMP] ERROR: Falló el backup\";
+          echo \"[$$TIMESTAMP] Backup completado en /bitnami/minio/backups/$$(date +%Y%m%d)/\";
+          sleep 86400;
+        done
+      "
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME}
+    volumes:
+      - jicst_backup_data:/bitnami/minio/backups
+    depends_on:
+      jic_minio_storage:
+        condition: service_healthy
+    networks:
+      - netX
+    restart: unless-stopped
+
+  jic_db_backup:
+    image: bitnamilegacy/postgresql:17
+    env_file:
+      - .env.prod
+    entrypoint: |
+      /bin/bash -c "
+        export PGPASSWORD=1*o63U9JlN5bLp;
+        while true; do
+          TIMESTAMP=$$(date +%Y%m%d_%H%M%S);
+          BACKUP_FILE=/bitnami/postgresql/backups/$$(date +%Y%m%d)/db_jicweb_$$TIMESTAMP.sql.gz;
+          mkdir -p /bitnami/postgresql/backups/$$(date +%Y%m%d);
+          echo \"[$$TIMESTAMP] Iniciando backup de PostgreSQL...\";
+          pg_dump -h 172.20.1.85 -U mast_jicweb -d db_jicweb | gzip > $$BACKUP_FILE || echo \"[$$TIMESTAMP] ERROR: Falló el backup\";
+          echo \"[$$TIMESTAMP] Backup completado: $$BACKUP_FILE\";
+          find /bitnami/postgresql/backups -name '*.sql.gz' -mtime +30 -delete;
+          sleep 86400;
+        done
+      "
+    volumes:
+      - jicweb_master_data_backup_v1:/bitnami/postgresql/backups
+    depends_on:
+      jicweb_master:
+        condition: service_healthy
+    networks:
+      - netX
     restart: unless-stopped
 
 volumes:
-  postgres_data_prod:
+  jicst_storage_data:
     driver: local
-  minio_data_prod:
+  jicst_backup_data:
+    driver: local
+  jicweb_master_data_v1:
+    driver: local
+  jicweb_master_data_backup_v1:
     driver: local
   static_files:
     driver: local
-  media_files:
-    driver: local
 
 networks:
-  jic_network:
-    driver: bridge
+  netX:
+    name: netX
+    external: true

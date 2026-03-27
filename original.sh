@@ -1,6 +1,6 @@
 sudo docker network create --driver bridge netX \
 --subnet=172.20.0.0/16
-##################################33
+##################################
 mkdir -p /home/diapps/scripts/jic_web
 cd /home/diapps/scripts/jic_web
 ########################

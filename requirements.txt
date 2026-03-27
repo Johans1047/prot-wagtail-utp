@@ -2,7 +2,7 @@
 # REQUISITOS DEL SISTEMA - JIC WEB WAGTAIL CMS
 # ==============================================================================
 # Python Version: 3.11+
-# Sistema Operativo: Linux (Ubuntu/Debian recomendado)
+# Sistema Operativo: Linux (Ubuntu/Debian)
 # ==============================================================================
 
 # Core Framework
@@ -17,7 +17,6 @@ minio==7.2.3
 
 # Media & Images
 Pillow>=10.2.0,<12.0.0
-# willow==1.8
 
 # Development Tools
 django-livereload-server==0.4
