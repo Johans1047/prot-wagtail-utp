@@ -270,6 +270,9 @@ def global_admin_css():
         '.sidebar-wagtail-branding__icon-wrapper {{ background-image: url("{}"); background-size: 500%; background-repeat: no-repeat; background-position: center; background-color: hsl(254.3 50.4% 24.5%) !important; display: flex; align-items: center; justify-content: center; }}'
         '.w-theme-dark .sidebar-wagtail-branding__icon-wrapper {{ background-color: hsl(0 0% 11.4%) !important; }}'
         '@media (prefers-color-scheme: dark) {{ .w-theme-system .sidebar-wagtail-branding__icon-wrapper {{ background-color: hsl(0 0% 11.4%) !important; }} }}'
+        '.jic-logo-light, .jic-logo-dark { display: none; }'
+        '.w-theme-light .jic-logo-light { display: block; }'
+        '.w-theme-dark .jic-logo-dark { display: block; }'
         '</style>',
         static("img/utp-logo-admin.svg"),
     )
