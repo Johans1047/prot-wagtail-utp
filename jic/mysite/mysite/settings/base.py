@@ -171,7 +171,7 @@ STATICFILES_FINDERS = [
 
 STATICFILES_DIRS = []
 
-STATIC_ROOT = BASE_DIR / "theme/static"
+STATIC_ROOT = BASE_DIR / "/app/staticfiles"
 STATIC_URL = "/static/"
 
 MEDIA_ROOT = BASE_DIR / "media"

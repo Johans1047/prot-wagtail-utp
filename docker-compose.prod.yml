@@ -4,11 +4,11 @@ services:
     image: nginx:latest
     container_name: jicweb_nginx
     ports:
-      - "8002:80"
+      - "80:80"
     volumes:
       # - ./nginx.conf:/etc/nginx/conf.d/nginx.conf:ro
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./jic/mysite/theme/static:/static:ro
+      - ./jic/mysite/theme/static:/app/staticfiles:ro
     depends_on:
       - jicweb_app
     networks:
@@ -53,53 +53,53 @@ services:
     networks:
       - netX
 
-  jic_projects_sync_worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: jic_projects_sync_worker
-    env_file:
-      - .env.prod
-    command: >
-      sh -c "
-        INTERVAL=$${JIC_PROJECTS_SYNC_INTERVAL};
-        echo \"[projects-sync] Interval: $${INTERVAL}s (weekly)\";
-        while true; do
-          TS=$$(date -u +%Y-%m-%dT%H:%M:%SZ);
-          echo \"[$$TS] Running API->DB sync...\";
-          python mysite/manage.py sync_projects_api --skip-checks || echo \"[$$TS] Sync failed; retrying next cycle.\";
-          sleep $${INTERVAL};
-        done
-      "
-    volumes:
-      - ./jic/mysite:/app/mysite
-    environment:
-      - DEBUG=${DEBUG}
-      - PYTHONUNBUFFERED=${PYTHONUNBUFFERED}
-      - DB_REPLICATION_ENABLED=${DB_REPLICATION_ENABLED}
-      # PostgreSQL connection variables consumed by mysite/settings/base.py
-      - POSTGRESQL_DATABASE=${POSTGRESQL_DATABASE}
-      - POSTGRESQL_POSTGRES_USERNAME=${POSTGRESQL_POSTGRES_USERNAME}
-      - POSTGRESQL_POSTGRES_PASSWORD=${POSTGRESQL_POSTGRES_PASSWORD}
-      - POSTGRESQL_HOST=${POSTGRESQL_HOST}
-      - POSTGRESQL_DATABASE_PORT_NUMBER=${POSTGRESQL_DATABASE_PORT_NUMBER}
-      - JIC_PROJECTS_API_URL=${JIC_PROJECTS_API_URL}
-      - JIC_PROJECTS_API_TIMEOUT=${JIC_PROJECTS_API_TIMEOUT}
-      - JIC_PROJECTS_AUTO_SYNC_DB=${JIC_PROJECTS_AUTO_SYNC_DB}
-      - JIC_PROJECTS_SYNC_INTERVAL=${JIC_PROJECTS_SYNC_INTERVAL}
-      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
-      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
-      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
-      - MINIO_USE_SSL=${MINIO_USE_SSL}
-      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME}
-    depends_on:
-      jicweb_master:
-        condition: service_healthy
-      jic_projects_mock_api:
-        condition: service_started
-    restart: unless-stopped
-    networks:
-      - netX
+  # jic_projects_sync_worker:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: jic_projects_sync_worker
+  #   env_file:
+  #     - .env.prod
+  #   command: >
+  #     sh -c "
+  #       INTERVAL=$${JIC_PROJECTS_SYNC_INTERVAL};
+  #       echo \"[projects-sync] Interval: $${INTERVAL}s (weekly)\";
+  #       while true; do
+  #         TS=$$(date -u +%Y-%m-%dT%H:%M:%SZ);
+  #         echo \"[$$TS] Running API->DB sync...\";
+  #         python mysite/manage.py sync_projects_api --skip-checks || echo \"[$$TS] Sync failed; retrying next cycle.\";
+  #         sleep $${INTERVAL};
+  #       done
+  #     "
+  #   volumes:
+  #     - ./jic/mysite:/app/mysite
+  #   environment:
+  #     - DEBUG=${DEBUG}
+  #     - PYTHONUNBUFFERED=${PYTHONUNBUFFERED}
+  #     - DB_REPLICATION_ENABLED=${DB_REPLICATION_ENABLED}
+  #     # PostgreSQL connection variables consumed by mysite/settings/base.py
+  #     - POSTGRESQL_DATABASE=${POSTGRESQL_DATABASE}
+  #     - POSTGRESQL_POSTGRES_USERNAME=${POSTGRESQL_POSTGRES_USERNAME}
+  #     - POSTGRESQL_POSTGRES_PASSWORD=${POSTGRESQL_POSTGRES_PASSWORD}
+  #     - POSTGRESQL_HOST=${POSTGRESQL_HOST}
+  #     - POSTGRESQL_DATABASE_PORT_NUMBER=${POSTGRESQL_DATABASE_PORT_NUMBER}
+  #     - JIC_PROJECTS_API_URL=${JIC_PROJECTS_API_URL}
+  #     - JIC_PROJECTS_API_TIMEOUT=${JIC_PROJECTS_API_TIMEOUT}
+  #     - JIC_PROJECTS_AUTO_SYNC_DB=${JIC_PROJECTS_AUTO_SYNC_DB}
+  #     - JIC_PROJECTS_SYNC_INTERVAL=${JIC_PROJECTS_SYNC_INTERVAL}
+  #     - MINIO_ENDPOINT=${MINIO_ENDPOINT}
+  #     - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+  #     - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+  #     - MINIO_USE_SSL=${MINIO_USE_SSL}
+  #     - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME}
+  #   depends_on:
+  #     jicweb_master:
+  #       condition: service_healthy
+  #     jic_projects_mock_api:
+  #       condition: service_started
+  #   restart: unless-stopped
+  #   networks:
+  #     - netX
 
   jicweb_master:
     image: 'bitnamilegacy/postgresql:17'
@@ -158,6 +158,7 @@ services:
       - MINIO_ROOT_USER=${MINIO_ROOT_USER}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
       - MINIO_CONSOLE_ADDRESS=:9001
+      - MINIO_BROWSER_REDIRECT_URL=${MINIO_BROWSER_REDIRECT_URL:-http://localhost/minio-console}
       - MINIO_DEFAULT_BUCKETS=${MINIO_BUCKET_NAME}:public
       - MINIO_SCHEME=http
       - MINIO_SKIP_CLIENT=no
@@ -230,15 +231,20 @@ services:
 
 volumes:
   jicst_storage_data:
-    driver: local
+    name: prototipo-utp_jicst_storage_data
+    external: true
   jicst_backup_data:
-    driver: local
+    name: prototipo-utp_jicst_backup_data
+    external: true
   jicweb_master_data_v1:
-    driver: local
+    name: prototipo-utp_jicweb_master_data_v1
+    external: true
   jicweb_master_data_backup_v1:
-    driver: local
+    name: prototipo-utp_jicweb_master_data_backup_v1
+    external: true
   static_files:
-    driver: local
+    name: prototipo-utp_static_files
+    external: true
 
 networks:
   netX:
