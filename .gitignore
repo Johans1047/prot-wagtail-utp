@@ -48,6 +48,9 @@ yarn-error.log*
 package-lock.json
 yarn.lock
 
+*.tar
+bitnami_minio.tar
+
 # Environment Variables
 .env
 .env.local
