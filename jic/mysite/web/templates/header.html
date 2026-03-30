@@ -19,6 +19,22 @@
         @media (max-width: 1149.98px) {
             .bpmax1150-rounded-sm { border-radius: 0.125rem; }
         }
+
+        /* Fallback para botón Plataforma con texto responsivo */
+        .platform-btn-short {
+            display: inline;
+        }
+        .platform-btn-full {
+            display: none;
+        }
+        @media (min-width: 640px) {
+            .platform-btn-short {
+                display: none;
+            }
+            .platform-btn-full {
+                display: inline;
+            }
+        }
     </style>
     <nav
         aria-label="Navegación principal"
@@ -57,7 +73,8 @@
                         type="button"
                         class="cursor-pointer text-primary-foreground bg-primary hover:bg-primary/90 box-border border border-transparent focus:ring-3 focus:ring-cobalt-700 shadow-xs font-medium leading-5 rounded-base text-xs sm:text-sm px-3 py-2 focus:outline-none whitespace-nowrap flex-shrink-0"
                     >
-                        Plataforma JIC
+                        <span class="platform-btn-short">Plataforma</span>
+                        <span class="platform-btn-full">Plataforma JIC</span>
                     </button>
                 </div>
                 <button
