@@ -90,16 +90,6 @@
                             {% if current_result.totalProjects %}&middot; <strong>{{ current_result.totalProjects }}</strong> Proyectos Históricos{% endif %}
                         </p>
                     </div>
-                    {% if current_result.status %}
-                    {% if current_result.results or current_result.documents or current_result.status == 'en_proceso' or current_result.status == 'pendiente' %}
-                    <span class="inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold
-                        {% if current_result.status == 'completada' or current_result.status == 'finalizada' %}bg-green-100 text-green-800
-                        {% elif current_result.status == 'en_proceso' %}bg-yellow-100 text-yellow-800
-                        {% else %}bg-primary/10 text-primary{% endif %}">
-                        {% if current_result.status == "en_proceso" %}En proceso{% elif current_result.status == 'completada' or current_result.status == 'finalizada' %}Finalizada{% else %}{{ current_result.status|title }}{% endif %}
-                    </span>
-                    {% endif %}
-                    {% endif %}
                 </header>
 
                 {% if current_result.results %}
@@ -166,19 +156,11 @@
                 {% endif %}
 
                 {% if not current_result.results and not current_result.documents %}
-                {% if current_result.status == 'pendiente' or current_result.status == 'en_proceso' %}
-                <div class="border-t border-border bg-yellow-50 p-6 text-center">
-                    <p class="text-sm text-yellow-800">
-                        La JIC Nacional {{ current_year }} está actualmente en proceso. Los resultados y actas oficiales se publicarán en esta sección al concluir.
-                    </p>
-                </div>
-                {% else %}
                 <div class="border-t border-border p-6 text-center">
                     <p class="text-sm text-muted-foreground">
                         Aún no se han detallado resultados para esta edición.
                     </p>
                 </div>
-                {% endif %}
                 {% endif %}
             </article>
             {% endif %}

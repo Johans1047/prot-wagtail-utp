@@ -107,7 +107,8 @@ class Coordinator:
     email: str
     sort_order: int = 0
     is_active: bool = True
-    photo: str = None
+    college_logo: str = None
+    url: str = None
 
     @property
     def shortName(self):

@@ -174,74 +174,74 @@ services:
       timeout: 5s
       retries: 5
 
-  jic_minio_backup:
-    image: bitnami/minio:latest
-    env_file:
-      - .env.prod
-    entrypoint: |
-      /bin/bash -c "
-        mc alias set src ${MINIO_SCHEME}://${MINIO_ENDPOINT} ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
-        while true; do
-          TIMESTAMP=$$(date +%Y%m%d_%H%M%S);
-          echo \"[$$TIMESTAMP] Iniciando backup de MinIO...\";
-          mc mirror --overwrite src/${MINIO_BUCKET_NAME} /bitnami/minio/backups/$$(date +%Y%m%d)/ || echo \"[$$TIMESTAMP] ERROR: Falló el backup\";
-          echo \"[$$TIMESTAMP] Backup completado en /bitnami/minio/backups/$$(date +%Y%m%d)/\";
-          sleep ${BACKUP_INTERVAL:-86400};
-        done
-      "
-    environment:
-      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
-      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME}
-    volumes:
-      - jicst_backup_data:/bitnami/minio/backups
-    depends_on:
-      jic_minio_storage:
-        condition: service_healthy
-    networks:
-      - netX
-    restart: unless-stopped
+  # jic_minio_backup:
+  #   image: bitnami/minio:latest
+  #   env_file:
+  #     - .env.prod
+  #   entrypoint: |
+  #     /bin/bash -c "
+  #       mc alias set src ${MINIO_SCHEME}://${MINIO_ENDPOINT} ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+  #       while true; do
+  #         TIMESTAMP=$$(date +%Y%m%d_%H%M%S);
+  #         echo \"[$$TIMESTAMP] Iniciando backup de MinIO...\";
+  #         mc mirror --overwrite src/${MINIO_BUCKET_NAME} /bitnami/minio/backups/$$(date +%Y%m%d)/ || echo \"[$$TIMESTAMP] ERROR: Falló el backup\";
+  #         echo \"[$$TIMESTAMP] Backup completado en /bitnami/minio/backups/$$(date +%Y%m%d)/\";
+  #         sleep ${BACKUP_INTERVAL:-86400};
+  #       done
+  #     "
+  #   environment:
+  #     - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+  #     - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+  #     - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME}
+  #   volumes:
+  #     - jicst_backup_data:/bitnami/minio/backups
+  #   depends_on:
+  #     jic_minio_storage:
+  #       condition: service_healthy
+  #   networks:
+  #     - netX
+  #   restart: unless-stopped
 
-  jic_db_backup:
-    image: bitnamilegacy/postgresql:17
-    env_file:
-      - .env.prod
-    entrypoint: |
-      /bin/bash -c "
-        export PGPASSWORD=${POSTGRESQL_POSTGRES_PASSWORD};
-        while true; do
-          TIMESTAMP=$$(date +%Y%m%d_%H%M%S);
-          BACKUP_FILE=/bitnami/postgresql/backups/$$(date +%Y%m%d)/db_jicweb_$$TIMESTAMP.sql.gz;
-          mkdir -p /bitnami/postgresql/backups/$$(date +%Y%m%d);
-          echo \"[$$TIMESTAMP] Iniciando backup de PostgreSQL...\";
-          pg_dump -h 172.20.1.85 -U mast_jicweb -d db_jicweb | gzip > $$BACKUP_FILE || echo \"[$$TIMESTAMP] ERROR: Falló el backup\";
-          echo \"[$$TIMESTAMP] Backup completado: $$BACKUP_FILE\";
-          find /bitnami/postgresql/backups -name '*.sql.gz' -mtime +${BACKUP_RETENTION_DAYS:-30} -delete;
-          sleep ${BACKUP_INTERVAL:-86400};
-        done
-      "
-    volumes:
-      - jicweb_master_data_backup_v1:/bitnami/postgresql/backups
-    depends_on:
-      jicweb_master:
-        condition: service_healthy
-    networks:
-      - netX
-    restart: unless-stopped
+  # jic_db_backup:
+  #   image: bitnamilegacy/postgresql:17
+  #   env_file:
+  #     - .env.prod
+  #   entrypoint: |
+  #     /bin/bash -c "
+  #       export PGPASSWORD=${POSTGRESQL_POSTGRES_PASSWORD};
+  #       while true; do
+  #         TIMESTAMP=$$(date +%Y%m%d_%H%M%S);
+  #         BACKUP_FILE=/bitnami/postgresql/backups/$$(date +%Y%m%d)/db_jicweb_$$TIMESTAMP.sql.gz;
+  #         mkdir -p /bitnami/postgresql/backups/$$(date +%Y%m%d);
+  #         echo \"[$$TIMESTAMP] Iniciando backup de PostgreSQL...\";
+  #         pg_dump -h 172.20.1.85 -U mast_jicweb -d db_jicweb | gzip > $$BACKUP_FILE || echo \"[$$TIMESTAMP] ERROR: Falló el backup\";
+  #         echo \"[$$TIMESTAMP] Backup completado: $$BACKUP_FILE\";
+  #         find /bitnami/postgresql/backups -name '*.sql.gz' -mtime +${BACKUP_RETENTION_DAYS:-30} -delete;
+  #         sleep ${BACKUP_INTERVAL:-86400};
+  #       done
+  #     "
+  #   volumes:
+  #     - jicweb_master_data_backup_v1:/bitnami/postgresql/backups
+  #   depends_on:
+  #     jicweb_master:
+  #       condition: service_healthy
+  #   networks:
+  #     - netX
+  #   restart: unless-stopped
 
 volumes:
   jicst_storage_data:
     name: prototipo-utp_jicst_storage_data
     external: true
-  jicst_backup_data:
-    name: prototipo-utp_jicst_backup_data
-    external: true
+  # jicst_backup_data:
+  #   name: prototipo-utp_jicst_backup_data
+  #   external: true
   jicweb_master_data_v1:
     name: prototipo-utp_jicweb_master_data_v1
     external: true
-  jicweb_master_data_backup_v1:
-    name: prototipo-utp_jicweb_master_data_backup_v1
-    external: true
+  # jicweb_master_data_backup_v1:
+  #   name: prototipo-utp_jicweb_master_data_backup_v1
+  #   external: true
   static_files:
     name: prototipo-utp_static_files
     external: true

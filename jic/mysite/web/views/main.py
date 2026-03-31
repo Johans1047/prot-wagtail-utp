@@ -88,13 +88,15 @@ def Inicio(request) -> render:
         ts = title_section_fallback()
 
     try:
-        _event_intro = list(
-            event_intro.objects.filter(is_active=True)
-        )
+        _event_intro_total = event_intro.objects.count()
+        _event_intro = list(event_intro.objects.filter(is_active=True))
     except (OperationalError, ProgrammingError):
+        _event_intro_total = 0
         _event_intro = []
 
-    if not _event_intro:
+    # Use fallback only when there is no event intro configured yet.
+    # If records exist but are inactive, keep the section hidden.
+    if not _event_intro and _event_intro_total == 0:
         _event_intro = [event_intro_fallback()]
         
     try:
@@ -112,9 +114,10 @@ def Inicio(request) -> render:
     try:
         db_faqs = frequently_ask_question.objects.filter(is_active=True)
         for faq in db_faqs:
-            slug = faq.category_slug
+            slug = frequently_ask_question.normalize_category_slug(faq.category_slug or faq.category)
+            title = frequently_ask_question.CATEGORY_LABELS[slug]
             if slug not in faqs:
-                faqs[slug] = FAQCategory(title=faq.category)
+                faqs[slug] = FAQCategory(title=title)
             faqs[slug].items.append(FAQItem(q=faq.question, a=faq.answer))
     except (OperationalError, ProgrammingError):
         pass
@@ -651,7 +654,6 @@ def Resultados(request) -> render:
         if year and year not in results_by_year:
             results_by_year[year] = {
                 "year": year,
-                "status": "finalizada",
                 "totalProjects": 0,
                 "universities": 0,
                 "results": [],

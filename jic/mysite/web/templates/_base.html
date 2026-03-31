@@ -39,11 +39,11 @@
     {% endif %}
 
     {% include 'header.html' %}
-    <main id="contenido-principal" class="pt-18 overflow-x-hidden">
+    <main id="contenido-principal" class="pt-18 overflow-x-hidden flex-1 bg-card">
         {% block content %}{% endblock %}
     </main>
     {% if last_data_update %}
-    <div class="mx-auto w-full text-center px-4 pb-3 text-right text-xs text-muted-foreground lg:px-8 bg-card">
+    <div class="mx-auto w-full px-4 pb-3 text-right text-xs text-muted-foreground lg:px-8 bg-card">
         Última vez actualizado: {{ last_data_update|date:"d/m/Y" }}
     </div>
     {% endif %}

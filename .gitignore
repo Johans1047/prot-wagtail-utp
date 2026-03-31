@@ -25,7 +25,13 @@ coverage.xml
 .git
 .mypy_cache
 .pytest_cache
+.github
+/mock_projects_api
 .hypothesis
+migrate_*.*
+original.sh
+.env
+.env.*
 
 # Django
 *.log

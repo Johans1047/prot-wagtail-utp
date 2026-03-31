@@ -449,12 +449,14 @@ services:
 volumes:
   jicst_storage_data:
     driver: local
-  jicst_backup_data:
-    driver: local
+  # jicst_backup_data:
+  #   name: prototipo-utp_jicst_backup_data
+  #   external: true
   jicweb_master_data_v1:
     driver: local
-  jicweb_master_data_backup_v1:
-    driver: local
+  # jicweb_master_data_backup_v1:
+  #   name: prototipo-utp_jicweb_master_data_backup_v1
+  #   external: true
   static_files:
     driver: local
 

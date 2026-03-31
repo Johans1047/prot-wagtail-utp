@@ -39,7 +39,7 @@ class ImportantDateViewSet(SnippetViewSet):
     model = important_date
     menu_label = "Fechas importantes"
     icon = "date"
-    list_display = ("title", "event_date", "is_primary", "sort_order", "is_active")
+    list_display = ("title", "event_date", "is_primary", "is_active", "frontend_usage_count", "sort_order")
     list_filter = ("is_primary", "is_active")
     search_fields = ("title", "description")
 
@@ -48,23 +48,23 @@ class FrequentlyAskQuestionViewSet(SnippetViewSet):
     model = frequently_ask_question
     menu_label = "Preguntas frecuentes"
     icon = "help"
-    list_display = ("category", "question", "sort_order", "is_active")
+    list_display = ("category_slug", "question", "is_active", "frontend_usage_count", "sort_order")
     list_filter = ("category_slug", "is_active")
-    search_fields = ("category", "question", "answer")
+    search_fields = ("category_slug", "question", "answer")
 
 
 class EventIntroViewSet(SnippetViewSet):
     model = event_intro
     menu_label = "Introducción del evento"
     icon = "doc-full"
-    list_display = ("title", "is_active")
+    list_display = ("title", "is_active", "frontend_usage_count")
 
 
 class TitleSectionViewSet(SnippetViewSet):
     model = title_section
     menu_label = "Sección Hero/Título"
     icon = "image"
-    list_display = ("title", "carousel_interval", "is_active", "sort_order")
+    list_display = ("title", "carousel_interval", "is_active", "frontend_usage_count", "sort_order")
     list_filter = ("is_active",)
     search_fields = ("title", "description")
     permission_policy = SingletonPermissionPolicy(title_section)
@@ -83,7 +83,7 @@ class BackgroundItemViewSet(SnippetViewSet):
     model = background_item
     menu_label = "Antecedentes"
     icon = "history"
-    list_display = ("year_label", "sort_order")
+    list_display = ("year_label", "frontend_usage_count", "sort_order")
     search_fields = ("year_label", "description")
 
 
@@ -91,7 +91,7 @@ class JicCategoryViewSet(SnippetViewSet):
     model = jic_category
     menu_label = "Categorías"
     icon = "folder-open-inverse"
-    list_display = ("name", "sort_order")
+    list_display = ("name", "frontend_usage_count", "sort_order")
     search_fields = ("name", "description")
 
 
@@ -99,7 +99,7 @@ class AwardViewSet(SnippetViewSet):
     model = award
     menu_label = "Reconocimientos"
     icon = "pick"
-    list_display = ("prize", "year", "entity", "sort_order")
+    list_display = ("prize", "year", "entity", "frontend_usage_count", "sort_order")
     search_fields = ("prize", "entity", "description")
 
 
@@ -107,6 +107,7 @@ class NationalCoordinatorsSectionViewSet(SnippetViewSet):
     model = national_coordinators_section
     menu_label = "Sección Coordinadores"
     icon = "cog"
+    list_display = ("title", "is_active", "frontend_usage_count")
     permission_policy = SingletonPermissionPolicy(national_coordinators_section)
 
 
@@ -114,7 +115,7 @@ class CoordinatorViewSet(SnippetViewSet):
     model = coordinator
     menu_label = "Coordinadores"
     icon = "user"
-    list_display = ("university_short_name", "name", "email", "sort_order", "is_active")
+    list_display = ("university_short_name", "name", "email", "is_active", "frontend_usage_count", "sort_order")
     list_filter = ("is_active",)
     search_fields = ("name", "university_short_name")
 
@@ -123,7 +124,7 @@ class OrganizerCommitteeViewSet(SnippetViewSet):
     model = organizer_committee_member
     menu_label = "Comité organizador"
     icon = "group"
-    list_display = ("name", "role", "institution", "sort_order", "is_active")
+    list_display = ("name", "role", "institution", "is_active", "frontend_usage_count", "sort_order")
     list_filter = ("is_active",)
     search_fields = ("name", "role", "institution")
 
@@ -148,8 +149,15 @@ class SeleccionInstitucionalViewSet(SnippetViewSet):
     model = selection_institutional
     menu_label = "Selecciones institucionales"
     icon = "list-ul"
-    list_display = ("university", "short_name", "year", "status", "is_active", "sort_order")
-    list_filter = ("status", "is_active", "year")
+    list_display = (
+        "university",
+        "short_name",
+        "year",
+        "is_active",
+        "frontend_usage_count",
+        "sort_order",
+    )
+    list_filter = ("is_active", "year")
     search_fields = ("university", "short_name")
 
 
@@ -158,8 +166,8 @@ class SeleccionNacionalViewSet(SnippetViewSet):
     model = selection_national
     menu_label = "Selecciones nacionales"
     icon = "list-ul"
-    list_display = ("year", "status", "host_place", "is_active", "sort_order")
-    list_filter = ("status", "is_active")
+    list_display = ("year", "host_place", "is_active", "frontend_usage_count", "sort_order")
+    list_filter = ("is_active",)
     search_fields = ("year", "host_place")
 
 class ResultadosGroup(SnippetViewSetGroup):
@@ -176,7 +184,7 @@ class AsesorViewSet(SnippetViewSet):
     model = consultant
     menu_label = "Asesores"
     icon = "user"
-    list_display = ("name", "email", "institution", "is_active")
+    list_display = ("name", "email", "institution", "is_active", "frontend_usage_count")
     list_filter = ("is_active",)
     search_fields = ("name", "email", "institution")
 
@@ -185,7 +193,7 @@ class InvestigacionViewSet(SnippetViewSet):
     model = project
     menu_label = "Investigaciones"
     icon = "doc-full"
-    list_display = ("title", "year", "university", "category", "winner")
+    list_display = ("title", "year", "university", "category", "winner", "frontend_usage_count")
     list_filter = ("year", "category", "winner")
     search_fields = ("title", "abstract", "university", "category")
 
@@ -203,7 +211,7 @@ class VideoViewSet(SnippetViewSet):
     model = video
     menu_label = "Videos"
     icon = "media"
-    list_display = ("title", "category", "sort_order", "is_active", "created_at")
+    list_display = ("title", "category", "is_active", "frontend_usage_count", "sort_order", "created_at")
     list_filter = ("category", "is_active")
     search_fields = ("title", "description", "category")
 
@@ -212,7 +220,7 @@ class ResourceDocumentViewSet(SnippetViewSet):
     model = resource_document
     menu_label = "Documentos de Recursos"
     icon = "doc-full"
-    list_display = ("title", "year", "doc_type", "is_active", "sort_order")
+    list_display = ("title", "year", "doc_type", "is_active", "frontend_usage_count", "sort_order")
     list_filter = ("year", "doc_type", "is_active")
     search_fields = ("title", "description", "doc_type")
     ordering = ["-year", "doc_type", "sort_order"]
@@ -222,7 +230,7 @@ class GalleryViewSet(SnippetViewSet):
     model = Gallery
     menu_label = "Galería Ordenable"
     icon = "image"
-    list_display = ("title",)
+    list_display = ("title", "frontend_usage_count")
     search_fields = ("title",)
     permission_policy = SingletonPermissionPolicy(Gallery)
 
@@ -236,14 +244,72 @@ def register_recursos_menu():
         LazyMenuItem("Galería Ordenable", "wagtailsnippets_web_gallery:list", icon_name="image"),
         LazyMenuItem("Videos", "wagtailsnippets_web_video:list", icon_name="media"),
     ])
-    return SubmenuMenuItem("Recursos", recursos_menu, icon_name="folder-open-inverse", order=104)
+    return SubmenuMenuItem(
+        "Recursos",
+        recursos_menu,
+        icon_name="folder-open-inverse",
+        order=104,
+        name="recursos",
+    )
 
 ## list_display = (all items except images and documents) ##
 @hooks.register("construct_main_menu")
 def hide_original_menus(request, menu_items):
-    """Hide the original top-level items so they only appear inside Resources."""
-    hidden_items = ['images', 'documents']
+    """Hide selected top-level items and restrict Noticias users to Pages only."""
+    user = request.user
+    group_names = set(user.groups.values_list("name", flat=True)) if user.is_authenticated else set()
+    is_news_only_user = user.is_authenticated and not user.is_superuser and group_names == {"Noticias"}
+
+    if is_news_only_user:
+        menu_items[:] = [item for item in menu_items if getattr(item, "name", "") == "explorer"]
+        return
+
+    hidden_items = ['images', 'documents', 'snippets', 'sites']
     menu_items[:] = [item for item in menu_items if item.name not in hidden_items]
+
+
+@hooks.register("construct_reports_menu")
+def customize_reports_menu(request, menu_items):
+    """Hide page types usage report and rename aging pages entry."""
+    user = request.user
+    group_names = set(user.groups.values_list("name", flat=True)) if user.is_authenticated else set()
+    is_news_only_user = user.is_authenticated and not user.is_superuser and group_names == {"Noticias"}
+    if is_news_only_user:
+        menu_items[:] = []
+        return
+
+    filtered_items = []
+    for item in menu_items:
+        item_name = str(getattr(item, "name", "") or "")
+        item_url = str(getattr(item, "url", "") or "")
+
+        if item_name == "page_types_usage" or "reports/page-types-usage" in item_url:
+            continue
+
+        if item_name == "aging_pages" or "reports/aging-pages" in item_url:
+            item.label = "Historial de páginas"
+
+        filtered_items.append(item)
+
+    menu_items[:] = filtered_items
+
+
+@hooks.register("construct_settings_menu")
+def hide_sites_from_settings_menu(request, menu_items):
+    """Hide the Sites option from the Settings submenu."""
+    user = request.user
+    group_names = set(user.groups.values_list("name", flat=True)) if user.is_authenticated else set()
+    is_news_only_user = user.is_authenticated and not user.is_superuser and group_names == {"Noticias"}
+    if is_news_only_user:
+        menu_items[:] = []
+        return
+
+    menu_items[:] = [
+        item
+        for item in menu_items
+        if getattr(item, "name", "") != "sites"
+        and "admin/sites" not in str(getattr(item, "url", "") or "")
+    ]
 
 
 # ─── Register all groups ─────────────────────────────────────────────
@@ -275,6 +341,7 @@ def global_admin_css():
         '.w-theme-dark .jic-logo-dark {{ display: block; }}'
         '</style>',
         static("img/utp-logo-admin.svg"),
+        # static("img/utp-logo-admin-dark.svg"),
     )
     
     
@@ -293,6 +360,7 @@ def register_import_menu():
     return MenuItem(
         'Importar Datos',
         reverse('importar_datos'),
+        name='importar_datos',
         icon_name='upload',
         order=105,
     )

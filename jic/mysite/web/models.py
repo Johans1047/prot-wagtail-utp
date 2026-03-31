@@ -1,10 +1,11 @@
-from django.db import models
+from django.db import models, transaction
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.core.files.images import get_image_dimensions
 from django.db.models import Case, When
 from django.db.models.functions import Lower
 from django.utils import timezone
+import unicodedata
 from urllib.parse import urlparse, parse_qs
 from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
@@ -23,6 +24,85 @@ from .utils import get_video_file_path, get_video_thumbnail_path, get_document_p
 
 
 IMAGE_MODEL = get_image_model_string()
+
+
+class FrontendUsageMixin:
+    """Shared admin metric: whether an item is expected to appear on frontend."""
+
+    def frontend_usage_count(self) -> int:
+        return 1 if getattr(self, "is_active", True) else 0
+
+    frontend_usage_count.short_description = "Usos"
+
+
+class AutoSortOrderMixin(models.Model):
+    """Keep sort_order unique and compact when items are inserted, moved, or deleted."""
+
+    sort_order_group_fields: tuple[str, ...] = ()
+
+    class Meta:
+        abstract = True
+
+    def _group_filter(self, source=None) -> dict:
+        instance = source or self
+        return {field_name: getattr(instance, field_name) for field_name in self.sort_order_group_fields}
+
+    def _group_queryset(self, source=None):
+        return self.__class__.objects.filter(**self._group_filter(source=source))
+
+    @staticmethod
+    def _normalize_target_order(target_order, max_index: int) -> int:
+        if target_order is None:
+            return max_index
+        return max(0, min(int(target_order), max_index))
+
+    def _reindex_group(self, group_filter: dict, target_pk=None, target_order=None):
+        base_ids = list(
+            self.__class__.objects.filter(**group_filter)
+            .exclude(pk=target_pk)
+            .order_by("sort_order", "pk")
+            .values_list("pk", flat=True)
+        )
+
+        if target_pk is not None:
+            insert_at = self._normalize_target_order(target_order, len(base_ids))
+            base_ids.insert(insert_at, target_pk)
+
+        instances_by_pk = {
+            obj.pk: obj
+            for obj in self.__class__.objects.filter(pk__in=base_ids)
+        }
+        to_update = []
+        for index, pk_value in enumerate(base_ids):
+            obj = instances_by_pk.get(pk_value)
+            if obj and obj.sort_order != index:
+                obj.sort_order = index
+                to_update.append(obj)
+        if to_update:
+            self.__class__.objects.bulk_update(to_update, ["sort_order"])
+
+    def save(self, *args, **kwargs):
+        old_instance = None
+        if self.pk:
+            old_instance = self.__class__.objects.filter(pk=self.pk).first()
+
+        with transaction.atomic():
+            old_group = self._group_filter(source=old_instance) if old_instance else None
+            new_group = self._group_filter()
+            requested_position = self.sort_order
+            super().save(*args, **kwargs)
+
+            if old_group and old_group != new_group:
+                self._reindex_group(old_group)
+            self._reindex_group(new_group, target_pk=self.pk, target_order=requested_position)
+            self.refresh_from_db(fields=["sort_order"])
+
+    def delete(self, *args, **kwargs):
+        group_filter = self._group_filter()
+        with transaction.atomic():
+            result = super().delete(*args, **kwargs)
+            self._reindex_group(group_filter)
+            return result
 
 
 class BlogIndexPage(Page):
@@ -95,7 +175,7 @@ class BlogPage(Page):
         verbose_name = "Noticia"
         verbose_name_plural = "Noticias"
 
-class important_date(PreviewableMixin, models.Model):
+class important_date(AutoSortOrderMixin, FrontendUsageMixin, PreviewableMixin, models.Model):
     """Editable timeline item for the home page."""
 
     title = models.CharField("Título", max_length=150, default="Selección Nacional")
@@ -143,7 +223,7 @@ class important_date(PreviewableMixin, models.Model):
         return {"snippet": self}
     
     
-class frequently_ask_question(PreviewableMixin, models.Model):
+class frequently_ask_question(AutoSortOrderMixin, FrontendUsageMixin, PreviewableMixin, models.Model):
     """Editable question and answer items for the home page."""
 
     base_form_class = _FaqAdminForm
@@ -153,15 +233,31 @@ class frequently_ask_question(PreviewableMixin, models.Model):
         ("plataforma", "Plataforma Tecnológica"),
         ("entregables", "Entregables y Evaluación"),
     ]
+    CATEGORY_LABELS = dict(CATEGORY_SLUG_CHOICES)
+    CATEGORY_ALIASES = {
+        "participacion": "participacion",
+        "participacion_y_equipos": "participacion",
+        "plataforma": "plataforma",
+        "plataforma_tecnologica": "plataforma",
+        "entregable": "entregables",
+        "entregables": "entregables",
+        "entregables_y_evaluacion": "entregables",
+    }
+    sort_order_group_fields = ("category_slug",)
 
     category_slug = models.SlugField(
-        "Slug de categoría",
+        "Categoría",
         max_length=50,
         choices=CATEGORY_SLUG_CHOICES,
         default="participacion",
-        help_text="Identificador interno de la categoría (ej: participacion, plataforma, entregables)",
+        help_text="Selecciona la categoría para esta pregunta",
     )
-    category = models.CharField("Categoría", max_length=150, choices=CATEGORY_SLUG_CHOICES)
+    category = models.CharField(
+        "Etiqueta de categoría",
+        max_length=150,
+        choices=CATEGORY_SLUG_CHOICES,
+        help_text="La etiqueta se sincroniza automáticamente con la categoría seleccionada",
+    )
     question  = models.TextField("Pregunta")
     answer = models.TextField("Respuesta")
     sort_order = models.PositiveIntegerField("Orden", default=0)
@@ -169,7 +265,6 @@ class frequently_ask_question(PreviewableMixin, models.Model):
 
     panels = [
         FieldPanel("category_slug"),
-        FieldPanel("category"),
         FieldPanel("question"),
         FieldPanel("answer"),
         FieldPanel("sort_order"),
@@ -188,8 +283,25 @@ class frequently_ask_question(PreviewableMixin, models.Model):
         verbose_name = "Pregunta frecuente"
         verbose_name_plural = "Preguntas frecuentes"
 
+    @classmethod
+    def normalize_category_slug(cls, value) -> str:
+        normalized = unicodedata.normalize("NFKD", str(value or "").strip().lower())
+        normalized = normalized.encode("ascii", "ignore").decode("ascii")
+        normalized = normalized.replace("-", "_").replace(" ", "_")
+        normalized = "_".join(part for part in normalized.split("_") if part)
+        normalized = cls.CATEGORY_ALIASES.get(normalized, normalized)
+        if normalized not in cls.CATEGORY_LABELS:
+            return "participacion"
+        return normalized
+
+    def save(self, *args, **kwargs):
+        canonical_slug = self.normalize_category_slug(self.category_slug or self.category)
+        self.category_slug = canonical_slug
+        self.category = canonical_slug
+        super().save(*args, **kwargs)
+
     def __str__(self) -> str:
-        return f"{self.category}: {self.question}"
+        return f"{self.get_category_slug_display()}: {self.question}"
 
     def get_preview_template(self, request, mode_name):
         return "utilidades/previews/faq_preview.html"
@@ -198,7 +310,7 @@ class frequently_ask_question(PreviewableMixin, models.Model):
         return {"snippet": self}
 
 
-class background_item(PreviewableMixin, models.Model):
+class background_item(AutoSortOrderMixin, FrontendUsageMixin, PreviewableMixin, models.Model):
     """Editable timeline item for the JIC background/history section."""
 
     year_label = models.CharField("Año / Período", max_length=20)
@@ -226,7 +338,7 @@ class background_item(PreviewableMixin, models.Model):
         return {"snippet": self}
 
 
-class jic_category(PreviewableMixin, models.Model):
+class jic_category(AutoSortOrderMixin, FrontendUsageMixin, PreviewableMixin, models.Model):
     """Editable category item for the JIC categories section."""
 
     name = models.CharField("Nombre", max_length=150)
@@ -254,7 +366,7 @@ class jic_category(PreviewableMixin, models.Model):
         return {"snippet": self}
 
 
-class award(PreviewableMixin, models.Model):
+class award(AutoSortOrderMixin, FrontendUsageMixin, PreviewableMixin, models.Model):
     """Editable award/recognition item for the JIC recognitions section."""
 
     prize = models.CharField("Premio", max_length=200)
@@ -294,7 +406,7 @@ class award(PreviewableMixin, models.Model):
         return {"snippet": self}
 
 
-class event_intro(PreviewableMixin, models.Model):
+class event_intro(FrontendUsageMixin, PreviewableMixin, models.Model):
     """Editable event introduction section with logo and descriptions - Singleton."""
 
     # Singleton pattern: always use the same primary key for the single instance
@@ -317,11 +429,13 @@ class event_intro(PreviewableMixin, models.Model):
         "Etiqueta de marco",
         max_length=100,
         default="En el marco de",
+        blank=True,
         help_text="Texto que precede al evento organizador"
     )
     framework_text = models.CharField(
         "Evento organizador",
         max_length=200,
+        blank=True,
         help_text="Ej: Congreso IESTEC"
     )
     logo_image = models.FileField(
@@ -336,6 +450,7 @@ class event_intro(PreviewableMixin, models.Model):
         "Texto de respaldo para logo",
         max_length=50,
         default="Logo del evento",
+        blank=True,
         help_text="Texto a mostrar si la imagen no carga"
     )
     is_active = models.BooleanField(
@@ -383,7 +498,7 @@ class event_intro(PreviewableMixin, models.Model):
         return {"snippet": self}
 
 
-class national_coordinators_section(PreviewableMixin, models.Model):
+class national_coordinators_section(FrontendUsageMixin, PreviewableMixin, models.Model):
     """Control de visibilidad para la sección de Coordinadores Nacionales - Singleton."""
 
     _singleton_id = 1
@@ -433,7 +548,7 @@ class national_coordinators_section(PreviewableMixin, models.Model):
         return self.title
 
 
-class coordinator(PreviewableMixin, models.Model):
+class coordinator(AutoSortOrderMixin, FrontendUsageMixin, PreviewableMixin, models.Model):
     """National coordinator for JIC by university."""
 
     university_short_name = models.CharField("Sigla Universidad", max_length=20)
@@ -485,7 +600,7 @@ class coordinator(PreviewableMixin, models.Model):
         return {"snippet": self}
 
 
-class organizer_committee_member(PreviewableMixin, models.Model):
+class organizer_committee_member(AutoSortOrderMixin, FrontendUsageMixin, PreviewableMixin, models.Model):
     """Member of the JIC organizing committee."""
 
     name = models.CharField("Nombre", max_length=200)
@@ -571,13 +686,26 @@ class selection_document(Orderable):
         on_delete=models.CASCADE,
         related_name="documents",
     )
-    label = models.CharField("Etiqueta", max_length=200)
-    href = models.URLField("Enlace", help_text="URL pública del documento")
+    label = models.CharField("Nombre", help_text="Nombre con que se muestra el documento", max_length=200)
+    href = models.URLField(
+        "URL pública",
+        blank=True,
+        help_text="Enlace público del documento (opcional si eliges un documento del dropdown)",
+    )
+    document = models.ForeignKey(
+        "wagtaildocs.Document",
+        on_delete=models.CASCADE,
+        verbose_name="Documento",
+        help_text="Documento guardado en la biblioteca de documentos",
+        null=True,
+        blank=True,
+    )
     sort_order = models.PositiveIntegerField("Orden", default=0)
 
     panels = [
         FieldPanel("label"),
         FieldPanel("href"),
+        FieldPanel("document"),
         FieldPanel("sort_order"),
     ]
 
@@ -589,24 +717,12 @@ class selection_document(Orderable):
         return self.label
 
 
-class selection_institutional(PreviewableMixin, ClusterableModel):
+class selection_institutional(AutoSortOrderMixin, FrontendUsageMixin, PreviewableMixin, ClusterableModel):
     """Institutional selection results per university per year."""
-
-    STATUS_CHOICES = [
-        ("completada", "Completada"),
-        ("en_proceso", "En proceso"),
-        ("pendiente", "Pendiente"),
-    ]
 
     university = models.CharField("Universidad", max_length=300)
     short_name = models.CharField("Sigla", max_length=20)
     year = models.PositiveIntegerField("Año JIC")
-    status = models.CharField(
-        "Estado",
-        max_length=20,
-        choices=STATUS_CHOICES,
-        default="pendiente",
-    )
     is_active = models.BooleanField(
         "Activo",
         default=True,
@@ -618,7 +734,6 @@ class selection_institutional(PreviewableMixin, ClusterableModel):
         FieldPanel("university"),
         FieldPanel("short_name"),
         FieldPanel("year"),
-        FieldPanel("status"),
         FieldPanel("is_active"),
         FieldPanel("sort_order"),
         InlinePanel("results", label="Resultados por categoría"),
@@ -626,16 +741,27 @@ class selection_institutional(PreviewableMixin, ClusterableModel):
     ]
 
     class Meta:
-        ordering = ["sort_order", "university"]
+        ordering = ["sort_order", "-year", "university"]
         verbose_name = "Selección Institucional"
         verbose_name_plural = "Selecciones Institucionales"
 
     def __str__(self) -> str:
-        return f"{self.short_name} {self.year} ({self.get_status_display()})"
+        return f"{self.short_name} {self.year}"
 
     @property
     def shortName(self):
         return self.short_name
+
+    @staticmethod
+    def format_category_display(category_str) -> str:
+        """Convert category slug to display name (e.g., 'ciencias_de_la_salud' -> 'Ciencias de la Salud')."""
+        category_map = {
+            "ingenieria": "Ingeniería",
+            "ciencias_de_la_salud": "Ciencias de la Salud",
+            "ciencias_naturales_y_exactas": "Ciencias Naturales y Exactas",
+            "ciencias_sociales_y_humanisticas": "Ciencias Sociales y Humanísticas",
+        }
+        return category_map.get(str(category_str).lower(), str(category_str).title())
 
     def to_dict(self):
         """Normalize to the same dict structure used by the fallback."""
@@ -643,14 +769,23 @@ class selection_institutional(PreviewableMixin, ClusterableModel):
             "university": self.university,
             "shortName": self.short_name,
             "year": self.year,
-            "status": self.status,
             "results": [
-                {"category": r.category, "selected": r.selected, "total": r.total}
+                {
+                    "category": self.format_category_display(r.category),
+                    "selected": r.selected,
+                    "total": r.total
+                }
                 for r in self.results.all().order_by("sort_order")
             ],
             "documents": [
-                {"label": d.label, "href": d.href}
+                {
+                    "label": d.label,
+                    "url": (d.document.url if d.document else d.href),
+                    "filename": (d.document.filename if d.document else ""),
+                    "title": (d.document.title if d.document else d.label),
+                }
                 for d in self.documents.all().order_by("sort_order")
+                if (d.document or d.href)
             ],
         }
 
@@ -661,7 +796,7 @@ class selection_institutional(PreviewableMixin, ClusterableModel):
         return {"snippet": self, "seleccion": self.to_dict()}
 
 
-class video(PreviewableMixin, models.Model):
+class video(AutoSortOrderMixin, FrontendUsageMixin, PreviewableMixin, models.Model):
     """Editable video file for multimedia resources."""
 
     title = models.CharField("Título", max_length=200)
@@ -765,7 +900,7 @@ class video(PreviewableMixin, models.Model):
         return {"snippet": self}
 
 
-class resource_document(PreviewableMixin, models.Model):
+class resource_document(AutoSortOrderMixin, FrontendUsageMixin, PreviewableMixin, models.Model):
     """Editable document file for resources, organized by type and year."""
 
     DOC_TYPE_CHOICES = [
@@ -940,7 +1075,7 @@ class CustomRendition(AbstractRendition):
         unique_together = (("image", "filter_spec", "focal_point_key"),)
 
 
-class Gallery(ClusterableModel):
+class Gallery(FrontendUsageMixin, ClusterableModel):
     """
     Singleton gallery snippet to manage ordered images.
     Uses InlinePanel for drag-and-drop reordering of images.
@@ -1098,7 +1233,7 @@ class title_section_button(Orderable):
         return self.label
 
 
-class title_section(PreviewableMixin, ClusterableModel):
+class title_section(AutoSortOrderMixin, FrontendUsageMixin, PreviewableMixin, ClusterableModel):
     """Editable hero/title section with carousel for the home page."""
     
     title = models.CharField(
@@ -1106,7 +1241,7 @@ class title_section(PreviewableMixin, ClusterableModel):
         max_length=200,
         default="JIC Nacional",
         help_text="Texto mostrado en la etiqueta superior (ej: 'JIC Nacional {año}'), el año se calcula automáticamente y no debe incluirse aquí",
-        editable=False,
+        editable=True,
     )
     description = models.TextField(
         "Descripción",
@@ -1126,11 +1261,11 @@ class title_section(PreviewableMixin, ClusterableModel):
     sort_order = models.PositiveIntegerField("Orden", default=0)
     
     panels = [
-        FieldPanel("title", read_only=True),
+        FieldPanel("title", read_only=False),
         FieldPanel("description"),
         FieldPanel("carousel_interval"),
         InlinePanel("carousel_images", label="Imágenes del carrusel", max_num=10),
-        InlinePanel("action_buttons", label="Botones de acción", max_num=5),
+        InlinePanel("action_buttons", label="Botones de acción", max_num=2),
         FieldPanel("is_active"),
         FieldPanel("sort_order"),
     ]
@@ -1193,14 +1328,27 @@ class selection_national_document(Orderable):
         on_delete=models.CASCADE,
         related_name="documents",
     )
-    label = models.CharField("Etiqueta", max_length=200)
+    label = models.CharField("Nombre", help_text="Nombre con que se muestra el documento", max_length=200)
     document_type = models.CharField("Tipo (ej: PDF, XLS)", max_length=50, default="PDF")
-    href = models.URLField("Enlace", help_text="URL pública del documento")
+    document = models.ForeignKey(
+        "wagtaildocs.Document",
+        on_delete=models.CASCADE,
+        verbose_name="Documento",
+        help_text="Documento guardado en la biblioteca de documentos",
+        null=True,
+        blank=True,
+    )
+    href = models.URLField(
+        "URL pública",
+        blank=True,
+        help_text="Enlace público del documento (opcional si eliges un documento del dropdown)",
+    )
     sort_order = models.PositiveIntegerField("Orden", default=0)
 
     panels = [
         FieldPanel("label"),
         FieldPanel("document_type"),
+        FieldPanel("document"),
         FieldPanel("href"),
         FieldPanel("sort_order"),
     ]
@@ -1213,21 +1361,10 @@ class selection_national_document(Orderable):
         return self.label
 
 
-class selection_national(PreviewableMixin, ClusterableModel):
+class selection_national(AutoSortOrderMixin, FrontendUsageMixin, PreviewableMixin, ClusterableModel):
     """National selection results per year."""
 
-    STATUS_CHOICES = [
-        ("finalizada", "Finalizada"),
-        ("en_proceso", "En proceso"),
-    ]
-
     year = models.PositiveIntegerField("Año JIC", unique=True)
-    status = models.CharField(
-        "Estado",
-        max_length=20,
-        choices=STATUS_CHOICES,
-        default="en_proceso",
-    )
     total_projects = models.PositiveIntegerField("Total de Proyectos (Histórico)", default=0, help_text="Para datos históricos, si no se usan los resultados por categoría.")
     host_place = models.CharField(
         "Sede", 
@@ -1246,7 +1383,6 @@ class selection_national(PreviewableMixin, ClusterableModel):
 
     panels = [
         FieldPanel("year"),
-        FieldPanel("status"),
         FieldPanel("total_projects"),
         FieldPanel("host_place"),
         FieldPanel("universities_count"),
@@ -1262,7 +1398,7 @@ class selection_national(PreviewableMixin, ClusterableModel):
         verbose_name_plural = "Selecciones Nacionales"
 
     def __str__(self) -> str:
-        return f"JIC Nacional {self.year} ({self.get_status_display()})"
+        return f"JIC Nacional {self.year}"
 
     @property
     def host_university(self):
@@ -1275,14 +1411,14 @@ class selection_national(PreviewableMixin, ClusterableModel):
         tipos_permitidos = ["PDF", "Actas de Resultados", "acta", "actas"]
         def es_documento_real(doc):
             # Solo documentos con href no vacío y tipo relevante
-            return bool(doc.href) and (
+            resolved_url = doc.document.url if doc.document else doc.href
+            return bool(resolved_url) and (
                 doc.document_type.strip().lower() in [t.lower() for t in tipos_permitidos]
                 or any(t.lower() in doc.document_type.strip().lower() for t in tipos_permitidos)
             )
 
         return {
             "year": self.year,
-            "status": self.status,
             "totalProjects": self.total_projects,
             "universities": self.universities_count,
             "host_university": self.host_place,
@@ -1296,7 +1432,11 @@ class selection_national(PreviewableMixin, ClusterableModel):
                 for r in self.results.all().order_by("sort_order")
             ],
             "documents": [
-                {"label": d.label, "type": d.document_type, "href": d.href}
+                {
+                    "label": d.label,
+                    "type": d.document_type,
+                    "href": (d.document.url if d.document else d.href),
+                }
                 for d in self.documents.all().order_by("sort_order") if es_documento_real(d)
             ],
         }
@@ -1308,7 +1448,7 @@ class selection_national(PreviewableMixin, ClusterableModel):
         return {"snippet": self, "seleccion": self.to_dict()}
 
 
-class consultant(models.Model):
+class consultant(FrontendUsageMixin, models.Model):
     """Advisor/teacher for research projects."""
 
     name = models.CharField("Nombre", max_length=200)
@@ -1338,15 +1478,87 @@ class consultant(models.Model):
         return self.name
 
 
-class project(PreviewableMixin, models.Model):
-    """Research/investigation projects by students."""
+class project(FrontendUsageMixin, PreviewableMixin, models.Model):
+    """Research/investigation projects by students with canonical category and university names."""
 
+    # Winner status choices
     WINNER_CHOICES = [
         (0, "No ganador"),
         (1, "Primer lugar"),
         (2, "Segundo lugar"),
         (3, "Tercer lugar"),
     ]
+
+    # Canonical project categories with aliases for robust filtering
+    CATEGORY_CHOICES = [
+        ("Ingeniería", "Ingeniería"),
+        ("Ciencias de la Salud", "Ciencias de la Salud"),
+        ("Ciencias Naturales y Exactas", "Ciencias Naturales y Exactas"),
+        ("Ciencias Sociales y Humanísticas", "Ciencias Sociales y Humanísticas"),
+    ]
+    CATEGORY_LABELS = dict(CATEGORY_CHOICES)
+    CATEGORY_ALIASES = {
+        # Lowercase versions
+        "ingenieria": "Ingeniería",
+        "ingenierias": "Ingeniería",
+        # Salud variants
+        "de la salud": "Ciencias de la Salud",
+        "salud": "Ciencias de la Salud",
+        "ciencias de la salud": "Ciencias de la Salud",
+        # Naturales y exactas
+        "naturales y exactas": "Ciencias Naturales y Exactas",
+        "ciencias naturales y exactas": "Ciencias Naturales y Exactas",
+        # Sociales y humanísticas
+        "ciencias sociales": "Ciencias Sociales y Humanísticas",
+        "sociales y humanisticas": "Ciencias Sociales y Humanísticas",
+        "ciencias sociales y humanisticas": "Ciencias Sociales y Humanísticas",
+        # Index numbers (from legacy imports)
+        "0": "Ingeniería",
+        "1": "Ciencias de la Salud",
+        "2": "Ciencias Naturales y Exactas",
+        "3": "Ciencias Sociales y Humanísticas",
+    }
+
+    # Official university names with aliases for robust filtering
+    OFFICIAL_UNIVERSITIES = [
+        "Universidad Católica Santa María la Antigua",
+        "Universidad Especializada de las Américas",
+        "Universidad Internacional de Ciencia y Tecnología",
+        "Universidad Latina de Panamá",
+        "Universidad Marítima Internacional de Panamá",
+        "Universidad Metropolitana de Educación, Ciencia y Tecnología",
+        "Universidad Santander",
+        "Universidad Tecnológica de Oteima",
+        "Universidad Tecnológica de Panamá",
+        "Universidad de Panamá",
+    ]
+    UNIVERSITY_ALIASES = {
+        # USMA variants
+        "universidad catolica santa maria la antigua": "Universidad Católica Santa María la Antigua",
+        "universidad catolica santa maria la antigua usma": "Universidad Católica Santa María la Antigua",
+        "usma": "Universidad Católica Santa María la Antigua",
+        # UTP variants
+        "universidad tecnologica de panama": "Universidad Tecnológica de Panamá",
+        "utp": "Universidad Tecnológica de Panamá",
+        # UP variants
+        "universidad de panama": "Universidad de Panamá",
+        "up": "Universidad de Panamá",
+        # UMECIT variants
+        "universidad metropolitana de educacion ciencia y tecnologia": "Universidad Metropolitana de Educación, Ciencia y Tecnología",
+        "umecit": "Universidad Metropolitana de Educación, Ciencia y Tecnología",
+        # Udelas variants
+        "universidad especializada de las americas": "Universidad Especializada de las Américas",
+        "udelas": "Universidad Especializada de las Américas",
+        # Others
+        "universidad internacional de ciencia y tecnologia": "Universidad Internacional de Ciencia y Tecnología",
+        "unicyt": "Universidad Internacional de Ciencia y Tecnología",
+        "universidad latina de panama": "Universidad Latina de Panamá",
+        "ulat": "Universidad Latina de Panamá",
+        "universidad maritima internacional de panama": "Universidad Marítima Internacional de Panamá",
+        "umip": "Universidad Marítima Internacional de Panamá",
+        "universidad santander": "Universidad Santander",
+        "universidad tecnologica de oteima": "Universidad Tecnológica de Oteima",
+    }
 
     year = models.PositiveIntegerField("Año")
     title = models.CharField("Título", max_length=500)
@@ -1359,9 +1571,23 @@ class project(PreviewableMixin, models.Model):
         related_name="investigations",
         verbose_name="Asesor",
     )
-    university = models.CharField("Universidad", max_length=255)    
-    university_short_name = models.CharField("Siglas", max_length=50, blank=True, null=True, help_text="Siglas de la Universidad")    
-    category = models.CharField("Categoría", max_length=255)
+    university = models.CharField(
+        "Universidad",
+        max_length=255,
+        help_text="Se normaliza automáticamente a nombres canónicos (mayúsculas, acentos, etc.)",
+    )
+    university_short_name = models.CharField(
+        "Siglas",
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text="Siglas de la Universidad",
+    )
+    category = models.CharField(
+        "Categoría",
+        max_length=255,
+        help_text="Se normaliza automáticamente a nombres canónicos (Ingeniería, Ciencias de la Salud, etc.)",
+    )
     winner = models.PositiveSmallIntegerField(
         "Estado de Premio",
         choices=WINNER_CHOICES,
@@ -1390,6 +1616,56 @@ class project(PreviewableMixin, models.Model):
                 name="web_project_title_year_ci_unique",
             )
         ]
+
+    @staticmethod
+    def _normalize_text_key(raw_value) -> str:
+        """Convert any text to normalized ASCII lowercase key for matching (strips accents, punctuation)."""
+        value = str(raw_value or "").strip().lower()
+        value = unicodedata.normalize('NFD', value)
+        value = ''.join(ch for ch in value if unicodedata.category(ch) != 'Mn')  # Remove diacritics
+        value = ''.join(ch if ch.isalnum() or ch.isspace() else ' ' for ch in value)
+        return ' '.join(value.split())
+
+    @classmethod
+    def normalize_category(cls, value) -> str:
+        """Map category variants to canonical label (e.g., 'ingenieria' -> 'Ingeniería')."""
+        if not value:
+            return "Ingeniería"  # default
+        
+        normalized_key = cls._normalize_text_key(value)
+        canonical = cls.CATEGORY_ALIASES.get(normalized_key, value.strip())
+        
+        # If result is in official labels, return it; otherwise return original
+        if canonical in cls.CATEGORY_LABELS:
+            return canonical
+        
+        return value.strip()
+
+    @classmethod
+    def normalize_university(cls, value) -> str:
+        """Map university name variants to canonical label."""
+        if not value:
+            return ""
+        
+        normalized_key = cls._normalize_text_key(value)
+        
+        # First check aliases (handles abbreviations + variants)
+        if normalized_key in cls.UNIVERSITY_ALIASES:
+            return cls.UNIVERSITY_ALIASES[normalized_key]
+        
+        # Check if input matches any official university (after normalization)
+        for official in cls.OFFICIAL_UNIVERSITIES:
+            if cls._normalize_text_key(official) == normalized_key:
+                return official
+        
+        # Return original value if no canonical match found (first-seen behavior)
+        return value.strip()
+
+    def save(self, *args, **kwargs):
+        # Normalize category and university to canonical names
+        self.category = self.normalize_category(self.category)
+        self.university = self.normalize_university(self.university)
+        super().save(*args, **kwargs)
 
     def __str__(self) -> str:
         return self.title

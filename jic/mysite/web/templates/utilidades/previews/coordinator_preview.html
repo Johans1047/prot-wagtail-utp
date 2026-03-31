@@ -7,9 +7,9 @@
     </div>
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div class="rounded-lg border border-border bg-card p-6">
-            {% if snippet.photo %}
+            {% if snippet.college_logo %}
             <div class="mb-4">
-                <img src="{{ snippet.photo.file.url }}" alt="{{ snippet.name }}" class="w-full h-40 object-cover rounded-lg">
+                <img src="{{ snippet.college_logo.url }}" alt="{{ snippet.university_short_name }}" class="w-full h-40 object-cover rounded-lg">
             </div>
             {% endif %}
             <div class="mb-2 flex items-center justify-between">
@@ -22,6 +22,12 @@
                     <span class="font-medium">Email:</span>
                 </p>
                 <p class="text-foreground break-all">{{ snippet.email }}</p>
+                {% if snippet.url %}
+                <p class="mt-2 text-muted-foreground">
+                    <span class="font-medium">Sitio web:</span>
+                </p>
+                <a href="{{ snippet.url }}" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline break-all">{{ snippet.url }}</a>
+                {% endif %}
             </div>
             {% if not snippet.is_active %}
             <div class="mt-4 p-2 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded">Inactivo</div>

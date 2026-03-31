@@ -417,6 +417,10 @@ def _auto_sync_projects_to_database(normalized_projects: list[dict]) -> None:
     if not auto_sync_enabled or not normalized_projects:
         return
 
+    # By default, keep admin edits intact and only insert missing records.
+    # Set JIC_PROJECTS_SYNC_UPDATE_EXISTING=true to allow overwrite mode.
+    update_existing = _is_truthy(getattr(settings, "JIC_PROJECTS_SYNC_UPDATE_EXISTING", False))
+
     try:
         from .models import consultant, project
     except Exception:
@@ -435,11 +439,12 @@ def _auto_sync_projects_to_database(normalized_projects: list[dict]) -> None:
                 # Match consultant by name case-insensitively to avoid duplicate advisors.
                 advisor_obj = consultant.objects.filter(name__iexact=advisor_name).first()
                 if advisor_obj:
-                    advisor_obj.name = advisor_name
-                    advisor_obj.email = advisor_email
-                    advisor_obj.institution = institution
-                    advisor_obj.is_active = True
-                    advisor_obj.save(update_fields=["name", "email", "institution", "is_active"])
+                    if update_existing:
+                        advisor_obj.name = advisor_name
+                        advisor_obj.email = advisor_email
+                        advisor_obj.institution = institution
+                        advisor_obj.is_active = True
+                        advisor_obj.save(update_fields=["name", "email", "institution", "is_active"])
                 else:
                     advisor_obj = consultant.objects.create(
                         name=advisor_name,
@@ -454,24 +459,25 @@ def _auto_sync_projects_to_database(normalized_projects: list[dict]) -> None:
             if not title or not year or not university:
                 continue
 
-            existing_project = project.objects.filter(title__iexact=title).first()
+            existing_project = project.objects.filter(title__iexact=title, year=year).first()
             if existing_project:
-                existing_project.title = title
-                existing_project.abstract = (item.get("abstract") or "").strip()
-                existing_project.advisor = advisor_obj
-                existing_project.university = university
-                existing_project.university_short_name = (item.get("university_short_name") or "").strip() or None
-                existing_project.category = (item.get("category") or "").strip()
-                existing_project.winner = winner_map.get(int(item.get("winner") or 0), 0)
-                existing_project.save(update_fields=[
-                    "title",
-                    "abstract",
-                    "advisor",
-                    "university",
-                    "university_short_name",
-                    "category",
-                    "winner",
-                ])
+                if update_existing:
+                    existing_project.title = title
+                    existing_project.abstract = (item.get("abstract") or "").strip()
+                    existing_project.advisor = advisor_obj
+                    existing_project.university = university
+                    existing_project.university_short_name = (item.get("university_short_name") or "").strip() or None
+                    existing_project.category = (item.get("category") or "").strip()
+                    existing_project.winner = winner_map.get(int(item.get("winner") or 0), 0)
+                    existing_project.save(update_fields=[
+                        "title",
+                        "abstract",
+                        "advisor",
+                        "university",
+                        "university_short_name",
+                        "category",
+                        "winner",
+                    ])
             else:
                 project.objects.create(
                     title=title,
