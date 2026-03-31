@@ -26,7 +26,7 @@ coverage.xml
 .mypy_cache
 .pytest_cache
 .github
-/mock_projects_api
+mock_projects_api/
 .hypothesis
 migrate_*.*
 original.sh
