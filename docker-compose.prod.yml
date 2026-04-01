@@ -50,8 +50,12 @@ services:
     depends_on:
       jic_minio_storage:
         condition: service_healthy
+    extra_hosts:
+      - "iniciacioncientifica.di.local:192.168.0.27"
     networks:
-      - netX
+      netX:
+        aliases:
+          - iniciacioncientifica.di.local
 
   # jic_projects_sync_worker:
   #   build:

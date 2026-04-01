@@ -31,6 +31,7 @@ mock_projects_api/
 migrate_*.*
 original.sh
 .env
+.env.prod
 .env.*
 
 # Django

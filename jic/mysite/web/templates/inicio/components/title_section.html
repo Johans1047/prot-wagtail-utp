@@ -4,15 +4,19 @@
     <div class="absolute inset-0 z-0 overflow-hidden bg-black">
         {% for carousel_image in title_section.carousel_images.all %}
         <div class="hidden duration-700 ease-in-out" data-carousel-item{% if forloop.first %}="active"{% endif %}>
-            {% if carousel_image.image.file.url %}
+            {% if carousel_image.image and carousel_image.image.file and carousel_image.image.file.name %}
                 <img src="{{ carousel_image.image.file.url }}" class="object-cover absolute h-full w-full inset-0" alt="{{ carousel_image.alt_text }}">
+            {% elif carousel_image.image and carousel_image.image.url %}
+                <img src="{{ carousel_image.image.url }}" class="object-cover absolute h-full w-full inset-0" alt="{{ carousel_image.alt_text }}">
+            {% elif carousel_image.url %}
+                <img src="{{ carousel_image.url }}" class="object-cover absolute h-full w-full inset-0" alt="{{ carousel_image.alt_text }}">
             {% endif %}
         </div>
         {% endfor %}
     </div>
     
     <!-- Filtro oscuro (desactivamos puntero para que no bloquee clics) -->
-    <div class="absolute inset-0 bg-black/55 z-10 pointer-events-none"></div>
+    <div class="absolute inset-0 z-10 pointer-events-none" style="background-color: rgba(0, 0, 0, 0.55);"></div>
 
     <!-- Contenido encima del slider -->
     <div class="relative mx-auto max-w-7xl px-4 py-32 lg:px-8 lg:py-32 z-20">
