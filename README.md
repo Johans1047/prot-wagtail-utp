@@ -1,6 +1,6 @@
-# JIC Web Page (Django + Wagtail)
+﻿# JIC Web Page (Django + Wagtail)
 
-> Sitio web para la Jornada de Iniciacion Cientifica (JIC), construida con Django 5.2 y Wagtail 7.0, con administracion de contenido, recursos multimedia y resultados de proyectos.
+> Sitio web para la Jornada de Iniciación Científica (JIC), construida con Django 5.2 y Wagtail 7.0, con administración de contenido, recursos multimedia y resultados de proyectos.
 
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![Django](https://img.shields.io/badge/django-5.2-green)
@@ -36,7 +36,7 @@
 
 ### 🖼️ Gestión Multimedia Robusta
 
-- **Storage en MinIO (S3-compatible)**: Imagenes y documentos en objeto storage escalable
+- **Storage en MinIO (S3-compatible)**: Imágenes y documentos en objeto storage escalable
 - **Compresión automática**: Convertir JPEG→WebP, redimensionar automáticamente por devices (mobile, tablet, desktop)
 - **Biblioteca centralizada**: Todos los uploads van a `/panel/documents/` y `/panel/images/`
 - **Reuso de media**: Reutiliza misma imagen/doc en múltiples lugares sin duplicar
@@ -48,7 +48,7 @@
 - **Dev = Prod**: Al mismo contenedor (Python 3.11-slim) en ambos entornos
 - **Servicios orquestados**: PostgreSQL, MinIO, app, Nginx todo en compose (2 comandos: up/down)
 - **Replicación BD**: En producción, Master-Slave de PostgreSQL para alta disponibilidad
-- **Reverse proxy Nginx**: Compresión gzip, https terminación, cache de estaticos
+- **Reverse proxy Nginx**: Compresión gzip, https terminación, cache de estáticos
 - **Entrypoint automático**: Migraciones de BD automáticas al startup (entrypoint.prod.sh)
 - **Ejemplo**: `docker compose -f docker-compose.prod.yml up -d --build` → 20s después, sitio listo con BD migrada y MinIO disponible
 
@@ -56,7 +56,7 @@
 
 - **Sincronización**: Se datos entre BD y MinIO, API externa, migraciones
 - **Carga de datos**: Seed inicial (FAQ, eventos, premios) desde fixtures o CSV
-- **Mantenimiento**: Recomprimir imagenes, verificar integridad, limpiar media huérfana
+- **Mantenimiento**: Recomprimir imágenes, verificar integridad, limpiar media huérfana
 - **Reporte**: Estadísticas de uso, usuarios activos, proyectos por categoría
 - **Ejemplo**: `docker exec jicweb_app python manage.py load_jic_dates --year 2024 --batch-size 100` → Load 100 eventos del 2024 sin bloquear
 
@@ -68,14 +68,14 @@
 - **Bulk actions**: Seleccionar 10 eventos, activarlos todos de un click, cambiar categoría en batch
 - **Ejemplo**: Admin ve columna "Usos=0" para una FAQ → no está activa en `/preguntas/` → edita, marca is_active=True → página recalcula sort_order, aparece en posición 5
 
-## Stack Tecnico
+## Stack Técnico
 
 ### Arquitectura de capas
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  Cliente (Navegador)                                        │
-│  - Accede sitio publico (frontend)                          │
+│  - Accede sitio público (frontend)                          │
 │  - O admin Wagtail (CMS) / Django admin                     │
 └──────────────┬──────────────────────────────────────────────┘
                │ HTTP/HTTPS
@@ -83,12 +83,12 @@
 │  Nginx (Reverse Proxy + Static Server)                      │
 │  - Recibe peticiones, rutea a Gunicorn                      │
 │  - Sirve archivos CACHE/CSS/JS sin tocar Python            │
-│  - SSL/TLS en produccion                                    │
+│  - SSL/TLS en producción                                    │
 └──────────────┬──────────────────────────────────────────────┘
                │ Proxy local unix
 ┌──────────────▼──────────────────────────────────────────────┐
 │  Gunicorn (App Server)                                      │
-│  - Ejecuta aplicacion Django en 4 workers (prod)           │
+│  - Ejecuta aplicación Django en 4 workers (prod)           │
 │  - Maneja vistas, ORM queries, autenticación               │
 │  - Timeout: 120s por petición                              │
 └──────────────┬──────────────────────────────────────────────┘
@@ -99,7 +99,7 @@
 │  PostgreSQL 15    │  │  MinIO S3-compat    │
 │  (Master-Slave)   │  │  (Media Storage)    │
 │                   │  │                     │
-│ - Contenido       │  │ - Imagenes          │
+│ - Contenido       │  │ - Imágenes          │
 │ - Usuarios        │  │ - Documentos        │
 │ - Proyectos       │  │ - PDFs              │
 │ - Configuracion   │  │ - Videos            │
@@ -121,21 +121,21 @@ Frontend (HTML/CSS/JS en navegador):
 **Wagtail 7.0** (CMS integrado en Django):
 - Interfaz web en `/panel/admin/` para editar contenido sin tocar código
 - Snippet system: CRUD para items reutilizables (FAQs, Events, Awards, etc.)
-- Page tree: jerarquía de paginas editables (no usado intensivamente aqui)
+- Page tree: jerarquía de páginas editables (no usado intensivamente aqui)
 - Image/Document library: repositorio centralizado con thumbnails automáticos
 
 **PostgreSQL 15** (Base de datos):
 - Almacena todas las tablas Django (django_*, auth_*, wagtail*, web_*)
-- Master-Slave replication en produccion (redundancia)
+- Master-Slave replication en producción (redundancia)
 - Volumen persistente en Docker (data no se pierde al reiniciar)
 
 **MinIO** (S3-compatible storage):
 - Recibe media uploads desde Django app
-- Devuelve URLs publicas para imagenes/documentos
+- Devuelve URLs públicas para imágenes/documentos
 - Bucket structure: `jic/` (media) y otros buckets para backups
 - Console web en puerto 9001 para inspeccionar buckets
 
-**Gunicorn** (App server produccion):
+**Gunicorn** (App server producción):
 - Lee Django code y ejecuta en procesos workers
 - 4 workers por defecto (paralelismo)
 - Timeout 120s; rechaza peticiones que tarden mas
@@ -154,23 +154,23 @@ Frontend (HTML/CSS/JS en navegador):
 
 ### Dependencias principales
 
-De [requirements.txt](requirements.txt) (desarrollo) y [requirements-prod.txt](requirements-prod.txt) (produccion):
+De [requirements.txt](requirements.txt) (desarrollo) y [requirements-prod.txt](requirements-prod.txt) (producción):
 
 **Core framework**:
 - Django 5.2, Wagtail 7.0 — Framework + CMS
 - psycopg2-binary — Driver PostgreSQL
 - minio — Cliente SDK para MinIO
 
-**Imagenes y media**:
-- Pillow — Procesamiento de imagenes (thumbnails, EXIF)
+**Imágenes y media**:
+- Pillow — Procesamiento de imágenes (thumbnails, EXIF)
 - django-imagekit — Soporte para image fields con transformaciones
 
-**Compresion y build**:
-- django-compressor — Minifica CSS/JS automaticamente
+**Compresión y build**:
+- django-compressor — Minifica CSS/JS automáticamente
 - whitenoise — Sirve estaticos desde Gunicorn sin Nginx (fallback)
 
 **Desarrollo local**:
-- django-livereload-server — Recarga automatica al guardar (DevX)
+- django-livereload-server — Recarga automática al guardar (DevX)
 - python-dotenv — Carga variables desde .env local
 
 **Datos y utilitarios**:
@@ -183,10 +183,10 @@ De [requirements.txt](requirements.txt) (desarrollo) y [requirements-prod.txt](r
 
 - **Python 3.11+** — Lenguaje de desarrollo; verifica con `python --version`.
 - **Docker y Docker Compose** (recomendado) — Empaquetan servicios (app, BD, MinIO) en contenedores aislados.
-- **PostgreSQL y MinIO** (solo si ejecutas sin Docker) — Servidores necesarios que Docker montará automaticamente.
-- **Git** — Para clonar el repo (si aun no lo tienes localmente).
+- **PostgreSQL y MinIO** (solo si ejecutas sin Docker) — Servidores necesarios que Docker montará automáticamente.
+- **Git** — Para clonar el repo (si aún no lo tienes localmente).
 
-## Opcion A: Desarrollo con Docker (RECOMENDADO)
+## Opción A: Desarrollo con Docker (RECOMENDADO)
 
 Mas simple: no instalas PostgreSQL ni MinIO manualmente; Docker lo hace.
 
@@ -204,7 +204,7 @@ Mas simple: no instalas PostgreSQL ni MinIO manualmente; Docker lo hace.
    docker compose up -d --build
    ```
 
-   Esto buildea imagenes y levanta contenedores. Ver logs en tiempo real:
+   Esto buildea imágenes y levanta contenedores. Ver logs en tiempo real:
    ```bash
    docker compose logs -f jicweb_app
    ```
@@ -230,12 +230,12 @@ Mas simple: no instalas PostgreSQL ni MinIO manualmente; Docker lo hace.
    ```
 
 6. **Accede al sitio**:
-   - Sitio publico: http://localhost:8000
+   - Sitio público: http://localhost:8000
    - Admin Django: http://localhost:8000/django-admin/ (login con user/pass creado)
    - Admin Wagtail (CMS): http://localhost:8000/panel/admin/
    - MinIO console: http://localhost:9001 (credentials en .env.prod)
 
-## Opcion B: Ejecucion local sin Docker
+## Opción B: Ejecución local sin Docker
 
 Mas manual; requiere instalar BD y MinIO localmente previa.
 
@@ -260,7 +260,7 @@ Mas manual; requiere instalar BD y MinIO localmente previa.
 3. **Configurar .env local**:
 
    ```bash
-   # Crear .env en raiz
+   # Crear .env en raíz
    DEBUG=True
    POSTGRESQL_HOST=localhost
    POSTGRESQL_PORT=5432
@@ -289,13 +289,13 @@ Mas manual; requiere instalar BD y MinIO localmente previa.
 
    Sitio accesible en: http://localhost:8000
 
-   **Nota**: manage.py selecciona settings automaticamente segun DEBUG:
+   **Nota**: manage.py selecciona settings automáticamente según DEBUG:
    - `DEBUG=True` carga `mysite.settings.dev`
-   - `DEBUG=False` carga `mysite.settings.base` (produccion)
+   - `DEBUG=False` carga `mysite.settings.base` (producción)
 
-## Produccion (Compose)
+## Producción (Compose)
 
-Para compose de produccion se usa [docker-compose.prod.yml](docker-compose.prod.yml), [Dockerfile.prod](Dockerfile.prod) y [entrypoint.prod.sh](entrypoint.prod.sh).
+Para compose de producción se usa [docker-compose.prod.yml](docker-compose.prod.yml), [Dockerfile.prod](Dockerfile.prod) y [entrypoint.prod.sh](entrypoint.prod.sh).
 
 Comando habitual:
 
@@ -305,27 +305,27 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build --f
 
 ## Endpoints y Rutas Principales
 
-Las rutas están definidas en [jic/mysite/mysite/urls.py](jic/mysite/mysite/urls.py) (raiz) y [jic/mysite/web/urls.py](jic/mysite/web/urls.py) (app).
+Las rutas están definidas en [jic/mysite/mysite/urls.py](jic/mysite/mysite/urls.py) (raíz) y [jic/mysite/web/urls.py](jic/mysite/web/urls.py) (app).
 
 ### Sitio Público (Frontend)
 
 Todas las rutas devuelven HTML renderizado con templates de Django.
 
-| Ruta | Método | Descripcion |
+| Ruta | Método | Descripción |
 |------|--------|-------------|
 | `/` | GET | Página de inicio (homepage). Muestra banner, secciones destacadas. |
 | `/acerca-de/` | GET | Información general sobre JIC, historia, objetivos. |
 | `/acerca-de/coordinadores/` | GET | Listado de coordinadores y equipo organizador. |
-| `/participar/` | GET | Guia para participantes: como inscribirse, requisitos, plazos. |
+| `/participar/` | GET | Guía para participantes: cómo inscribirse, requisitos, plazos. |
 | `/noticias/` | GET | Listado de noticias/blog posts con paginación. |
 | `/noticias/<slug>/` | GET | Vista detalle de una noticia individual. |
-| `/proyectos/` | GET | Listado de proyectos historicos con filtros (categoría, año). |
+| `/proyectos/` | GET | Listado de proyectos históricos con filtros (categoría, año). |
 | `/proyectos/<id>/` | GET | Detalle de proyecto individual: descripción, investigadores, resultados. |
 | `/resultados/` | GET | Resumen de resultados del evento (estadísticas, ganadores). |
 | `/resultados/selecciones/` | GET | Tabla detallada de selecciones y premios. |
-| `/recursos/` | GET | Biblioteca de recursos (guias, plantillas, documentos descargables). |
+| `/recursos/` | GET | Biblioteca de recursos (guías, plantillas, documentos descargables). |
 | `/contacto/` | GET | Formulario de contacto; POST envía email. |
-| `/busqueda/` | GET | Busqueda full-text en proyectos, noticias, recursos. Parámetro: `?q=keywords` |
+| `/busqueda/` | GET | Búsqueda full-text en proyectos, noticias, recursos. Parámetro: `?q=keywords` |
 
 **Acceso**: En local → http://localhost:8000/ruta
 
@@ -335,23 +335,23 @@ Estas rutas requieren autenticación de usuario administrador.
 
 #### Django Admin (Legacy)
 
-| Ruta | Acceso | Proposito |
+| Ruta | Acceso | Propósito |
 |------|--------|-----------|
 | `/django-admin/` | Solo staff=True | Admin nativo Django (permisos modelo, usuarios, groups) |
 | `/django-admin/auth/user/` | Staff | CRUD de usuarios system |
 | `/django-admin/auth/group/` | Staff | Gestión de permisos por grupo |
 
-**Nota**: En produccion, preferir `/panel/admin/` (Wagtail) en lugar de este.
+**Nota**: En producción, preferir `/panel/admin/` (Wagtail) en lugar de este.
 
 #### Wagtail Admin (CMS Recomendado)
 
-| Ruta | Acceso | Descripcion |
+| Ruta | Acceso | Descripción |
 |------|--------|-------------|
 | `/panel/admin/` | Logged-in user | Dashboard principal del CMS Wagtail |
 | `/panel/admin/snippets/` | Editor | CRUD de snippets: FAQ, Eventos, Awards, Videos, etc. (15+ tipos) |
-| `/panel/admin/pages/` | Page Editor | Jerarquía de paginas editables (menos usado aqui) |
+| `/panel/admin/pages/` | Page Editor | Jerarquía de páginas editables (menos usado aquí) |
 | `/panel/documents/` | Editor | Library centralizada de documentos uploadados |
-| `/panel/images/` | Editor | Library centralizada de imagenes con thumbnails automáticos |
+| `/panel/images/` | Editor | Library centralizada de imágenes con thumbnails automáticos |
 
 **Acceso**: http://localhost:8000/panel/admin/
 
@@ -364,12 +364,12 @@ Estas rutas requieren autenticación de usuario administrador.
 
 Algunos endpoints devuelven JSON para consumir desde frontend JavaScript o clientes externos.
 
-| Ruta | Método | Descripcion | Response |
+| Ruta | Método | Descripción | Response |
 |------|--------|-------------|----------|
 | `/api/proyectos/` | GET | Listado de proyectos en JSON (paginado) | `{count, next, previous, results: [...]}`|
 | `/api/proyectos/<id>/` | GET | Detalle de proyecto JSON | `{id, name, description, ...}` |
 | `/api/noticias/` | GET | Listado de noticias en JSON | Igual estructura |
-| `/api/categorias/` | GET | Listado de categorias/tags disponibles | `{results: [{id, name}, ...]}` |
+| `/api/categorias/` | GET | Listado de categorías/tags disponibles | `{results: [{id, name}, ...]}` |
 
 **Headers** (si aplica autenticacion futura):
 ```
@@ -388,10 +388,10 @@ Content-Type: application/json
 
 Servicio FastAPI en [mock_projects_api/](mock_projects_api) que simula datos históricos de proyectos (solo en docker-compose de desarrollo).
 
-| Ruta | Proposito |
+| Ruta | Propósito |
 |------|-----------|
 | `/health` | Health check; devuelve `{"status": "ok"}` |
-| `/api/proyectos-jic` | Listado mock de proyectos historicos (responde a `JIC_PROJECTS_API_URL`) |
+| `/api/proyectos-jic` | Listado mock de proyectos históricos (responde a `JIC_PROJECTS_API_URL`) |
 
 **Acceso local**: http://localhost:8001/health
 
@@ -401,46 +401,46 @@ Servicio FastAPI en [mock_projects_api/](mock_projects_api) que simula datos his
 
 ### Variables de Entorno
 
-Todas las variables se configuran en archivos `.env` (desarrollo) o via `docker-compose` segun el entorno.
+Todas las variables se configuran en archivos `.env` (desarrollo) o via `docker-compose` según el entorno.
 
 #### Django Core
 
-| Variable | Ejemplo | Descripcion |
+| Variable | Ejemplo | Descripción |
 |---|---|---|
-| **DEBUG** | `True` / `False` | En `True`: servidor de desarrollo, errores detallados, autorecarga. En `False`: settings de produccion, errores seguros. Tambien controla que settings se carguen (`dev` vs `base`). |
-| **DJANGO_SECRET_KEY** | `J5u_gSJHz9!wyIe...` | Clave criptografica para sesiones, CSRF, tokens. Cambiar en produccion por seguridad. |
+| **DEBUG** | `True` / `False` | En `True`: servidor de desarrollo, errores detallados, autorecarga. En `False`: settings de producción, errores seguros. También controla que settings se carguen (`dev` vs `base`). |
+| **DJANGO_SECRET_KEY** | `J5u_gSJHz9!wyIe...` | Clave criptográfica para sesiones, CSRF, tokens. Cambiar en producción por seguridad. |
 | **DJANGO_ALLOWED_HOSTS** | `localhost,127.0.0.1,example.com` | Hosts validos separados por coma; Django rechaza requests a otros dominios (proteccion HTTP Host Header). |
 
 #### Base de Datos (PostgreSQL)
 
-| Variable | Ejemplo | Descripcion |
+| Variable | Ejemplo | Descripción |
 |---|---|---|
 | **POSTGRESQL_DATABASE** | `db_jicweb` | Nombre de la base de datos que la app consultara. |
 | **POSTGRESQL_POSTGRES_USERNAME** | `postgres` | Usuario postgres que la app usa para conectarse. |
-| **POSTGRESQL_POSTGRES_PASSWORD** | `1*o63U9JlN5bLp` | Contrasena del usuario de base de datos. |
+| **POSTGRESQL_POSTGRES_PASSWORD** | `1*o63U9JlN5bLp` | Contraseña del usuario de base de datos. |
 | **POSTGRESQL_HOST** | `jicweb_master` (docker) o `localhost` (local) | Host del servidor PostgreSQL. En Docker usa el nombre del servicio. |
 | **POSTGRESQL_DATABASE_PORT_NUMBER** | `5432` | Puerto de PostgreSQL (estandar 5432). |
-| **DB_REPLICATION_ENABLED** | `False` | Habilita logica de replicacion master-slave. Aparentemente desactivado en desarrollo. |
+| **DB_REPLICATION_ENABLED** | `False` | Habilita lógica de replicación master-slave. Aparentemente desactivado en desarrollo. |
 
 #### Storage de Media (MinIO S3-compatible)
 
-| Variable | Ejemplo | Descripcion |
+| Variable | Ejemplo | Descripción |
 |---|---|---|
 | **MINIO_ENDPOINT** | `jic_minio_storage:9000` | Host y puerto de MinIO. En Docker es el nombre del servicio. |
 | **MINIO_ACCESS_KEY** | `k0RjKo7kyRwbswMs...` | ID de acceso S3/MinIO (similar a AWS Access Key ID). |
 | **MINIO_SECRET_KEY** | `D8rIiXbK58MXPjyU...` | Clave secreta S3/MinIO (similar a AWS Secret Access Key). |
-| **MINIO_BUCKET_NAME** | `jic-media` | Nombre del bucket donde se almacenan imagenes y documentos. |
-| **MINIO_USE_SSL** | `False` / `True` | Usa HTTPS para conectarse a MinIO (false localmente, true en produccion). |
+| **MINIO_BUCKET_NAME** | `jic-media` | Nombre del bucket donde se almacenan imágenes y documentos. |
+| **MINIO_USE_SSL** | `False` / `True` | Usa HTTPS para conectarse a MinIO (false localmente, true en producción). |
 
 #### API de Proyectos JIC
 
-| Variable | Ejemplo | Descripcion |
+| Variable | Ejemplo | Descripción |
 |---|---|---|
-| **JIC_PROJECTS_API_URL** | `http://jic_projects_mock_api:8001/api/proyectos-jic` | URL del endpoint que devuelve proyectos historicos. Si no se define, usa datos mock locales (fallback). Utiliza cache + circuit breaker para evitar bloqueos. |
+| **JIC_PROJECTS_API_URL** | `http://jic_projects_mock_api:8001/api/proyectos-jic` | URL del endpoint que devuelve proyectos históricos. Si no se define, usa datos mock locales (fallback). Utiliza cache + circuit breaker para evitar bloqueos. |
 | **JIC_PROJECTS_API_TIMEOUT** | `5` | Segundos para esperar respuesta de la API antes de timeout. Evita bloquear el sitio si API cae. |
 | **JIC_PROJECTS_PREFER_API** | `0` / `1` | Si vale 1, consulta API primero; si 0, usa datos locales de BD. Util para AB testing diferente datos. |
 | **JIC_PROJECTS_AUTO_SYNC_DB** | `1` | Si vale 1, comando `sync_projects_api` puede sincronizar API hacia BD localmente. |
-| **JIC_PROJECTS_SYNC_INTERVAL** | `604800` | Segundos entre sincronizaciones automaticas programadas (604800 = 7 dias). |
+| **JIC_PROJECTS_SYNC_INTERVAL** | `604800` | Segundos entre sincronizaciones automáticas programadas (604800 = 7 días). |
 
 **Ejemplo .env para desarrollo local**:
 
@@ -467,9 +467,9 @@ JIC_PROJECTS_PREFER_API=0
 JIC_PROJECTS_AUTO_SYNC_DB=1
 ```
 
-## Comandos de Gestion Utiles
+## Comandos de Gestión Útiles
 
-Comandos disponibles en [jic/mysite/web/management/commands](jic/mysite/web/management/commands) para tareas de mantenimiento y sincronizacion de datos:
+Comandos disponibles en [jic/mysite/web/management/commands](jic/mysite/web/management/commands) para tareas de mantenimiento y sincronización de datos:
 
 ### Sincronizacion de Proyectos
 
@@ -477,14 +477,14 @@ Comandos disponibles en [jic/mysite/web/management/commands](jic/mysite/web/mana
 python jic/mysite/manage.py sync_projects_api
 ```
 
-**Proposito**: Sincroniza proyectos desde la API externa (jic_projects_api) a la base de datos local.
+**Propósito**: Sincroniza proyectos desde la API externa (jic_projects_api) a la base de datos local.
 
 **Cuándo usar**: 
 - Periodicamente para mantener BD actualizada con proyectos nuevos/modificados.
 - Manualmente si se actualizo la API y necesitas traer cambios.
-- Se ejecuta automaticamente si `JIC_PROJECTS_AUTO_SYNC_DB=1`.
+- Se ejecuta automáticamente si `JIC_PROJECTS_AUTO_SYNC_DB=1`.
 
-**Logica**: Consulta `JIC_PROJECTS_API_URL`, normaliza datos (universidades, categories), y almacena en tablas `project`, `consultant`, etc.
+**Lógica**: Consulta `JIC_PROJECTS_API_URL`, normaliza datos (universidades, categories), y almacena en tablas `project`, `consultant`, etc.
 
 ### Sincronizacion MinIO
 
@@ -492,24 +492,24 @@ python jic/mysite/manage.py sync_projects_api
 python jic/mysite/manage.py sync_minio
 ```
 
-**Proposito**: Sincroniza archivos multimedia (imagenes, documentos) entre storage local y MinIO.
+**Propósito**: Sincroniza archivos multimedia (imágenes, documentos) entre storage local y MinIO.
 
 **Cuándo usar**:
-- Despues de cargar archivos localmente y necesitas subirlos a MinIO.
+- Después de cargar archivos localmente y necesitas subirlos a MinIO.
 - Recovery o backup: descargar desde MinIO a disco local.
 - Verificar integridad de archivos entre storages.
 
-### Recompresion de Imagenes Wagtail
+### Recompresión de Imágenes Wagtail
 
 ```bash
 python jic/mysite/manage.py recompress_wagtail_images
 ```
 
-**Proposito**: Reprocesa todas las imagenes en Wagtail aplicando compresion y optimizacion configurada.
+**Propósito**: Reprocesa todas las imágenes en Wagtail aplicando compresión y optimización configurada.
 
 **Cuándo usar**:
-- Cambio de parametros de compresion (JPEG_QUALITY, WEBP_QUALITY, etc.).
-- Imagenes viejas con diferentes configuraciones necesitan estandarizacion.
+- Cambio de parámetros de compresión (JPEG_QUALITY, WEBP_QUALITY, etc.).
+- Imágenes viejas con diferentes configuraciones necesitan estandarización.
 - Recuperar espacio: reconvertir a WebP o reducir dimensiones.
 
 ### Configurar Flujo de Noticias
@@ -518,7 +518,7 @@ python jic/mysite/manage.py recompress_wagtail_images
 python jic/mysite/manage.py setup_news_workflow
 ```
 
-**Proposito**: Inicializa workflow/permisos para edicion de Blog (noticias) en Wagtail.
+**Propósito**: Inicializa workflow/permisos para edición de Blog (noticias) en Wagtail.
 
 **Cuándo usar**:
 - Instalacion inicial del sitio; prepara grupos de editores, publicadores, etc.
@@ -530,7 +530,7 @@ python jic/mysite/manage.py setup_news_workflow
 python jic/mysite/manage.py load_jic_dates
 ```
 
-**Proposito**: Carga datos iniciales de fechas importantes (timeline JIC: inicio convocatoria, cierre, nacional, etc.).
+**Propósito**: Carga datos iniciales de fechas importantes (timeline JIC: inicio convocatoria, cierre, nacional, etc.).
 
 **Cuándo usar**:
 - Primera vez que configures el sitio (carga data de referencia).
@@ -543,13 +543,13 @@ python jic/mysite/manage.py load_jic_dates
 python jic/mysite/manage.py populate_background
 ```
 
-**Proposito**: Carga datos de antecedentes/historia (seccion "Acerca de JIC").
+**Propósito**: Carga datos de antecedentes/historia (sección "Acerca de JIC").
 
 **Cuándo usar**:
 - Instalacion inicial; trae timeline historico del programa.
 - Reset de datos de background.
 
-### Ejecucion en Docker
+### Ejecución en Docker
 
 Para ejecutar comandos dentro del contenedor:
 
@@ -568,19 +568,19 @@ cd mysite
 python manage.py sync_projects_api
 ```
 
-### Uso en Produccion (dentro de Dockerfile/entrypoint)
+### Uso en Producción (dentro de Dockerfile/entrypoint)
 
-Los comandos se ejecutan automaticamente como parte del startup:
-- `entrypoint.prod.sh` corre `collectstatic` para compilar assets estaticos.
+Los comandos se ejecutan automáticamente como parte del startup:
+- `entrypoint.prod.sh` corre `collectstatic` para compilar assets estáticos.
 - `migrate --noinput` aplica migraciones pendientes.
 
-Comandos puntuales en produccion (via SSH o CI/CD):
+Comandos puntuales en producción (via SSH o CI/CD):
 
 ```bash
 # Sincronizar proyectos recientes
 docker exec jicweb_app python manage.py sync_projects_api
 
-# Recomprimir imagenes viejas (puede tardar, ejecutar en offpeak)
+# Recomprimir imágenes viejas (puede tardar, ejecutar en offpeak)
 docker exec jicweb_app python manage.py recompress_wagtail_images --batch-size=10
 
 # Ver estado de sincronizacion
@@ -594,12 +594,12 @@ docker exec jicweb_app python manage.py debug_projects
 ```text
 .
 ├── docker-compose.yml              # Orquestación local (app, PostgreSQL, MinIO, Redis)
-├── docker-compose.prod.yml         # Orquestación produccion (replicacion BD, volumes, networks)
+├── docker-compose.prod.yml         # Orquestación producción (replicación BD, volumes, networks)
 ├── Dockerfile                      # Imagen Docker de desarrollo (Python 3.11, deps dev)
-├── Dockerfile.prod                 # Imagen Docker produccion (optimizada, sin dependencias dev)
+├── Dockerfile.prod                 # Imagen Docker producción (optimizada, sin dependencias dev)
 ├── entrypoint.prod.sh              # Script que ejecuta migraciones y levanta Gunicorn en prod
 ├── requirements.txt                # Dependencias Python con extras para desarrollo
-├── requirements-prod.txt           # Dependencias Python para produccion (minificadoras)
+├── requirements-prod.txt           # Dependencias Python para producción (minificadoras)
 ├── jic/                            # Django project root
 └── mock_projects_api/              # Servicio auxiliar FastAPI para simular API externa
 ```
@@ -622,9 +622,9 @@ jic/mysite/
 │   │   ├── __init__.py
 │   │   ├── base.py               # Configuracion base (DB, installed apps, middleware, logging)
 │   │   ├── dev.py                # Desarrollo: DEBUG=True, livereload, sin HTTPS
-│   │   └── production.py         # Produccion: DEBUG=False, HTTPS, cache, compresion
+│   │   └── production.py         # Producción: DEBUG=False, HTTPS, cache, compresión
 │   │
-│   ├── urls.py                     # Rutas HTTP raiz; incluye urls de apps
+│   ├── urls.py                     # Rutas HTTP raíz; incluye urls de apps
 │   ├── wsgi.py                     # Interfaz WSGI para servidores (Gunicorn)
 │   ├── context_processors.py       # Contexto global para templates (variables en todos los context)
 │   ├── storage.py                  # Configuracion de storage personalizado (MinIO)
@@ -634,12 +634,12 @@ jic/mysite/
 │   │   ├── 404.html               # Pagina error no encontrado
 │   │   └── 500.html               # Pagina error servidor
 │   │
-│   └── static/                     # Archivos estaticos (CSS, JS, imagenes)
+│   └── static/                     # Archivos estáticos (CSS, JS, imágenes)
 │       ├── CACHE/                 # Comprimidos por django-compressor
 │       ├── css/                   # Stylesheets compilados
 │       └── js/                    # JavaScript
 │
-├── web/                            # App principal (logica de negocio)
+├── web/                            # App principal (lógica de negocio)
 │   ├── models.py                   # 15+ modelos: FAQ, Event, Award, etc.
 │   │                                - FrontendUsageMixin (contador admin)
 │   │                                - AutoSortOrderMixin (reordenamiento automatico)
@@ -651,7 +651,7 @@ jic/mysite/
 │   ├── signals.py                  # Handlers para save/delete (triggers)
 │   ├── utils.py                    # Funciones utilitarias
 │   ├── policies.py                 # Politicas de acceso, permisos
-│   ├── image_pipeline.py           # Procesamiento de imagenes (resize, format)
+│   ├── image_pipeline.py           # Procesamiento de imágenes (resize, format)
 │   │
 │   ├── forms/                      # Formularios Django (search, bulk actions)
 │   │   ├── forms.py
@@ -660,12 +660,12 @@ jic/mysite/
 │   │
 │   ├── services/                   # Servicios de negocio (capa intermedia)
 │   │   ├── __init__.py
-│   │   └── [servicios de integracion/procesamiento]
+│   │   └── [servicios de integración/procesamiento]
 │   │
 │   ├── migrations/                 # Versiones de BD (schema changes)
 │   │   ├── 0001_initial.py
 │   │   ├── ...
-│   │   └── NNNN_descripcion.py
+│   │   └── NNNN_descripción.py
 │   │
 │   ├── management/commands/        # Comandos custom (python manage.py load_jic_dates)
 │   │   └── commands/
@@ -678,7 +678,7 @@ jic/mysite/
 ├── home/                           # App de homepage (opcional)
 │   └── [templates, migrations]
 │
-├── search/                         # Integracion busqueda Wagtail (opcional)
+├── search/                         # Integración búsqueda Wagtail (opcional)
 │   └── views.py
 │
 ├── theme/                          # App para temas y frontend
@@ -687,9 +687,9 @@ jic/mysite/
 │   │   ├── css/                   # TailwindCSS
 │   │   ├── js/                    # JavaScript de tema
 │   │   ├── src/                   # Fuentes TailwindCSS (antes de compilar)
-│   │   └── img/                   # Imagenes de tema
+│   │   └── img/                   # Imágenes de tema
 │   │
-│   ├── templates/wagtailadmin/    # Customizacion del CMS Wagtail
+│   ├── templates/wagtailadmin/    # Customización del CMS Wagtail
 │   ├── tailwind_watcher.py        # Monitorea cambios en CSS (dev)
 │   └── migrations/
 │
@@ -721,7 +721,7 @@ Servicio FastAPI independiente que simula la API de proyectos JIC:
 mock_projects_api/
 ├── app.py                 # FastAPI con endpoints /health, /api/proyectos-jic
 ├── requirements.txt       # fastapi, uvicorn
-└── README.md             # Documentacion del mock
+└── README.md             # Documentación del mock
 ```
 
 **Uso**: Cuando la API real (externa) no está disponible, Docker levanta este mock en puerto 8001. 
@@ -777,7 +777,7 @@ CATEGORY_ALIASES = {
 2. **`project.save()`** intercepta y normaliza automáticamente:
    - `category` → `"Ingeniería"`
    - `university` → `"Universidad Tecnológica de Panamá"`
-3. **BD almacena valor canónico** → predicible, queryable
+3. **BD almacena valor canónico** → predecible, queryable
 4. **Filtros/búsquedas usan valor canónico** → no hay "falsos negativos"
 
 ### Migración de datos existentes
@@ -837,3 +837,4 @@ def _normalize_category(raw_value) -> str:
 ✅ **Escalable** — Agregar categorías no rompe querys existentes  
 ✅ **Testeable** — `project.normalize_category("ingenieria")` es predecible  
 ✅ **Compatible con BD** — Valores siempre canónicos → índices efectivos, querys rápidas
+

@@ -28,6 +28,8 @@ from .models import (
     Gallery,
     title_section,
     consultant,
+    project_category,
+    project_university,
     project,
 )
 from .views.import_data_view import import_view
@@ -189,6 +191,24 @@ class AsesorViewSet(SnippetViewSet):
     search_fields = ("name", "email", "institution")
 
 
+class ProjectCategoryViewSet(SnippetViewSet):
+    model = project_category
+    menu_label = "Categorías"
+    icon = "tag"
+    list_display = ("name", "is_active", "frontend_usage_count", "sort_order")
+    list_filter = ("is_active",)
+    search_fields = ("name",)
+
+
+class ProjectUniversityViewSet(SnippetViewSet):
+    model = project_university
+    menu_label = "Universidades"
+    icon = "site"
+    list_display = ("name", "short_name", "is_active", "frontend_usage_count", "sort_order")
+    list_filter = ("is_active",)
+    search_fields = ("name", "short_name")
+
+
 class InvestigacionViewSet(SnippetViewSet):
     model = project
     menu_label = "Investigaciones"
@@ -202,7 +222,7 @@ class ProyectosGroup(SnippetViewSetGroup):
     menu_label = "Proyectos"
     menu_icon = "folder-open-inverse"
     menu_order = 102
-    items = (AsesorViewSet, InvestigacionViewSet)
+    items = (AsesorViewSet, ProjectCategoryViewSet, ProjectUniversityViewSet, InvestigacionViewSet)
 
 
 # ─── Recursos ────────────────────────────────────────────────────────

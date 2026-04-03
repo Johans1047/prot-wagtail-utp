@@ -1478,6 +1478,78 @@ class consultant(FrontendUsageMixin, models.Model):
         return self.name
 
 
+class project_category(AutoSortOrderMixin, FrontendUsageMixin, PreviewableMixin, models.Model):
+    """Editable catalog of project categories used by investigations."""
+
+    name = models.CharField("Nombre", max_length=150)
+    is_active = models.BooleanField("Activo", default=True)
+    sort_order = models.PositiveIntegerField("Orden", default=0)
+
+    panels = [
+        FieldPanel("name"),
+        FieldPanel("is_active"),
+        FieldPanel("sort_order"),
+    ]
+
+    class Meta:
+        ordering = ["sort_order", "name"]
+        verbose_name = "Categoría de Proyecto"
+        verbose_name_plural = "Categorías de Proyecto"
+        constraints = [
+            models.UniqueConstraint(
+                Lower("name"),
+                name="web_project_category_name_ci_unique",
+            )
+        ]
+
+    def __str__(self) -> str:
+        return self.name
+
+    def get_preview_template(self, request, mode_name):
+        return "utilidades/previews/jic_category_preview.html"
+
+    def get_preview_context(self, request, mode_name):
+        return {"snippet": self}
+
+
+class project_university(AutoSortOrderMixin, FrontendUsageMixin, PreviewableMixin, models.Model):
+    """Editable catalog of universities used by investigations."""
+
+    name = models.CharField("Nombre", max_length=255)
+    short_name = models.CharField("Siglas", max_length=50, blank=True, null=True)
+    is_active = models.BooleanField("Activo", default=True)
+    sort_order = models.PositiveIntegerField("Orden", default=0)
+
+    panels = [
+        FieldPanel("name"),
+        FieldPanel("short_name"),
+        FieldPanel("is_active"),
+        FieldPanel("sort_order"),
+    ]
+
+    class Meta:
+        ordering = ["sort_order", "name"]
+        verbose_name = "Universidad de Proyecto"
+        verbose_name_plural = "Universidades de Proyecto"
+        constraints = [
+            models.UniqueConstraint(
+                Lower("name"),
+                name="web_project_university_name_ci_unique",
+            )
+        ]
+
+    def __str__(self) -> str:
+        if self.short_name:
+            return f"{self.name} ({self.short_name})"
+        return self.name
+
+    def get_preview_template(self, request, mode_name):
+        return "utilidades/previews/coordinator_preview.html"
+
+    def get_preview_context(self, request, mode_name):
+        return {"snippet": self}
+
+
 class project(FrontendUsageMixin, PreviewableMixin, models.Model):
     """Research/investigation projects by students with canonical category and university names."""
 
@@ -1571,6 +1643,14 @@ class project(FrontendUsageMixin, PreviewableMixin, models.Model):
         related_name="investigations",
         verbose_name="Asesor",
     )
+    university_catalog = models.ForeignKey(
+        "project_university",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="projects",
+        verbose_name="Universidad (catálogo)",
+    )
     university = models.CharField(
         "Universidad",
         max_length=255,
@@ -1582,6 +1662,14 @@ class project(FrontendUsageMixin, PreviewableMixin, models.Model):
         blank=True,
         null=True,
         help_text="Siglas de la Universidad",
+    )
+    category_catalog = models.ForeignKey(
+        "project_category",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="projects",
+        verbose_name="Categoría (catálogo)",
     )
     category = models.CharField(
         "Categoría",
@@ -1599,9 +1687,9 @@ class project(FrontendUsageMixin, PreviewableMixin, models.Model):
         FieldPanel("title"),
         FieldPanel("abstract"),
         FieldPanel("advisor"),
-        FieldPanel("university"),
+        FieldPanel("university_catalog"),
         FieldPanel("university_short_name"),
-        FieldPanel("category"),
+        FieldPanel("category_catalog"),
         FieldPanel("winner"),
     ]
 
@@ -1662,9 +1750,33 @@ class project(FrontendUsageMixin, PreviewableMixin, models.Model):
         return value.strip()
 
     def save(self, *args, **kwargs):
-        # Normalize category and university to canonical names
-        self.category = self.normalize_category(self.category)
-        self.university = self.normalize_university(self.university)
+        # Keep text fields synchronized for templates/services that still consume raw strings.
+        normalized_category = self.normalize_category(self.category)
+        normalized_university = self.normalize_university(self.university)
+
+        if self.category_catalog:
+            normalized_category = self.category_catalog.name
+        elif normalized_category:
+            existing_category = project_category.objects.filter(name__iexact=normalized_category).first()
+            if existing_category:
+                self.category_catalog = existing_category
+            else:
+                self.category_catalog = project_category.objects.create(name=normalized_category)
+
+        if self.university_catalog:
+            normalized_university = self.university_catalog.name
+            if not self.university_short_name:
+                self.university_short_name = self.university_catalog.short_name
+        elif normalized_university:
+            existing_university = project_university.objects.filter(name__iexact=normalized_university).first()
+            if existing_university:
+                self.university_catalog = existing_university
+            else:
+                self.university_catalog = project_university.objects.create(name=normalized_university)
+
+        self.category = normalized_category
+        self.university = normalized_university
+
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
