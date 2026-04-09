@@ -739,29 +739,14 @@ El sistema implementa normalización canónica para categorías de proyectos y n
 
 ### Implementación: Modelo `project`
 
-En [jic/mysite/web/models.py](jic/mysite/web/models.py), la clase `project` define:
+En [jic/mysite/web/models.py](jic/mysite/web/models.py), la clase `project` ahora trabaja con catálogos editables:
 
-**Categorías canónicas**:
-```python
-CATEGORY_CHOICES = [
-    ("Ingeniería", "Ingeniería"),
-    ("Ciencias de la Salud", "Ciencias de la Salud"),
-    ("Ciencias Naturales y Exactas", "Ciencias Naturales y Exactas"),
-    ("Ciencias Sociales y Humanísticas", "Ciencias Sociales y Humanísticas"),
-]
-```
+- `project_category`: catálogo de categorías
+- `project_university`: catálogo de universidades
+- `project.category_catalog` y `project.university_catalog`: relaciones FK usadas en admin
+- `project.category` y `project.university`: campos de texto que se mantienen sincronizados para compatibilidad con vistas y servicios existentes
 
-**Aliases de categorías** (variantes que mapean a canónicas):
-```python
-CATEGORY_ALIASES = {
-    "0": "Ingeniería",                              # Legacy index
-    "ingenieria": "Ingeniería",                     # Lowercase
-    "ciencias de la salud": "Ciencias de la Salud", # Spanish variants
-    # ... más aliases predefinidos
-}
-```
-
-**Universidades canónicas + aliases** (igual patrón, lista completa de 10 universidades oficiales).
+Este cambio permite administrar categorías y universidades directamente desde el panel, sin tocar código.
 
 ### Métodos de normalización
 
@@ -773,24 +758,29 @@ CATEGORY_ALIASES = {
 
 ### Flujo: Creación/Actualización de Proyectos
 
-1. **Admin/API ingresa proyecto** con categoría=`"ingenieria"` o universidad=`"UTP"`
-2. **`project.save()`** intercepta y normaliza automáticamente:
-   - `category` → `"Ingeniería"`
-   - `university` → `"Universidad Tecnológica de Panamá"`
-3. **BD almacena valor canónico** → predecible, queryable
-4. **Filtros/búsquedas usan valor canónico** → no hay "falsos negativos"
+1. Ir a `/panel/admin/` → **Proyectos**.
+2. Crear/editar en **Categorías** y **Universidades**.
+3. Al crear o editar una **Investigación**, seleccionar los valores de catálogo.
+4. `project.save()` sincroniza automáticamente FK + campos de texto (`category` y `university`) para mantener compatibilidad.
+5. Los filtros públicos continúan funcionando porque los valores canónicos quedan persistidos.
 
 ### Migración de datos existentes
 
-**Archivo**: [jic/mysite/web/migrations/0044_normalize_project_categories_universities.py](jic/mysite/web/migrations/0044_normalize_project_categories_universities.py)
+**Archivos**:
+
+- [jic/mysite/web/migrations/0044_normalize_project_categories_universities.py](jic/mysite/web/migrations/0044_normalize_project_categories_universities.py)
+- [jic/mysite/web/migrations/0045_project_catalogs.py](jic/mysite/web/migrations/0045_project_catalogs.py)
+- [jic/mysite/web/migrations/0046_seed_project_catalogs.py](jic/mysite/web/migrations/0046_seed_project_catalogs.py)
 
 Ejecutada al hacer `migrate`:
 ```bash
 docker exec jicweb_app python manage.py migrate web
-# Salida: ✓ Normalized 142 projects to canonical categories and universities
+# 0044: normaliza categorías y universidades legacy
+# 0045: crea catálogos y enlaza proyectos existentes
+# 0046: precarga categorías/universidades oficiales
 ```
 
-Revierte duplicados/inconsistencias en datos legados (importados antes de que existiera normalización).
+Con esto quedan corregidos los datos legados y habilitada la gestión por panel admin.
 
 ### Integración con `ImportService`
 
@@ -805,36 +795,23 @@ def _normalize_category(raw_value) -> str:
 
 **Ventaja**: Reutiliza aliases del modelo → 1 único lugar donde mantenerlos. CSV imports automáticamente usan categorías canónicas.
 
+Además, como `project.save()` enlaza con catálogo, los proyectos importados quedan consistentes con el esquema nuevo.
+
 ### Agregar nuevas categorías o universidades
 
-**Si surge nueva categoría en futuro** (ej: "Artes"):
+**Flujo recomendado (sin código):**
 
-1. Agregar a `CATEGORY_CHOICES` en [models.py](jic/mysite/web/models.py):
-   ```python
-   CATEGORY_CHOICES = [
-       # ... existing
-       ("Artes y Diseño", "Artes y Diseño"),  # NEW
-   ]
-   ```
+1. Entrar al panel en `/panel/admin/`.
+2. Ir a **Proyectos → Categorías** o **Proyectos → Universidades**.
+3. Crear/editar/eliminar registros del catálogo.
+4. Usarlos desde **Proyectos → Investigaciones**.
 
-2. Agregar aliases (variantes):
-   ```python
-   CATEGORY_ALIASES = {
-       # ... existing
-       "artes": "Artes y Diseño",             # NEW
-       "artes y diseno": "Artes y Diseño",    # NEW
-   }
-   ```
-
-3. **Datos antiguos no requieren cambio** — `normalize_category()` solo usa CATEGORY_ALIASES; valores no-matching se aceptan como fallback.
-
-4. Opcionalmente, crear migración data para "canonicalizar atrás" valores legacy.
+Solo en casos especiales (formatos legacy de importación) conviene ampliar aliases en `normalize_category()` o `normalize_university()`.
 
 ### Beneficios de este diseño
 
-✅ **Single source of truth** — Aliases definidos una sola vez en modelo  
-✅ **DRY principle** — No duplicar normalización en import_service, views, etc.  
-✅ **Escalable** — Agregar categorías no rompe querys existentes  
-✅ **Testeable** — `project.normalize_category("ingenieria")` es predecible  
-✅ **Compatible con BD** — Valores siempre canónicos → índices efectivos, querys rápidas
-
+✅ **Sin código para operación diaria** — Altas/bajas/cambios desde admin  
+✅ **Compatibilidad hacia atrás** — Vistas y servicios actuales siguen funcionando  
+✅ **Escalable** — Nuevas categorías/universidades sin despliegues  
+✅ **Consistencia de datos** — FK + texto sincronizados en `project.save()`  
+✅ **Importación robusta** — Integración con normalización legacy
