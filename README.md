@@ -754,7 +754,7 @@ Este cambio permite administrar categorías y universidades directamente desde e
 |--------|-----------|---------|--------|
 | `normalize_category(value)` | Mapea variante a canónica | `"ingenieria"` | `"Ingeniería"` |
 | `normalize_university(value)` | Mapea variante a canónica | `"utp"` | `"Universidad Tecnológica de Panamá"` |
-| `_normalize_text_key(value)` | Genera key ASCII normalizada para matching | `"Ciências de la Salud"` | `"ciencias de la salud"` |
+| `_normalize_text_key(value)` | Genera key ASCII normalizada para matching | `"Ciencias de la Salud"` | `"ciencias de la salud"` |
 
 ### Flujo: Creación/Actualización de Proyectos
 

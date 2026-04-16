@@ -1785,6 +1785,7 @@ class project(FrontendUsageMixin, PreviewableMixin, models.Model):
         "umip": "Universidad Marítima Internacional de Panamá",
         "universidad santander": "Universidad Santander",
         "universidad tecnologica de oteima": "Universidad Tecnológica de Oteima",
+        "universidad tecnologica oteima": "Universidad Tecnológica de Oteima",
     }
 
     year = models.PositiveIntegerField("Año")

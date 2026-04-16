@@ -16,6 +16,8 @@ module.exports = {
     "text-violet-700",
     "bg-emerald-100",
     "text-emerald-600",
+    "bg-emerald-200",
+    "text-emerald-700",
     "bg-amber-100",
     "text-amber-700",
     "border-sky-700",

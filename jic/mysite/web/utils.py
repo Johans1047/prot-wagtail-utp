@@ -131,6 +131,7 @@ def _normalize_university_name(value: str | None) -> str:
         'umip': 'Universidad Marítima Internacional de Panamá',
         'universidad santander': 'Universidad Santander',
         'universidad tecnologica de oteima': 'Universidad Tecnológica de Oteima',
+        'universidad tecnologica oteima': 'Universidad Tecnológica de Oteima',
     }
 
     key = _normalize_text_key(raw_text)

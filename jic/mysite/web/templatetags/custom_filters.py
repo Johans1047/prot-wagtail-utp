@@ -40,8 +40,8 @@ def category_chip_class(value):
         "ingenieria": "bg-amber-100 text-amber-700",
         "ciencias de la salud": "bg-sky-100 text-sky-700",
         "de la salud": "bg-sky-100 text-sky-700",
-        "ciencias naturales y exactas": "bg-emerald-100 text-emerald-600",
-        "naturales y exactas": "bg-emerald-100 text-emerald-600",
+        "ciencias naturales y exactas": "bg-emerald-200 text-emerald-700",
+        "naturales y exactas": "bg-emerald-200 text-emerald-700",
         "sociales y humanisticas": "bg-violet-100 text-violet-700",
         "ciencias sociales y humanisticas": "bg-violet-100 text-violet-700",
     }

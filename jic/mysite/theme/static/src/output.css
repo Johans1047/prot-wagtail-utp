@@ -1352,14 +1352,8 @@
       border-color: color-mix(in oklab, var(--primary) 30%, transparent);
     }
   }
-  .border-secondary {
-    border-color: var(--secondary);
-  }
   .border-sky-300 {
     border-color: var(--color-sky-300);
-  }
-  .border-sky-700 {
-    border-color: var(--color-sky-700);
   }
   .border-stone-neutral-300 {
     border-color: var(--color-stone-neutral-300);
@@ -1381,9 +1375,6 @@
   }
   .border-violet-400 {
     border-color: var(--color-violet-400);
-  }
-  .border-violet-700 {
-    border-color: var(--color-violet-700);
   }
   .bg-\[\#f3f3f3\] {
     background-color: #f3f3f3;
@@ -1436,8 +1427,8 @@
       background-color: color-mix(in oklab, var(--color-dark-backdrop) 70%, transparent);
     }
   }
-  .bg-emerald-100 {
-    background-color: var(--color-emerald-100);
+  .bg-emerald-200 {
+    background-color: var(--color-emerald-200);
   }
   .bg-foreground {
     background-color: var(--foreground);
@@ -1515,12 +1506,6 @@
     background-color: var(--secondary-foreground);
     @supports (color: color-mix(in lab, red, red)) {
       background-color: color-mix(in oklab, var(--secondary-foreground) 65%, transparent);
-    }
-  }
-  .bg-secondary\/10 {
-    background-color: var(--secondary);
-    @supports (color: color-mix(in lab, red, red)) {
-      background-color: color-mix(in oklab, var(--secondary) 10%, transparent);
     }
   }
   .bg-secondary\/30 {
@@ -1995,6 +1980,9 @@
   .text-emerald-600 {
     color: var(--color-emerald-600);
   }
+  .text-emerald-700 {
+    color: var(--color-emerald-700);
+  }
   .text-fg-brand {
     color: var(--color-fg-brand);
   }
@@ -2194,12 +2182,6 @@
   }
   .ring-primary {
     --tw-ring-color: var(--primary);
-  }
-  .ring-primary\/20 {
-    --tw-ring-color: var(--primary);
-    @supports (color: color-mix(in lab, red, red)) {
-      --tw-ring-color: color-mix(in oklab, var(--primary) 20%, transparent);
-    }
   }
   .outline {
     outline-style: var(--tw-outline-style);
@@ -2445,16 +2427,6 @@
         border-color: var(--primary);
         @supports (color: color-mix(in lab, red, red)) {
           border-color: color-mix(in oklab, var(--primary) 50%, transparent);
-        }
-      }
-    }
-  }
-  .hover\:border-secondary\/50 {
-    &:hover {
-      @media (hover: hover) {
-        border-color: var(--secondary);
-        @supports (color: color-mix(in lab, red, red)) {
-          border-color: color-mix(in oklab, var(--secondary) 50%, transparent);
         }
       }
     }
