@@ -108,6 +108,10 @@ dist/
 build/
 *.egg-info/
 
+# Generated compressed static sidecars
+jic/mysite/theme/static/**/*.gz
+jic/mysite/static/**/*.gz
+
 # MinIO data (local development)
 minio_data/
 bitnami_minio.tar
