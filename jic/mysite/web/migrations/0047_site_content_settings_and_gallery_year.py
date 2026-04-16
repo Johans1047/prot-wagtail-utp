@@ -5,6 +5,10 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
+    replaces = [
+        ("web", "0045_site_content_settings_and_gallery_year"),
+    ]
+
     dependencies = [
         ("web", "0046_seed_project_catalogs"),
     ]

@@ -5,6 +5,10 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
+    replaces = [
+        ("web", "0046_alter_galleryimage_options"),
+    ]
+
     dependencies = [
         ("web", "0047_site_content_settings_and_gallery_year"),
     ]
