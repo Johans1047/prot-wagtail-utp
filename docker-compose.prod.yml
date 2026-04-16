@@ -21,7 +21,7 @@ services:
       dockerfile: Dockerfile.prod
     container_name: jicweb_app
     env_file:
-      - .env.prod
+      - .env
     volumes:
       # - ./jic/mysite:/app/
       - ./jic/mysite/theme/static:/app/staticfiles
@@ -63,7 +63,7 @@ services:
   #     dockerfile: Dockerfile
   #   container_name: jic_projects_sync_worker
   #   env_file:
-  #     - .env.prod
+  #     - .env
   #   command: >
   #     sh -c "
   #       INTERVAL=$${JIC_PROJECTS_SYNC_INTERVAL};
@@ -110,7 +110,7 @@ services:
     ports:
       - '5440:5432'
     env_file:
-      - .env.prod    
+      - .env    
     networks:
       netX:
         ipv4_address: ${DB_MASTER_INTERNAL_IP}
@@ -136,7 +136,7 @@ services:
     ports:
       - '5432'
     env_file:
-      - .env.prod
+      - .env
     networks:
       - netX
     depends_on:
@@ -157,7 +157,7 @@ services:
       - 9010:9000
       - 9011:9001
     env_file:
-      - .env.prod
+      - .env
     environment:
       - MINIO_ROOT_USER=${MINIO_ROOT_USER}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
@@ -181,7 +181,7 @@ services:
   # jic_minio_backup:
   #   image: bitnami/minio:latest
   #   env_file:
-  #     - .env.prod
+  #     - .env
   #   entrypoint: |
   #     /bin/bash -c "
   #       mc alias set src ${MINIO_SCHEME}://${MINIO_ENDPOINT} ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
@@ -209,7 +209,7 @@ services:
   # jic_db_backup:
   #   image: bitnamilegacy/postgresql:17
   #   env_file:
-  #     - .env.prod
+  #     - .env
   #   entrypoint: |
   #     /bin/bash -c "
   #       export PGPASSWORD=${POSTGRESQL_POSTGRES_PASSWORD};

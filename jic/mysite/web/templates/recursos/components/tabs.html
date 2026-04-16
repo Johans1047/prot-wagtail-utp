@@ -280,7 +280,7 @@
                 <strong class="text-foreground">Nota:</strong> Los boletines
                 también están disponibles en el
                 <a
-                    href="https://ridda2.utp.ac.pa"
+                    href="{{ site_content.ridda_url }}"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="font-medium text-teal underline-offset-2 underline"
@@ -348,7 +348,7 @@
                 <strong class="text-foreground">Nota:</strong> Las memorias
                 también están disponibles en el
                 <a
-                    href="https://ridda2.utp.ac.pa"
+                    href="{{ site_content.ridda_url }}"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="font-medium text-teal underline-offset-2 underline"
@@ -370,17 +370,18 @@
                 Momentos destacados de las ediciones anteriores de la JIC.
             </p>
 
-            <!-- Filtros -->
+            <!-- Filtros por categoría -->
             <div class="flex flex-nowrap overflow-x-auto gap-2 pb-2 -mx-4 px-4 w-[calc(100%+2rem)] md:mx-0 md:px-0 md:w-full scrollbar-thin scrollbar-thumb-stone-300 scrollbar-track-transparent">
+                
                 <a
-                    href="?tab=galeria&img_cat=all"
+                    href="?tab=galeria&img_cat=all&img_year={{ current_img_year|default:'all' }}&page=1"
                     class="filter-link whitespace-nowrap shrink-0 px-4 py-2 rounded-lg border font-medium text-sm transition-colors cursor-pointer {% if current_img_cat == 'all' or not current_img_cat %}border-primary bg-primary text-primary-foreground hover:bg-primary/90{% else %}border-border bg-card text-foreground hover:border-primary/50 hover:bg-stone-neutral-100{% endif %}"
                 >
-                    Todos
+                    Todos los años
                 </a>
                 {% for category in categories %}
                 <a
-                    href="?tab=galeria&img_cat={{ category }}"
+                    href="?tab=galeria&img_cat={{ category }}&img_year={{ current_img_year|default:'all' }}&page=1"
                     class="filter-link whitespace-nowrap shrink-0 px-4 py-2 rounded-lg border font-medium text-sm transition-colors cursor-pointer {% if current_img_cat == category %}border-primary bg-primary text-primary-foreground hover:bg-primary/90{% else %}border-border bg-card text-foreground hover:border-primary/50 hover:bg-stone-neutral-100{% endif %}"
                 >
                     {{ category }}
@@ -412,7 +413,7 @@
                     {% if img.description or img.category %}
                     <div class="p-4 flex flex-col gap-2">
                         {% if img.category and img.category != "General" %}
-                        <span class="inline-flex items-center rounded-md bg-secondary/10 px-2 py-1 text-xs font-medium text-secondary-foreground ring-1 ring-inset ring-gray-500/10 w-fit">
+                        <span class="inline-flex items-center rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-secondary-foreground ring-1 ring-inset ring-gray-500/10 w-fit">
                             {{ img.category }}
                         </span>
                         {% endif %}

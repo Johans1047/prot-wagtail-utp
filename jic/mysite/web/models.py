@@ -5,6 +5,7 @@ from django.core.files.images import get_image_dimensions
 from django.db.models import Case, When
 from django.db.models.functions import Lower
 from django.utils import timezone
+import re
 import unicodedata
 from urllib.parse import urlparse, parse_qs
 from modelcluster.fields import ParentalKey
@@ -343,11 +344,19 @@ class jic_category(AutoSortOrderMixin, FrontendUsageMixin, PreviewableMixin, mod
 
     name = models.CharField("Nombre", max_length=150)
     description = models.TextField("Descripción")
+    image = models.ImageField(
+        "Ícono",
+        upload_to="category_icons/",
+        null=True,
+        blank=True,
+        help_text="Imagen opcional para representar visualmente la categoría.",
+    )
     sort_order = models.PositiveIntegerField("Orden", default=0)
 
     panels = [
         FieldPanel("name"),
         FieldPanel("description"),
+        FieldPanel("image"),
         FieldPanel("sort_order"),
     ]
 
@@ -496,6 +505,77 @@ class event_intro(FrontendUsageMixin, PreviewableMixin, models.Model):
 
     def get_preview_context(self, request, mode_name):
         return {"snippet": self}
+
+
+class site_content_settings(FrontendUsageMixin, models.Model):
+    """Singleton editable settings for recurring frontend copy and external links."""
+
+    _singleton_id = 1
+
+    platform_url = models.URLField(
+        "URL de Plataforma JIC",
+        default="https://jic.utp.ac.pa",
+        help_text="Enlace usado por los botones y accesos de Plataforma JIC.",
+    )
+    quick_section_title = models.CharField(
+        "Título de accesos rápidos",
+        max_length=120,
+        default="Accesos rápidos",
+    )
+    quick_section_description = models.CharField(
+        "Descripción de accesos rápidos",
+        max_length=240,
+        default="Todo lo que necesitas para la JIC en un solo lugar",
+    )
+    faq_section_title = models.CharField(
+        "Título de preguntas frecuentes",
+        max_length=120,
+        default="Preguntas Frecuentes",
+    )
+    faq_section_description = models.CharField(
+        "Descripción de preguntas frecuentes",
+        max_length=240,
+        default="Todo lo que necesitas saber sobre la Jornada de Iniciación Científica",
+    )
+    ridda_url = models.URLField(
+        "URL de RIDDA",
+        default="https://ridda2.utp.ac.pa",
+        help_text="Enlace por defecto para referencias al repositorio institucional.",
+    )
+    categories_reference_url = models.URLField(
+        "URL de referencia para categorías",
+        default="https://ridda2.utp.ac.pa",
+        help_text="Enlace alternativo cuando no exista documento etiquetado para categorías.",
+    )
+
+    panels = [
+        FieldPanel("platform_url"),
+        FieldPanel("quick_section_title"),
+        FieldPanel("quick_section_description"),
+        FieldPanel("faq_section_title"),
+        FieldPanel("faq_section_description"),
+        FieldPanel("ridda_url"),
+        FieldPanel("categories_reference_url"),
+    ]
+
+    class Meta:
+        verbose_name = "Configuración de Contenido del Sitio"
+        verbose_name_plural = "Configuración de Contenido del Sitio"
+
+    def save(self, *args, **kwargs):
+        self.pk = self._singleton_id
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        pass
+
+    @classmethod
+    def get_singleton(cls):
+        obj, _created = cls.objects.get_or_create(pk=cls._singleton_id)
+        return obj
+
+    def __str__(self) -> str:
+        return "Configuración del sitio"
 
 
 class national_coordinators_section(FrontendUsageMixin, PreviewableMixin, models.Model):
@@ -979,6 +1059,51 @@ class Document(WagtailDocument):
 
     admin_form_fields = WagtailDocument.admin_form_fields + ("is_active",)
 
+    CANONICAL_TAG_ALIASES = {
+        "lineamiento": "lineamiento",
+        "lineamientos": "lineamiento",
+        "manual": "manual",
+        "manuales": "manual",
+        "memoria": "memoria",
+        "memorias": "memoria",
+        "ganador": "ganadores",
+        "ganadores": "ganadores",
+        "estudiante": "estudiante",
+        "estudiantes": "estudiante",
+        "imprenta": "imprenta",
+        "boletin": "boletin",
+        "boletines": "boletin",
+    }
+
+    @classmethod
+    def _normalize_tag(cls, value: str) -> str:
+        text = unicodedata.normalize("NFKD", str(value or "").strip().lower())
+        text = text.encode("ascii", "ignore").decode("ascii")
+        text = re.sub(r"\s+", " ", text)
+        return cls.CANONICAL_TAG_ALIASES.get(text, text)
+
+    def _infer_tags_from_title(self) -> set[str]:
+        title_key = self._normalize_tag(self.title or "")
+        inferred = set()
+
+        for keyword, canonical in self.CANONICAL_TAG_ALIASES.items():
+            if keyword in title_key:
+                inferred.add(canonical)
+
+        years_in_title = re.findall(r"\b(19\d{2}|20\d{2})\b", self.title or "")
+        inferred.update(years_in_title)
+        return inferred
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        current_tags = {self._normalize_tag(tag) for tag in self.tags.names()}
+        inferred_tags = self._infer_tags_from_title()
+
+        tags_to_add = sorted(inferred_tags.difference(current_tags))
+        if tags_to_add:
+            self.tags.add(*tags_to_add)
+
 
 class CustomImage(AbstractImage):
     admin_form_fields = WagtailImage.admin_form_fields
@@ -1119,21 +1244,51 @@ class GalleryImage(Orderable):
         related_name='+',
         verbose_name="Imagen"
     )
+    collection = models.ForeignKey(
+        "wagtailcore.Collection",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        verbose_name="Colección",
+        help_text="Opcional: mover la imagen a una colección específica al guardar.",
+    )
     
     category = models.CharField("Año / Edición", max_length=100, blank=True, help_text="Año de la edición (Ej: 2024)")
+    year = models.PositiveIntegerField(
+        "Año",
+        null=True,
+        blank=True,
+        help_text="Año para ordenar y filtrar en la galería (ej: 2024).",
+    )
     description = models.TextField("Descripción", blank=True, help_text="Descripción visible de la imagen")
     alt_text = models.CharField("Leyenda / Accesibilidad", max_length=255, blank=True, help_text="Texto alternativo para lectores de pantalla")
     
     panels = [
         FieldPanel("image"),
+        FieldPanel("collection"),
         FieldPanel("category"),
+        FieldPanel("year"),
         FieldPanel("description"),
         FieldPanel("alt_text"),
     ]
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        if not self.collection_id or not self.image_id:
+            return
+
+        image_obj = self.image
+        if image_obj.collection_id != self.collection_id:
+            image_obj.collection_id = self.collection_id
+            image_obj.save(update_fields=["collection"])
     
     class Meta(Orderable.Meta):
         verbose_name = "Gallery Image"
         verbose_name_plural = "Gallery Images"
+        # Keep inline saves compatible with modelcluster, which expects string keys.
+        ordering = ["sort_order", "-pk"]
 
 
 class CollectionResourceVisibility(models.Model):

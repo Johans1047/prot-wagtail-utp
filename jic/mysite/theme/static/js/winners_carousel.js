@@ -21,10 +21,10 @@
 
         dots.forEach(function (dot, i) {
             if (i === index) {
-                dot.classList.add('bg-amber-400', 'text-amber-950');
+                dot.classList.add('bg-cobalt-800', 'text-primary-foreground');
                 dot.classList.remove('bg-primary-foreground/10', 'text-primary-foreground/70');
             } else {
-                dot.classList.remove('bg-amber-400', 'text-amber-950');
+                dot.classList.remove('bg-cobalt-800', 'text-primary-foreground');
                 dot.classList.add('bg-primary-foreground/10', 'text-primary-foreground/70');
             }
         });

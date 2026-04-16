@@ -1,3 +1,4 @@
+{% load custom_filters static %}
 <section class="py-8 lg:py-12 bg-stone-neutral-50">
     <div class="mx-auto max-w-7xl px-4 lg:px-8">
         <div class="mb-4 flex items-center justify-between gap-4">
@@ -30,8 +31,10 @@
                             data-year="{{ project.year|escape }}"
                             data-university="{{ project.university|escape }}"
                             data-category="{{ project.category|escape }}"
+                            data-category-class="{{ project.category|category_chip_class }}"
                             data-advisor="{{ project.advisor|escape }}"
                             data-contact="{{ project.contact|escape }}"
+                            data-winner="{{ project.winner|default:0 }}"
                             data-prize="{{ project.winner_label|default:''|escape }}"
                             data-abstract="{{ project.abstract|escape }}"
                             data-students="{{ project.students|default:''|join:'||'|escape }}"
@@ -40,19 +43,25 @@
                         >
                             <td class="px-4 py-3 text-foreground">
                                 <div class="flex items-center gap-2 whitespace-nowrap">
-                                    <span class="inline-flex h-4 w-4 items-center justify-center">
+                                    <span class="inline-flex h-5 w-5 items-center justify-center">
                                         {% if project.winner == 1 %}
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="text-yellow-500">
-                                            <path d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978"></path><path d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978"></path><path d="M18 9h1.5a1 1 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"></path><path d="M6 9H4.5a1 1 0 0 1 0-5H6"></path>
-                                        </svg>
+                                        <span class="inline-flex h-5 w-5 items-center justify-center rounded-full" style="background-color: #f59e0b;">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="text-white">
+                                                <path d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978"></path><path d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978"></path><path d="M18 9h1.5a1 1 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"></path><path d="M6 9H4.5a1 1 0 0 1 0-5H6"></path>
+                                            </svg>
+                                        </span>
                                         {% elif project.winner == 2 %}
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="text-slate-500">
-                                            <path d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978"></path><path d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978"></path><path d="M18 9h1.5a1 1 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"></path><path d="M6 9H4.5a1 1 0 0 1 0-5H6"></path>
-                                        </svg>
+                                        <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-400">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="text-white">
+                                                <path d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978"></path><path d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978"></path><path d="M18 9h1.5a1 1 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"></path><path d="M6 9H4.5a1 1 0 0 1 0-5H6"></path>
+                                            </svg>
+                                        </span>
                                         {% elif project.winner == 3 %}
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="text-yellow-700">
-                                            <path d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978"></path><path d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978"></path><path d="M18 9h1.5a1 1 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"></path><path d="M6 9H4.5a1 1 0 0 1 0-5H6"></path>
-                                        </svg>
+                                        <span class="inline-flex h-5 w-5 items-center justify-center rounded-full" style="background-color: #c2410c;">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="text-white">
+                                                <path d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978"></path><path d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978"></path><path d="M18 9h1.5a1 1 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"></path><path d="M6 9H4.5a1 1 0 0 1 0-5H6"></path>
+                                            </svg>
+                                        </span>
                                         {% endif %}
                                     </span>
                                     <span class="inline-block w-10 text-left">{{ project.year }}</span>
@@ -62,7 +71,7 @@
                                 {{ project.title }}
                             </td>
                             <td class="hidden px-4 py-3 text-muted-foreground md:table-cell">{{ project.university_short_name|default:'-' }}</td>
-                            <td class="hidden px-4 py-3 lg:table-cell"><span class="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">{{ project.category }}</span></td>
+                            <td class="hidden px-4 py-3 lg:table-cell"><span class="rounded-full px-2.5 py-0.5 text-xs font-medium {{ project.category|category_chip_class }}">{{ project.category }}</span></td>
                             <td class="hidden px-4 py-3 text-muted-foreground sm:table-cell">{{ project.advisor|default:'-' }}</td>
                             <td class="px-4 py-3 text-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-muted-foreground transition-colors group-hover:text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -99,9 +108,12 @@
         </button>
         <div class="mb-4 flex items-start gap-3">
             <div>
-                <span id="modal-category" class="inline-block rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary"></span>
+                <span id="modal-category" class="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium"></span>
                 <span id="modal-year" class="ml-2 self-center text-xs text-muted-foreground"></span>
-                <span id="modal-prize" class="ml-2 hidden rounded-full bg-yellow-100 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide text-yellow-800"></span>
+                <span id="modal-prize-wrap" class="ml-2 hidden items-center gap-1 align-middle">
+                    <img id="modal-prize-medal" src="" alt="" style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px; flex: 0 0 24px;" aria-hidden="true" />
+                    <span id="modal-prize" class="rounded-full px-2.5 py-1 text-2xs font-semibold uppercase tracking-wide"></span>
+                </span>
             </div>
         </div>
         <h2 id="modal-title" class="text-xl font-bold text-foreground">Detalle del proyecto</h2>
@@ -134,17 +146,52 @@
 <!-- SCRIPT -->
 <script>
 (function () {
+    var firstPlaceMedalSrc = "{% static 'img/first_place.svg' %}";
+    var secondPlaceMedalSrc = "{% static 'img/second_place.svg' %}";
+    var thirdPlaceMedalSrc = "{% static 'img/third_place.svg' %}";
+
     window.openProjectModal = function (row) {
         var d = row.dataset;
-        document.getElementById('modal-category').textContent = d.category || '';
+        var modalCategory = document.getElementById('modal-category');
+        modalCategory.textContent = d.category || '';
+        modalCategory.className = 'inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ' + (d.categoryClass || 'bg-primary/10 text-primary');
         document.getElementById('modal-year').textContent = d.year || '';
+        var winnerLevel = parseInt(d.winner || '0', 10);
         var modalPrize = document.getElementById('modal-prize');
+        var modalPrizeWrap = document.getElementById('modal-prize-wrap');
+        var modalPrizeMedal = document.getElementById('modal-prize-medal');
         if (d.prize) {
             modalPrize.textContent = d.prize;
-            modalPrize.classList.remove('hidden');
+            if (winnerLevel === 1) {
+                modalPrize.className = 'rounded-full px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide';
+                modalPrize.style.backgroundColor = '#fef3c7';
+                modalPrize.style.color = '#d97706';
+                modalPrizeMedal.src = firstPlaceMedalSrc;
+            } else if (winnerLevel === 2) {
+                modalPrize.className = 'rounded-full px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide';
+                modalPrize.style.backgroundColor = '#e2e8f0';
+                modalPrize.style.color = '#64748b';
+                modalPrizeMedal.src = secondPlaceMedalSrc;
+            } else if (winnerLevel === 3) {
+                modalPrize.className = 'rounded-full px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide';
+                modalPrize.style.backgroundColor = '#ffedd5';
+                modalPrize.style.color = '#c2410c';
+                modalPrizeMedal.src = thirdPlaceMedalSrc;
+            } else {
+                modalPrize.className = 'rounded-full bg-secondary px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide text-foreground';
+                modalPrize.style.backgroundColor = '';
+                modalPrize.style.color = '';
+                modalPrizeMedal.removeAttribute('src');
+            }
+            modalPrizeWrap.classList.remove('hidden');
+            modalPrizeWrap.classList.add('inline-flex');
         } else {
             modalPrize.textContent = '';
-            modalPrize.classList.add('hidden');
+            modalPrize.style.backgroundColor = '';
+            modalPrize.style.color = '';
+            modalPrizeMedal.removeAttribute('src');
+            modalPrizeWrap.classList.remove('inline-flex');
+            modalPrizeWrap.classList.add('hidden');
         }
         document.getElementById('modal-title').textContent = d.title || '';
         document.getElementById('modal-university').textContent = d.university || '';

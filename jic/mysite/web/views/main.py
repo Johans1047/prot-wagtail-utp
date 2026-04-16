@@ -784,8 +784,9 @@ def Recursos(request) -> render:
     
     # 3. Gallery
     current_img_cat = request.GET.get('img_cat', 'all')
-    gallery_images, gallery_categories, page_obj_gall = get_recursos_gallery(
-        request, tab, current_img_cat, gallery_images_fallback()
+    current_img_year = request.GET.get('img_year', 'all')
+    gallery_images, gallery_categories, gallery_years, page_obj_gall = get_recursos_gallery(
+        request, tab, current_img_cat, current_img_year, gallery_images_fallback()
     )
     
     # 4. Videos
@@ -810,10 +811,12 @@ def Recursos(request) -> render:
         'memorias': memorias,
         'gallery_images': gallery_images,
         'categories': gallery_categories,
+        'gallery_years': gallery_years,
         'current_img_cat': current_img_cat,
+        'current_img_year': current_img_year,
         'videos': videos,
         'page_obj': page_obj,
-        'page_query': f'tab=galeria&img_cat={current_img_cat}' if tab == 'galeria' else '',
+        'page_query': f'tab=galeria&img_cat={current_img_cat}&img_year={current_img_year}' if tab == 'galeria' else '',
         'last_data_update': _get_last_data_update(all_docs, boletines, memorias),
     }
     return render(request, 'recursos/_index.html', context)

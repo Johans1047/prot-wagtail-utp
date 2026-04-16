@@ -2,10 +2,10 @@
     <div class="mx-auto max-w-7xl px-4 lg:px-8">
         <div class="mb-12 text-center">
             <h2 class="font-serif font-extrabold tracking-tight text-2xl text-foreground md:text-3xl">
-                Accesos rápidos
+                {{ site_content.quick_section_title }}
             </h2>
             <p class="mt-2 text-muted-foreground">
-                Todo lo que necesitas para la JIC en un solo lugar
+                {{ site_content.quick_section_description }}
             </p>
         </div>
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -200,7 +200,7 @@
                     </p>
                 </div></a
             ><a
-                href="https://jic.utp.ac.pa/login"
+                href="{{ site_content.platform_url }}"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="group flex gap-4 rounded-xl border border-border bg-card p-5 transition-all hover:border-primary/30 hover:shadow-md"

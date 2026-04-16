@@ -33,3 +33,4 @@ class WebConfig(AppConfig):
         self._patch_collections_translation()
         signals.register_imagefield_sync_signals()
         signals.register_collection_visibility_signal()
+        signals.register_news_image_collection_signal()

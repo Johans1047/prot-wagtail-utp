@@ -14,6 +14,21 @@ from wagtail.documents import urls as wagtaildocs_urls
 from search import views as search_views
 
 
+def admin_aware_server_error(request):
+    admin_error_prefixes = (
+        "/panel/admin/",
+        "/panel/documents/",
+    )
+
+    if request.path.startswith(admin_error_prefixes):
+        return render(request, "wagtailadmin/500.html", status=500)
+
+    return render(request, "500.html", status=500)
+
+
+handler500 = "mysite.urls.admin_aware_server_error"
+
+
 urlpatterns = [
     path("django-admin/", admin.site.urls),
     path("admin/", RedirectView.as_view(url="/panel/admin/", permanent=False)),

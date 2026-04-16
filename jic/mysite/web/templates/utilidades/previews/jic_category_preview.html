@@ -1,3 +1,4 @@
+{% load static %}
 {% extends "utilidades/previews/_preview_base.html" %}
 {% block content %}
 <section class="py-8 bg-stone-neutral-50">
@@ -11,8 +12,15 @@
             <h2 class="font-serif font-extrabold tracking-tight text-2xl text-foreground">Categorías</h2>
         </div>
         <div class="grid gap-4 sm:grid-cols-2">
-            <div class="rounded-xl border border-border bg-card p-6 transition-colors hover:border-teal/30">
-                <h3 class="text-lg font-semibold text-foreground">{{ snippet.name }}</h3>
+            <div class="rounded-xl border border-border bg-card p-6 transition-colors hover:border-teal/30 relative">
+                <div class="absolute top-4 right-4 h-14 w-14 rounded-lg flex items-center justify-center">
+                    {% if snippet.image %}
+                    <img src="{{ snippet.image.url }}" alt="{{ snippet.name }}" class="h-12 w-12 object-cover rounded">
+                    {% else %}
+                    <img src="{% static 'img/placeholders/placeholder-lab-1.svg' %}" alt="Placeholder de categoría" class="h-10 w-10 object-contain opacity-75 grayscale contrast-200 brightness-75 -translate-y-2 translate-x-2 scale-90">
+                    {% endif %}
+                </div>
+                <h3 class="text-lg font-semibold text-foreground pr-16">{{ snippet.name }}</h3>
                 <p class="mt-2 text-sm leading-relaxed text-muted-foreground">{{ snippet.description }}</p>
             </div>
         </div>

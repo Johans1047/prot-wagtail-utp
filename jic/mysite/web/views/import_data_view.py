@@ -3,10 +3,24 @@ Views for importing consultants and projects from CSV/XLSX files.
 """
 from django import forms
 from django.shortcuts import render
-from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.decorators import user_passes_test
 from django.views.decorators.http import require_http_methods
-from django.http import JsonResponse
 from web.services.import_service import ImportService
+
+
+def _can_access_import_data(user):
+    if not user or not getattr(user, "is_authenticated", False) or not getattr(user, "is_staff", False):
+        return False
+
+    if user.is_superuser:
+        return True
+
+    if not getattr(user, "pk", None):
+        return False
+
+    return bool(
+        user.has_perm("web.change_project") or user.has_perm("web.add_project")
+    )
 
 
 class ImportForm(forms.Form):
@@ -23,7 +37,7 @@ class ImportForm(forms.Form):
         help_text='Si está marcado, actualizará registros existentes; si no, solo creará nuevos.'
     )
 
-@staff_member_required
+@user_passes_test(_can_access_import_data)
 @require_http_methods(["GET", "POST"])
 def import_view(request):
     """

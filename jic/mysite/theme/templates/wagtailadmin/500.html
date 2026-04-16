@@ -1,0 +1,17 @@
+{% extends "wagtailadmin/base.html" %}
+{% load i18n %}
+
+{% block titletag %}{% trans "Server Error" %}{% endblock %}
+
+{% block content %}
+    <div class="nice-padding" style="margin-top: 4rem;">
+        <h1>{% trans "Server error" %}</h1>
+        <p>{% trans "Ocurrio un error interno mientras se procesaba la solicitud en el panel de administracion." %}</p>
+        <p>{% trans "Intenta nuevamente en unos segundos." %}</p>
+        <p>
+            <a href="{% url 'wagtailadmin_home' %}" class="button button-primary">
+                {% trans "Volver a la pagina de inicio" %}
+            </a>
+        </p>
+    </div>
+{% endblock %}

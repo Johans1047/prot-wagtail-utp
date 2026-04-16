@@ -27,3 +27,4 @@ pandas==3.0.0
 
 # Gunicorn for production
 gunicorn==25.3.0
+whitenoise==6.9.0

@@ -1,6 +1,10 @@
 from django.urls import reverse, path
+from django.contrib.auth.decorators import permission_required
+from django.db.models import F
+from django.http import JsonResponse
 from django.utils.html import format_html
 from django.templatetags.static import static
+from django.views.decorators.http import require_GET
 from functools import cached_property
 from wagtail import hooks
 from wagtail.admin.menu import MenuItem, SubmenuMenuItem, Menu
@@ -26,7 +30,9 @@ from .models import (
     video,
     resource_document,
     Gallery,
+    GalleryImage,
     title_section,
+    site_content_settings,
     consultant,
     project_category,
     project_university,
@@ -72,11 +78,30 @@ class TitleSectionViewSet(SnippetViewSet):
     permission_policy = SingletonPermissionPolicy(title_section)
 
 
+class SiteContentSettingsViewSet(SnippetViewSet):
+    model = site_content_settings
+    menu_label = "Textos y Enlaces del Sitio"
+    icon = "cog"
+    list_display = (
+        "platform_url",
+        "quick_section_title",
+        "faq_section_title",
+        "frontend_usage_count",
+    )
+    permission_policy = SingletonPermissionPolicy(site_content_settings)
+
+
 class InicioGroup(SnippetViewSetGroup):
     menu_label = "Inicio"
     menu_icon = "home"
     menu_order = 100
-    items = (TitleSectionViewSet, EventIntroViewSet, ImportantDateViewSet, FrequentlyAskQuestionViewSet)
+    items = (
+        TitleSectionViewSet,
+        SiteContentSettingsViewSet,
+        EventIntroViewSet,
+        ImportantDateViewSet,
+        FrequentlyAskQuestionViewSet,
+    )
 
 
 # ─── JIC ─────────────────────────────────────────────────────────────
@@ -285,6 +310,9 @@ def hide_original_menus(request, menu_items):
         return
 
     hidden_items = ['images', 'documents', 'snippets', 'sites']
+    can_access_import = user.is_authenticated and (user.is_superuser or user.has_perm("web.change_project"))
+    if not can_access_import:
+        hidden_items.append('importar_datos')
     menu_items[:] = [item for item in menu_items if item.name not in hidden_items]
 
 
@@ -353,17 +381,116 @@ def global_admin_css():
     return format_html(
         '<style>'
         '.sidebar-wagtail-branding__icon-wrapper svg {{ display: none !important; }}'
-        '.sidebar-wagtail-branding__icon-wrapper {{ background-image: url("{}"); background-size: 500%; background-repeat: no-repeat; background-position: center; background-color: hsl(254.3 50.4% 24.5%) !important; display: flex; align-items: center; justify-content: center; }}'
+        '.sidebar-wagtail-branding__icon-wrapper {{ background-image: url("{}"); background-size: 80%; background-repeat: no-repeat; background-position: center; background-color: hsl(254.3 50.4% 24.5%) !important; display: flex; align-items: center; justify-content: center; }}'
         '.w-theme-dark .sidebar-wagtail-branding__icon-wrapper {{ background-color: hsl(0 0% 11.4%) !important; }}'
         '@media (prefers-color-scheme: dark) {{ .w-theme-system .sidebar-wagtail-branding__icon-wrapper {{ background-color: hsl(0 0% 11.4%) !important; }} }}'
         '.jic-logo-light, .jic-logo-dark {{ display: none; }}'
         '.w-theme-light .jic-logo-light {{ display: block; }}'
         '.w-theme-dark .jic-logo-dark {{ display: block; }}'
         '</style>',
-        static("img/utp-logo-admin.svg"),
+        static("img/Recurso 8JIC LOGO.svg"),
         # static("img/utp-logo-admin-dark.svg"),
     )
+
+
+@hooks.register("insert_global_admin_js")
+def global_admin_js():
+    return format_html('<script src="{}?v=20260416-8"></script>', static("js/gallery_admin_enhancements.js"))
     
+
+def _ordered_gallery_images_queryset(gallery_id: int):
+    return (
+        GalleryImage.objects
+        .filter(gallery_id=gallery_id)
+        .select_related("image")
+        .order_by(
+            F("year").desc(nulls_last=True),
+            F("image__created_at").desc(nulls_last=True),
+            "-pk",
+        )
+    )
+
+
+@require_GET
+@permission_required("web.change_gallery", raise_exception=True)
+def gallery_admin_images_data(request, gallery_id: int):
+    year_param = str(request.GET.get("year", "all") or "all").strip().lower()
+
+    base_qs = _ordered_gallery_images_queryset(gallery_id)
+    available_years = list(
+        GalleryImage.objects
+        .filter(gallery_id=gallery_id, year__isnull=False)
+        .order_by("-year")
+        .values_list("year", flat=True)
+        .distinct()
+    )
+
+    if year_param == "unclassified":
+        filtered_qs = base_qs.filter(year__isnull=True)
+    elif year_param == "all":
+        filtered_qs = base_qs
+    else:
+        try:
+            selected_year = int(year_param)
+        except (TypeError, ValueError):
+            return JsonResponse(
+                {
+                    "error": "El parámetro year debe ser 'all', 'unclassified' o un año numérico.",
+                },
+                status=400,
+            )
+        filtered_qs = base_qs.filter(year=selected_year)
+
+    grouped = []
+    grouped_index = {}
+    items = []
+
+    for row in filtered_qs:
+        group_key = str(row.year) if row.year else "unclassified"
+        group_label = str(row.year) if row.year else "Sin clasificar"
+
+        if group_key not in grouped_index:
+            grouped_index[group_key] = {
+                "key": group_key,
+                "label": group_label,
+                "ids": [],
+                "count": 0,
+            }
+            grouped.append(grouped_index[group_key])
+
+        grouped_index[group_key]["ids"].append(row.pk)
+        grouped_index[group_key]["count"] += 1
+
+        items.append(
+            {
+                "id": row.pk,
+                "year": row.year,
+                "image_created_at": row.image.created_at.isoformat() if getattr(row.image, "created_at", None) else None,
+            }
+        )
+
+    return JsonResponse(
+        {
+            "gallery_id": gallery_id,
+            "active_year": year_param,
+            "available_years": available_years,
+            "ordered_ids": [item["id"] for item in items],
+            "groups": grouped,
+            "items": items,
+        }
+    )
+
+
+@hooks.register("register_admin_urls")
+def register_gallery_admin_url():
+    return [
+        path(
+            "snippets/web/gallery/images-data/<int:gallery_id>/",
+            gallery_admin_images_data,
+            name="gallery_admin_images_data",
+        ),
+    ]
+
     
 # Custom menu item for data import
 @hooks.register('register_admin_urls')

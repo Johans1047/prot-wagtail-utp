@@ -2,6 +2,8 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
 from wagtail.models import (
+    Collection,
+    GroupCollectionPermission,
     GroupPagePermission,
     Page,
     Site,
@@ -13,6 +15,50 @@ from web.models import BlogIndexPage, BlogPage
 
 class Command(BaseCommand):
     help = "Configura noticias con un unico rol que solo puede subir noticias"
+
+    @staticmethod
+    def _get_or_create_child_collection(parent, name):
+        """Return a direct child collection with the given name, creating it when missing."""
+        collection = parent.get_children().filter(name=name).first()
+        if collection:
+            return collection
+        return parent.add_child(instance=Collection(name=name))
+
+    def _ensure_news_image_collection(self):
+        """Ensure photo collections contain Fotos/Noticias and return Noticias collection."""
+        root_collection = Collection.get_first_root_node()
+        photos_collection = self._get_or_create_child_collection(root_collection, "Fotos")
+
+        news_collection = Collection.objects.filter(name="Noticias").exclude(pk=photos_collection.pk).first()
+        if news_collection and news_collection.get_parent() and news_collection.get_parent().id != photos_collection.id:
+            news_collection.move(photos_collection, pos="last-child")
+
+        if not news_collection or not news_collection.get_parent() or news_collection.get_parent().id != photos_collection.id:
+            news_collection = self._get_or_create_child_collection(photos_collection, "Noticias")
+
+        return news_collection
+
+    @staticmethod
+    def _assign_news_collection_permissions(news_group, news_collection):
+        """Restrict image collection permissions for Noticias group to the Noticias collection only."""
+        image_ct = ContentType.objects.get(app_label="web", model="customimage")
+
+        image_collection_perms = Permission.objects.filter(
+            content_type=image_ct,
+            codename__in=["add_customimage", "change_customimage", "choose_customimage"],
+        )
+
+        GroupCollectionPermission.objects.filter(
+            group=news_group,
+            permission__content_type=image_ct,
+        ).delete()
+
+        for permission in image_collection_perms:
+            GroupCollectionPermission.objects.get_or_create(
+                group=news_group,
+                collection=news_collection,
+                permission=permission,
+            )
 
     def handle(self, *args, **options):
         news_group, _ = Group.objects.get_or_create(name="Noticias")
@@ -79,6 +125,7 @@ class Command(BaseCommand):
             codename_map = {
                 "add": "add_page",
                 "edit": "change_page",
+                "publish": "publish_page",
             }
 
             for permission_type in permission_types:
@@ -93,9 +140,9 @@ class Command(BaseCommand):
                     permission=permission,
                 )
 
-        # Reset page-level permissions for this role and keep only add/edit on the news index.
+        # Reset page-level permissions for this role and keep add/edit/publish on the news index.
         GroupPagePermission.objects.filter(group=news_group).delete()
-        assign_page_permissions(news_group, ["add", "edit"])
+        assign_page_permissions(news_group, ["add", "edit", "publish"])
 
         # Remove workflow assignment from news index so this role cannot indirectly publish.
         WorkflowPage.objects.filter(page=news_index).delete()
@@ -106,6 +153,14 @@ class Command(BaseCommand):
                 user.is_staff = True
                 user.save(update_fields=["is_staff"])
 
+        news_image_collection = self._ensure_news_image_collection()
+        self._assign_news_collection_permissions(news_group, news_image_collection)
+
         self.stdout.write(self.style.SUCCESS("Rol unico de noticias configurado: Noticias"))
-        self.stdout.write(self.style.SUCCESS("Permisos aplicados: crear/editar noticias (sin publicar)."))
+        self.stdout.write(self.style.SUCCESS("Permisos aplicados: crear/editar/publicar noticias."))
+        self.stdout.write(
+            self.style.SUCCESS(
+                "Coleccion de imagenes configurada: Fotos/Noticias (solo para el grupo Noticias)."
+            )
+        )
         self.stdout.write(self.style.WARNING("Asigna usuarios unicamente al grupo: Noticias."))

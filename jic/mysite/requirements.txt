@@ -4,3 +4,4 @@ django-livereload-server==0.4
 django-compressor==4.5.1
 minio==7.2.3
 Pillow>=10.2.0,<12.0.0
+whitenoise==6.9.0

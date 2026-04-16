@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 import time
 import unicodedata
 from urllib.error import URLError
@@ -11,7 +12,7 @@ from django.urls import reverse
 from django.utils import timezone
 from wagtail.admin.menu import MenuItem
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import F, Q
 from django.db.utils import OperationalError, ProgrammingError
 from wagtail.images import get_image_model
 from wagtail.images.models import Image
@@ -778,12 +779,20 @@ def _sanitize_alt_text(filename_or_title: str) -> str:
     return "Fotografia del evento JIC"
 
 
-def get_recursos_gallery(request, tab, current_img_cat, fallback_images) -> tuple[list[dict], list[str], Paginator.page]: #Paginator.page | None
+def get_recursos_gallery(request, tab, current_img_cat, current_img_year, fallback_images) -> tuple[list[dict], list[str], list[int], Paginator.page]: #Paginator.page | None
     from .models import Gallery
     gallery_images = []
     gallery_categories = ['General']
+    gallery_years = []
     page_obj_gall = None
     gallery_is_configured = False
+
+    def _extract_year(value) -> int | None:
+        text = str(value or "")
+        match = re.search(r"\b(19\d{2}|20\d{2})\b", text)
+        if not match:
+            return None
+        return int(match.group(1))
     
     try:
         gallery = Gallery.objects.prefetch_related('gallery_images__image__tags').first()
@@ -793,7 +802,11 @@ def get_recursos_gallery(request, tab, current_img_cat, fallback_images) -> tupl
             gallery_images_qs = (
                 gallery.gallery_images
                 .select_related('image')
-                .order_by('-image__created_at')
+                .order_by(
+                    F('year').desc(nulls_last=True),
+                    F('image__created_at').desc(nulls_last=True),
+                    '-pk',
+                )
             )
             gallery_images_qs = gallery_images_qs.filter(
                 Q(image__collection__resource_visibility__is_visible_in_resources=True)
@@ -804,9 +817,30 @@ def get_recursos_gallery(request, tab, current_img_cat, fallback_images) -> tupl
             gallery_categories = sorted(gallery_categories, reverse=True)
             if not gallery_categories:
                 gallery_categories = ['General']
+
+            years_set = set()
+            for item in gallery_images_qs:
+                item_year = item.year or _extract_year(item.category) or getattr(item.image, 'created_at', None)
+                if hasattr(item_year, 'year'):
+                    item_year = item_year.year
+                if isinstance(item_year, int) and item_year > 0:
+                    years_set.add(item_year)
+            gallery_years = sorted(years_set, reverse=True)
             
             if current_img_cat != 'all':
                 gallery_images_qs = gallery_images_qs.filter(category=current_img_cat)
+
+            if current_img_year != 'all':
+                try:
+                    selected_year = int(current_img_year)
+                except (TypeError, ValueError):
+                    selected_year = None
+
+                if selected_year:
+                    gallery_images_qs = gallery_images_qs.filter(
+                        Q(year=selected_year)
+                        | Q(year__isnull=True, category__icontains=str(selected_year))
+                    )
             
             if tab == 'galeria':
                 paginator = Paginator(gallery_images_qs, 24)
@@ -817,6 +851,9 @@ def get_recursos_gallery(request, tab, current_img_cat, fallback_images) -> tupl
 
             for item in page_items:
                 category = item.category if item.category else 'General'
+                item_year = item.year or _extract_year(item.category) or getattr(item.image, 'created_at', None)
+                if hasattr(item_year, 'year'):
+                    item_year = item_year.year
                 description = item.description if hasattr(item, 'description') and item.description else ''
                 if not description and hasattr(item.image, 'description') and item.image.description:
                      description = item.image.description
@@ -842,6 +879,7 @@ def get_recursos_gallery(request, tab, current_img_cat, fallback_images) -> tupl
                     'title': item.image.title,
                     'description': description,
                     'category': category,
+                    'year': item_year,
                 })
         else:
             db_images = list(Image.objects.all().order_by('-created_at')[:24])
@@ -872,6 +910,7 @@ def get_recursos_gallery(request, tab, current_img_cat, fallback_images) -> tupl
                     'title': img.title,
                     'description': img.get_title() if hasattr(img, 'get_title') else '',
                     'category': 'General',
+                    'year': getattr(img, 'created_at', None).year if getattr(img, 'created_at', None) else None,
                 })
 
     except (OperationalError, ProgrammingError, Exception) as e:
@@ -887,13 +926,28 @@ def get_recursos_gallery(request, tab, current_img_cat, fallback_images) -> tupl
         gallery_categories = sorted(list(set(img['category'] for img in gallery_images)), reverse=True)
         if current_img_cat != 'all':
             gallery_images = [img for img in gallery_images if img['category'] == current_img_cat]
+
+        for img in gallery_images:
+            fallback_year = img.get('year') or _extract_year(img.get('category'))
+            if fallback_year:
+                img['year'] = fallback_year
+
+        gallery_years = sorted({img['year'] for img in gallery_images if img.get('year')}, reverse=True)
+
+        if current_img_year != 'all':
+            try:
+                selected_year = int(current_img_year)
+            except (TypeError, ValueError):
+                selected_year = None
+            if selected_year:
+                gallery_images = [img for img in gallery_images if img.get('year') == selected_year]
             
         if tab == 'galeria':
             paginator = Paginator(gallery_images, 24)
             page_obj_gall = paginator.get_page(request.GET.get('page', 1))
             gallery_images = page_obj_gall.object_list
 
-    return gallery_images, gallery_categories, page_obj_gall
+    return gallery_images, gallery_categories, gallery_years, page_obj_gall
 
 def get_recursos_videos(request, tab, fallback_videos) -> tuple[list[dict], Paginator.page]: #Paginator.page | None
     from .models import video   

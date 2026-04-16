@@ -19,7 +19,7 @@
                 {% if noticia.cover_image %}
                     {% image noticia.cover_image fill-800x460 as noticia_img %}
                     <a href="{% url 'NoticiaDetalle' noticia.slug %}">
-                        <img src="{{ noticia_img.url }}" alt="{{ noticia.title }}" class="w-full h-52 object-cover" />
+                        <img src="{{ noticia_img.url }}" alt="Imagen de portada de la noticia {{ noticia.title }}: {{ noticia.cover_image.title|default:noticia.excerpt|default:'contenido principal'|striptags|truncatechars:100 }}" class="w-full h-52 object-cover" />
                     </a>
                 {% endif %}
                 <div class="p-5">
