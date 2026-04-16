@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("web", "0044_normalize_project_categories_universities"),
+        ("web", "0046_seed_project_catalogs"),
     ]
 
     operations = [

@@ -22,7 +22,7 @@ def noop_reverse(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("web", "0046_alter_galleryimage_options"),
+        ("web", "0048_alter_galleryimage_options"),
     ]
 
     operations = [
