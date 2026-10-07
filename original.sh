@@ -10,7 +10,7 @@ version: "3.4"
 services:
   jic_minio_storage:
     restart: "no"
-    image: bitnamilegacy/minio:latest
+    image: soldevelo/minio:latest
     ports:
       - 9010:9000
       - 9011:9001
@@ -28,7 +28,7 @@ services:
       - 'jicst_storage_data:/bitnami/minio/data'
 
   jicweb-master:
-    image: 'bitnamilegacy/postgresql:17'
+    image: 'soldevelo/postgresql:17'
     ports:
       - '5440:5432'
     networks:
@@ -46,7 +46,7 @@ services:
       - POSTGRESQL_DATABASE=db_jicweb
 
   jicweb-slave:
-    image: 'bitnamilegacy/postgresql:17'
+    image: 'soldevelo/postgresql:17'
     ports:
       - '5432'
     networks:

@@ -331,7 +331,7 @@ services:
       - netX
 
   jicweb_master:
-    image: 'bitnamilegacy/postgresql:17'
+    image: 'soldevelo/postgresql:17'
     ports:
       - '5440:5432'
     networks:
@@ -355,7 +355,7 @@ services:
       retries: 5
 
   jicweb_slave:
-    image: 'bitnamilegacy/postgresql:17'
+    image: 'soldevelo/postgresql:17'
     ports:
       - '5432'
     networks:
@@ -372,7 +372,7 @@ services:
       - POSTGRESQL_MASTER_PORT_NUMBER=${POSTGRESQL_DATABASE_PORT_NUMBER}
   jic_minio_storage:
     restart: "no"
-    image: bitnami/minio:latest
+    image: soldevelo/minio:latest
     ports:
       - 9010:9000
       - 9011:9001
@@ -396,7 +396,7 @@ services:
       retries: 5
 
   jic_minio_backup:
-    image: bitnami/minio:latest
+    image: soldevelo/minio:latest
     entrypoint: |
       /bin/bash -c "
         mc alias set src http://172.20.0.75:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
@@ -422,7 +422,7 @@ services:
     restart: unless-stopped
 
   jic_db_backup:
-    image: bitnamilegacy/postgresql:17
+    image: soldevelo/postgresql:17
     entrypoint: |
       /bin/bash -c "
         export PGPASSWORD=1*o63U9JlN5bLp;
